@@ -47,10 +47,11 @@ in
         };
       };
 
-      # Defaults will get set in @see nixpkgs-flake.nix, "nixpkgs=flake:nixpkgs".
+      # Inherited from @see nixpkgs.flake.setNixPath
       # If you want to `nix-shell`, using `nix-shell -p '(import <n9> args).pname'`
       nix.nixPath = [
         "n9=${config.deployment.rootAbsolute}"
+        "nixpkgs=flake:nixpkgs"
       ];
 
       # https://nixos.wiki/wiki/Storage_optimization

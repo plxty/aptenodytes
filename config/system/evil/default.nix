@@ -42,67 +42,6 @@
           source = "${pkgs.qemu_kvm}/bin/${n}";
         });
 
-        # Try cosmic for fresh:
-        services.displayManager.cosmic-greeter.enable = true;
-        services.desktopManager.cosmic.enable = true;
-
-        # Fonts, TODO: merge with nix-darwin?
-        fonts = {
-          enableDefaultPackages = true;
-          packages = with pkgs; [
-            # essential
-            adwaita-fonts
-            noto-fonts
-
-            # cjk
-            noto-fonts-cjk-sans
-            noto-fonts-cjk-serif
-            sarasa-gothic
-            source-han-sans
-            source-han-serif
-            wqy_microhei
-            wqy_zenhei
-
-            # coding
-            nerd-fonts.symbols-only
-            jetbrains-mono
-            source-code-pro
-          ];
-
-          # https://zhuanlan.zhihu.com/p/463403799
-          fontconfig.defaultFonts = {
-            emoji = [ "Noto Color Emoji" ];
-            monospace = [
-              "Noto Sans Mono CJK SC"
-              "Sarasa Mono SC"
-              "DejaVu Sans Mono"
-            ];
-            sansSerif = [
-              "Noto Sans CJK SC"
-              "Source Han Sans SC"
-              "DejaVu Sans"
-            ];
-            serif = [
-              "Noto Serif CJK SC"
-              "Source Han Serif SC"
-              "DejaVu Serif"
-            ];
-          };
-        };
-
-        # Trying the input method:
-        i18n.inputMethod = {
-          type = "fcitx5";
-          enable = true;
-          fcitx5.addons = with pkgs; [
-            fcitx5-gtk
-            (fcitx5-rime.override { rimeDataPkgs = [ rime-ice ]; })
-          ];
-        };
-
-        # No networkmanager, we're a "router" handles network ourselves :)
-        networking.networkmanager.enable = false;
-
         # Auto mounting the removable disk:
         # @see https://knazarov.com/posts/automount_usb_drives_in_nixos/
         services.udev.extraRules = lib.concatStrings [
@@ -121,30 +60,6 @@
           minicom
           openocd
           btrfs-progs
-
-          # gui
-          brave
-          art # or darktable?
-          rpi-imager
-          (wechat.override (prev: {
-            # Fix for wrongly wechat version... FIXME: kind of unstable, use niv?
-            # The appimage is hard to override, therefore hacking the fetchurl...
-            fetchurl =
-              { url, ... }@attrs:
-              prev.fetchurl (
-                attrs
-                // (lib.optionalAttrs (lib.hasSuffix "/WeChatLinux_x86_64.AppImage" url) {
-                  url = "https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_x86_64.AppImage";
-                  hash = "sha256-+r5Ebu40GVGG2m2lmCFQ/JkiDsN/u7XEtnLrB98602w=";
-                })
-              );
-          }))
-          wpsoffice-cn
-          wireshark
-
-          # wine...
-          wineWowPackages.staging
-          winetricks
         ];
 
         programs.code-server.enable = true;
