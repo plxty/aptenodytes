@@ -25,20 +25,36 @@ in
           onVariable = "PWD";
         };
 
-        # or: direnv edit
-        envrc = ''
-          set -f env $argv[1]
-          if test -n "$env"
-            echo "use flake 'n9#\"$env\"'" | tee .envrc
+        direnv = ''
+          set -f op $argv[1]
+          if test "$op" = "use"
+            set -f env $argv[2]
+            if test -n "$env"
+              echo "use flake 'n9#\"$env\"'" | tee .envrc
+            end
+            command direnv allow
+          else if test "$op" = "reuse"
+            rm -rf .direnv
+            command direnv reload
+          else if test "$op" = "collect-garbage"
+            set -f gcroots (find /nix/var/nix/gcroots/auto -not -type d | xargs readlink \
+              | grep -F "/.direnv/" | string split "/.direnv/" -f 1 | sort | uniq)
+            for d in $gcroots
+              # TODO: Fish event is annoying, help me...
+              echo "removing '$d'"
+              bash -c "cd \"$d\" && rm -rf .direnv && direnv allow && eval \"\$(direnv export bash)\""
+            end
+            # nix-collect-garbage -d
+          else
+            command direnv $argv
           end
-          direnv allow
         '';
 
         # https://stackoverflow.com/questions/13713101/rsync-exclude-according-to-gitignore-hgignore-svnignore-like-filter-c
         rsync-git = ''
-          set -f excludes "--exclude=.git"
+          set -f excludes "--exclude=/.git"
           for i in (git ls-files --exclude-standard -oi --directory)
-            set -a excludes "--exclude=$i"
+            set -a excludes "--exclude=/$i"
           end
           rsync $excludes $argv
         '';
@@ -127,13 +143,13 @@ in
         abbr --command git c "commit --amend --reset-author --no-edit"
       '';
 
+      # TODO: Re-orgranize...
       shellAbbrs = {
-        ff = "fd --type f .";
+        # ff = "fd --type f .";
         up = "upto";
-        ze = "zoxide query";
-        dh = "dirh";
-        dc = "cdh";
-        dr = "direnv reload";
+        # ze = "zoxide query";
+        # dh = "dirh";
+        # dc = "cdh";
       };
     };
 

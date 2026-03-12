@@ -15,10 +15,11 @@
 # https://github.com/zyklotomic/virtme-ng-flake.nix/blob/master/flake.nix
 
 let
+  version = "1.40";
   src = fetchFromGitHub {
     owner = "arighi";
     repo = "virtme-ng";
-    rev = "1.40";
+    rev = "v${version}";
     sha256 = "0zqyv3s2xr4c934iin6jah6c311snllimi2cnjbp5lc0431pxwp6";
   };
 
@@ -30,9 +31,8 @@ let
   # MUST static for --root to work:
   virtme-ng-init = pkgsStatic.rustPlatform.buildRustPackage rec {
     pname = "virtme-ng-init";
-    inherit src;
-    version = src.rev;
-    sourceRoot = "virtme-ng-src/${lib.replaceStrings [ "-" ] [ "_" ] pname}";
+    inherit src version;
+    sourceRoot = "${src.name}/${lib.replaceStrings [ "-" ] [ "_" ] pname}";
     cargoHash = "sha256-3+MDf6pescqPnsQBOODZJ7ic2tqxh5LPvHIMouUkhjI=";
 
     # @see patchPhase, patchFlags
@@ -54,8 +54,7 @@ let
 in
 python3Packages.buildPythonPackage {
   pname = "virtme-ng";
-  inherit src;
-  version = src.rev;
+  inherit src version;
 
   # @see doc/languages-frameworks/python.section.md
   pyproject = true;

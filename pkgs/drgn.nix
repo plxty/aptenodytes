@@ -1,5 +1,4 @@
 {
-  fetchurl,
   fetchFromGitHub,
   python3Packages,
   automake,
@@ -24,14 +23,6 @@ python3Packages.buildPythonPackage rec {
     sha256 = "sha256-9foYSPwxneTqlckWFpi7Cge9ua4mpafhLkDYJE2ThiU=";
   };
   pyproject = true;
-
-  patches = [
-    # Enable the builtin commands (%crash), it still unstable, and lacks of many things, just try.
-    (fetchurl {
-      url = "https://github.com/osandov/drgn/commit/6cff072db547f6562505939a776e8260abe3f683.patch";
-      sha256 = "1vj6616h0f9a2iy812ak2clzc4jqqrl6lfzs3pmk12acl3z1rjs7";
-    })
-  ];
 
   # Legacy needs:
   build-system = with python3Packages; [
