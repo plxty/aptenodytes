@@ -1,0 +1,3 @@
+# linux
+USE="$USE dist-kernel"
+ACCEPT_LICENSE="@BINARY-REDISTRIBUTABLE"

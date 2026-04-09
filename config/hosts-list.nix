@@ -1,4 +1,0 @@
-[
-  ./system/iris
-  ./system/evil
-]

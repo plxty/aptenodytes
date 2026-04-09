@@ -1,0 +1,5 @@
+CFLAGS="${CFLAGS} -march=znver4"
+CXXFLAGS="${CXXFLAGS} -march=znver4"
+FCFLAGS="${FCFLAGS} -march=znver4"
+FFLAGS="${FFLAGS} -march=znver4"
+RUSTFLAGS="${RUSTFLAGS} -C target-cpu=znver4"

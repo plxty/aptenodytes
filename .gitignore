@@ -1,8 +1,0 @@
-# Project specified:
-asterisk/
-
-# Flake (and other stuff) will generates:
-.direnv/
-.gcroots/
-result
-.last
