@@ -1,3 +1,4 @@
 # linux
-sys-kernel/linux-firmware
-sys-kernel/installkernel
+*sys-kernel/linux-firmware
+*sys-kernel/installkernel
+*sys-kernel/gentoo-kernel

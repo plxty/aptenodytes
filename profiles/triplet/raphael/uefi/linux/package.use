@@ -1,6 +1,5 @@
 # https://wiki.gentoo.org/wiki/Unified_kernel_image
 # https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Kernel
-sys-kernel/gentoo-kernel secureboot
 sys-apps/systemd boot ukify
 sys-apps/systemd-utils boot ukify kernel-install
 sys-kernel/installkernel systemd systemd-boot dracut ukify uki
