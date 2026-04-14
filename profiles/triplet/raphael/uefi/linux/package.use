@@ -2,4 +2,4 @@
 # https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Kernel
 sys-apps/systemd boot ukify
 sys-apps/systemd-utils boot ukify kernel-install
-sys-kernel/installkernel systemd systemd-boot dracut ukify uki
+sys-kernel/installkernel systemd systemd-boot ukify uki

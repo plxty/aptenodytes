@@ -1,3 +1,10 @@
+# portage
+BINPKG_FORMAT="gpkg"
+FEATURES="getbinpkg binpkg-request-signature"
+
+# /etc/portage/mirrors?
+GENTOO_MIRRORS="https://mirrors.tuna.tsinghua.edu.cn/gentoo"
+
 # linux
-USE="$USE dist-kernel"
+USE="$USE dist-kernel -initramfs"
 ACCEPT_LICENSE="@BINARY-REDISTRIBUTABLE"
