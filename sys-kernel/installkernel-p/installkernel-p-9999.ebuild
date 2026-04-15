@@ -72,11 +72,15 @@ src_install() {
   fi
 
   insinto /etc/kernel
-  echo "root=UUID=$(findmnt / -o UUID -n) rootflags=subvol=@gentoo" > "${T}/cmdline"
+  echo "root=PARTUUID=$(findmnt / -o PARTUUID -n) rootflags=subvol=@gentoo" > "${T}/cmdline"
   doins "${T}/cmdline"
+
+  # sys-apps/systemd-p?
+  insinto /efi/loader
+  doins "${FILESDIR}/loader.conf"
 }
 
 post_install() {
-  # fstab? sys-apps/systemd-p?
+  # fstab?
   bootctl install --esp-path=/efi
 }
