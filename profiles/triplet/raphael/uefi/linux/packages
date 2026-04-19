@@ -10,3 +10,8 @@
 *sys-apps/systemd-p
 *app-admin/sudo-p
 *net-misc/openssh-p
+
+# cli world
+*app-shells/elvish
+*app-editors/helix-p
+*dev-util/opencode-bin

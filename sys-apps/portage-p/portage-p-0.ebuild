@@ -22,6 +22,10 @@ src_install() {
 
   insinto /etc/portage/repos.conf
   doins "${FILESDIR}/gentoo.conf"
+
+  # organize?
+  insinto /etc/portage/patches/app-editors/helix
+  doins "${FILESDIR}/0000-helix.patch"
 }
 
 pkg_preinst() {

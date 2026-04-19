@@ -1,0 +1,32 @@
+[[language]]
+name = "c"
+
+[language.indent]
+tab-width = 8
+unit = "\t"
+
+[[language]]
+name = "make"
+
+[language.indent]
+tab-width = 8
+unit = "\t"
+
+[[language]]
+comment-token = "#"
+name = "kconfig"
+scope = "source.kconfig"
+
+[[language.file-types]]
+glob = "Kconfig"
+
+[[language.file-types]]
+glob = "Kconfig.*"
+
+[language.indent]
+tab-width = 8
+unit = "\t"
+
+[language-server.clangd]
+args = ["--header-insertion=never"]
+command = "clangd"
