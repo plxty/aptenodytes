@@ -26,6 +26,7 @@ src_install() {
       continue
     fi
     insinto "$(getent passwd "${user}" | cut -d: -f6)/.config/helix"
+    insopts --owner "${user}" --group "${user}"
     doins "${FILESDIR}/"{config.toml,languages.toml}
   done
 }
