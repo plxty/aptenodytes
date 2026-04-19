@@ -8,6 +8,9 @@ SLOT="0"
 S="${T}"
 
 src_install() {
+  # without /etc/machine-id bootctl will generate a "temporary" kernel,
+  # prefixed by `gentoo-` (insteadof `<machine-id>-`), so the loader has a
+  # wierd machine-id match to against the "gentoo", which isn't hex.
   insinto /efi/loader
   doins "${FILESDIR}/loader.conf"
 
