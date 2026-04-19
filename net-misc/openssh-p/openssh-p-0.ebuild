@@ -1,4 +1,4 @@
-EAPI="9"
+EAPI="8" # systemd.eclass requires...
 KEYWORDS="amd64"
 RDEPEND="net-misc/openssh" # virtual?
 IUSE="server"
