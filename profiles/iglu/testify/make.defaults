@@ -1,2 +1,2 @@
-# this is an invariant, don't change
 IGLU_ID="testify"
+IGLU_NETWORK="eth0:dhcp"

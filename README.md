@@ -1,14 +1,26 @@
 # aptenodytes
 
-:)
+in pseudo-declarative style :)
 
-# hierarchy
-
-For `make.defaults`, there's some invariant variables, which means you really shouldn't modify them after profile has been selected.
+# profiling
 
 * `IGLU_ID`, the hostname
-* UKI without initramfs, means the kernel won't boot if disks have been switched
+* `IGLU_LIVES, iglu_lives_`, the username(s)
+* `IGLU_NETWORK`, the network topo
 
-For less restriction, i.e. users, they can be modify dynamically,
+if you change any of them, please check ebuilds that use, and re-emerge to take effects.
 
-* `IGLU_LIVES`, an `USE_EXPAND` variable
+there might be some hidden dependency-chain, so, good luck.
+
+# bring it up
+
+```bash
+curl -L "https://ptr.kei.network/noot" | bash -s -- ${IGLU_ID} /mnt/gentoo
+```
+
+(still incomplete, broken now)
+
+# things one more
+
+* supporting prefix, both linux and darwin
+* nix-like parsing config while in ebuild

@@ -5,7 +5,7 @@ RDEPEND="
   dev-vcs/git
 "
 
-DESCRIPTION="self-play with portage"
+DESCRIPTION="portage profile"
 SLOT="0"
 
 # source-less
@@ -28,19 +28,5 @@ pkg_preinst() {
   # suppress warnings
   if [[ -f /etc/portage/make.conf ]]; then
     rm -v /etc/portage/make.conf
-  fi
-
-  if grep -q catalyst /etc/portage/binrepos.conf/gentoobinhost.conf; then
-    rm -v /etc/portage/binrepos.conf/gentoobinhost.conf
-  fi
-
-  # maybe useless?
-  if ! grep -q aptenodytes /etc/portage/repos.conf/gentoo.conf; then
-    rm -v /etc/portage/repos.conf/gentoo.conf
-  fi
-
-  # stage-0 cleanup
-  if [[ -f /etc/portage/repos.conf/aptenodytes.conf ]]; then
-    rm -v /etc/portage/repos.conf/aptenodytes.conf
   fi
 }
