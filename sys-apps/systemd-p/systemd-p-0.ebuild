@@ -29,7 +29,9 @@ src_install() {
   done
 }
 
-post_install() {
-  # /boot?
+pkg_postinst() {
   bootctl install --esp-path=/efi
+  if [[ -d /boot ]]; then
+    rmdir /boot
+  fi
 }

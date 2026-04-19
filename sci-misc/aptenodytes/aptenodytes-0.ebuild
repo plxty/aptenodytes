@@ -20,6 +20,26 @@ src_install() {
 
   genfstab -t PARTUUID / > "${T}/fstab"
   doins "${T}/fstab"
+
+  # /usr/share/i18n/SUPPORTED
+  {
+    echo "en_US.UTF-8 UTF-8"
+    echo "en_US ISO-8859-1"
+    echo "zh_CN.GB18030 GB18030"
+    echo "zh_CN.GBK GBK"
+    echo "zh_CN.UTF-8 UTF-8"
+    echo "zh_CN GB2312"
+  } > "${T}/locale.gen"
+  doins "${T}/locale.gen"
+
+  # https://wiki.archlinux.org/title/Locale
+  {
+    echo "LANG=zh_CN.UTF-8"
+    echo "LANGUAGE=zh_CN:en_US"
+  } > "${T}/locale.conf"
+  doins "${T}/locale.conf"
+
+  dosym ../usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 }
 
 pkg_preinst() {
@@ -27,4 +47,20 @@ pkg_preinst() {
   if grep -q manpage /etc/fstab; then
     rm -v /etc/fstab
   fi
+
+  if grep -q "man pages" /etc/locale.gen; then
+    rm -v /etc/locale.gen
+  fi
+
+  if grep -q "LANG=C.UTF-8" /etc/locale.conf; then
+    rm -v /etc/locale.conf
+  fi
+
+  if [[ ! -e /etc/localtime || "$(realpath /etc/localtime)" == "/usr/share/zoneinfo/Factory" ]]; then
+    unlink /etc/localtime
+  fi
+}
+
+pkg_postinst() {
+  locale-gen
 }
