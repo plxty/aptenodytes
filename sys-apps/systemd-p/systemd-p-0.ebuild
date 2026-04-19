@@ -12,7 +12,7 @@ src_install() {
   doins "${FILESDIR}/loader.conf"
 
   # split it
-  insinto /etc/systemd/network
+  insinto /usr/lib/systemd/network
   local prio=0
   for network in $IGLU_NETWORK; do
     export IFACE="${network%:*}"

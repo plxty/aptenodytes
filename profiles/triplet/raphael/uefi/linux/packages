@@ -8,4 +8,5 @@
 
 # administrator
 *sys-apps/systemd-p
-*app-admin/sudo
+*app-admin/sudo-p
+*net-misc/openssh-p

@@ -6,10 +6,9 @@ IUSE="hyper-v"
 DESCRIPTION="installkernel profile"
 SLOT="0"
 
-src_install() {
-  insinto /etc/kernel/install.d
-  doins "${FILESDIR}/uki.conf"
+S="${T}"
 
+src_install() {
   # real localmod?
   insinto /etc/kernel/config.d
   doins "${FILESDIR}/0000-localmod.config"
@@ -17,7 +16,9 @@ src_install() {
     doins "${FILESDIR}/0000-hyper-v.config"
   fi
 
+  # /usr/lib/kernel?
   insinto /etc/kernel
-  echo "root=PARTUUID=$(findmnt / -o PARTUUID -n) rootflags=subvol=@gentoo" > "${T}/cmdline"
+  echo "root=PARTUUID=$(findmnt / -o PARTUUID -n) rootflags=subvol=@gentoo rw" \
+    > "${T}/cmdline"
   doins "${T}/cmdline"
 }
