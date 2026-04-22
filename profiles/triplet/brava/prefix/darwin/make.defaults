@@ -1,3 +1,6 @@
+# it's not working, just to silence
+GENTOO_BINHOST="https://mirrors.tuna.tsinghua.edu.cn/gentoo/releases/arm64/binpackages/23.0/arm64"
+
 # profile adds a ~one, we need a stable one:
 ACCEPT_KEYWORDS="arm64-macos"
 

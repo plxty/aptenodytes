@@ -1,11 +1,10 @@
-EAPI="9"
+EAPI="8"
 DESCRIPTION="byte the user"
 KEYWORDS="amd64 arm64-macos"
 SLOT="0"
 
-# for prefix, this is just a placeholder, won't actually do the things
-inherit acct-user
-if prefix; then
+inherit acct-user dirty-deeds
+if scopeuse prefix; then
   ACCT_USER_ID="${PORTAGE_INST_UID}"
   ACCT_USER_GROUPS=("${PORTAGE_GRPNAME}")
 else

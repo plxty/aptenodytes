@@ -5,6 +5,7 @@ SLOT="0"
 
 RDEPEND="
   sys-apps/portage
+  app-portage/getuto
   dev-vcs/git
 "
 S="${T}"
@@ -32,6 +33,11 @@ src_install() {
   # organize?
   insinto /etc/portage/patches/app-editors/helix
   doins "${FILESDIR}/0000-helix.patch"
+
+  if use prefix; then
+    insinto /etc/portage/patches/app-portage/getuto
+    doins "${FILESDIR}/0000-getuto.patch"
+  fi
 }
 
 pkg_preinst() {

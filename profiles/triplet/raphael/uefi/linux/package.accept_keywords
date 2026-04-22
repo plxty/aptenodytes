@@ -1,4 +1,1 @@
-app-shells/elvish ~amd64
-dev-util/bash-language-server ~amd64
-dev-util/ty ~amd64
-dev-util/opencode-bin ~amd64
+# to fix the version later...

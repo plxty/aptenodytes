@@ -1,0 +1,22 @@
+EAPI="8"
+
+# this is an package overlay:
+inherit dirty-deeds
+pkg_overlay
+
+if scopeuse prefix-guest; then
+  # follow upstream beta's path:
+  SRC_URI="
+    $(rust_all_arch_uris "rust-${PV}")
+    rust-src? ( ${RUST_TOOLCHAIN_BASEURL%/}/2025-08-07/rust-src-${PV}.tar.xz -> rust-src-${PV}.tar.xz )
+  "
+
+  # don't patchelf on darwin:
+  patchelf() {
+    echo "skipping: patchelf ${*}"
+  }
+
+  # remove some un-buildable depends:
+  RDEPEND="${RDEPEND//sys-apps\/lsb-release/}"
+  BDEPEND="${BDEPEND//prefix? ( dev-util\/patchelf )/}"
+fi

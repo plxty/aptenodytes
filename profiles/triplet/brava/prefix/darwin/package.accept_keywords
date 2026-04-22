@@ -1,0 +1,9 @@
+# for possiblely furthur using
+=app-portage/getuto-1.16 **
+
+# requires modified rust-toolchain, and using beta version
+=dev-lang/rust-bin-1.95.0 **
+=app-eselect/eselect-rust-20210703 **
+
+# hating wd40 now...
+=app-editors/helix-25.07.1 **

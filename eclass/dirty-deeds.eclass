@@ -6,6 +6,25 @@ esac
 if [[ -z ${_DIRTY_DEEDS_ECLASS} ]]; then
 _DIRTY_DEEDS_ECLASS=1
 
+scopeuse() {
+  # the USE is deduced from profile, not packages, so safe:
+  for flag in $USE; do
+    if [[ "${1}" == "${flag}" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+pkg_overlay() {
+  local gentoo_repo="gentoo"
+  if scopeuse prefix-guest; then
+    gentoo_repo="gentoo_prefix"
+  fi
+  # in global scope, the EPREFIX seems not set yet:
+  source "${PORTAGE_CONFIGROOT}/var/db/repos/${gentoo_repo}/${CATEGORY}/${PN}/${PF}.ebuild"
+}
+
 userinsinto() {
   export __E_USERINSDESTTREE="${1}"
 }

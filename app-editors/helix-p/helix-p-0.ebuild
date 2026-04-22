@@ -1,17 +1,19 @@
 EAPI="8"
 DESCRIPTION="helix profile"
-KEYWORDS="amd64"
+KEYWORDS="amd64 arm64-macos"
 SLOT="0"
 
 inherit dirty-deeds
+
+# fixing rdepends...
+#   llvm-core/clang
+#   dev-util/bash-language-server
+#   dev-util/ty
 
 IUSE="iglu_lives_byte"
 RDEPEND="
   app-editors/helix
   iglu_lives_byte? ( acct-user/byte )
-  llvm-core/clang
-  dev-util/bash-language-server
-  dev-util/ty
 "
 S="${T}"
 
