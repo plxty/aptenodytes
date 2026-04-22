@@ -1,2 +1,3 @@
 IGLU_ID="testify"
 IGLU_NETWORK="eth0:dhcp"
+IGLU_DOMAIN="xas.is"
