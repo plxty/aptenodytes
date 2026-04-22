@@ -30,7 +30,8 @@ if [[ ! -f "${PREFIX}/var/db/repos/aptenodytes/noot" ]]; then
   url="https://raw.githubusercontent.com/plxty/aptenodytes/refs/heads/main/sys-apps/portage-p/files"
   # making use of the git from livecd
   mkdir -p {,"${PREFIX}"}/etc/portage/repos.conf
-  curl -so /etc/portage/repos.conf/gentoo.conf "${url}/gentoo.conf"
+  curl -so /etc/portage/repos.conf/gentoo.conf | \
+    EPREFIX="${PREFIX}" envsubst '${EPREFIX}' > "${url}/gentoo.conf"
   emerge --sync
   cp {,"${PREFIX}"}/etc/portage/repos.conf/gentoo.conf
   cp -Ta {,"${PREFIX}"}/var/db/repos

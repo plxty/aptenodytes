@@ -1,11 +1,10 @@
 EAPI="9"
-KEYWORDS="amd64"
-RDEPEND="sys-kernel/installkernel"
-IUSE="hyper-v"
-
 DESCRIPTION="installkernel profile"
+KEYWORDS="amd64"
 SLOT="0"
 
+IUSE="hyper-v"
+RDEPEND="sys-kernel/installkernel"
 S="${T}"
 
 src_install() {

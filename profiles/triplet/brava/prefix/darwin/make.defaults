@@ -1,0 +1,5 @@
+# profile adds a ~one, we need a stable one:
+ACCEPT_KEYWORDS="arm64-macos"
+
+# prefix already has one built-in, in:
+# etc/portage/make.conf/0100_bootstrap_prefix_make.conf

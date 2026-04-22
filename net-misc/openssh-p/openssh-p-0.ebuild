@@ -1,13 +1,12 @@
 EAPI="8" # systemd.eclass requires...
-KEYWORDS="amd64"
-RDEPEND="net-misc/openssh" # virtual?
-IUSE="server"
-
 DESCRIPTION="openssh profile"
+KEYWORDS="amd64"
 SLOT="0"
 
 inherit systemd
 
+RDEPEND="net-misc/openssh" # virtual?
+IUSE="server"
 S="${T}"
 
 src_install() {

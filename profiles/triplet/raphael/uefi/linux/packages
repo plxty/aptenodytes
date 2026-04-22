@@ -1,6 +1,3 @@
-# hello-world
-*sci-misc/aptenodytes
-
 # linux
 *sys-kernel/linux-firmware
 *sys-kernel/installkernel
@@ -10,8 +7,3 @@
 *sys-apps/systemd-p
 *app-admin/sudo-p
 *net-misc/openssh-p
-
-# cli world
-*app-shells/elvish
-*app-editors/helix-p
-*dev-util/opencode-bin

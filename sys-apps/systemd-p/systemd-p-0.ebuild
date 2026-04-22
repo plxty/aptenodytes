@@ -1,10 +1,9 @@
 EAPI="9"
-KEYWORDS="amd64"
-RDEPEND="sys-apps/systemd"
-
 DESCRIPTION="systemd profile"
+KEYWORDS="amd64"
 SLOT="0"
 
+RDEPEND="sys-apps/systemd"
 S="${T}"
 
 src_install() {
@@ -21,7 +20,7 @@ src_install() {
     export IFACE="${network%:*}"
     read -ra configs <<< "${network#*:}"
     for cfg in "${configs[@]}"; do
-      target="${T}/$(printf %02d $prio)-${IFACE}.network"
+      local target="${T}/$(printf %02d $prio)-${IFACE}.network"
       envsubst '${IFACE}' < "${FILESDIR}/${cfg}.network" > "${target}"
       doins "${target}"
       ((++prio))

@@ -1,7 +1,6 @@
 EAPI="8"
-KEYWORDS="amd64"
-
 DESCRIPTION="xonsh shell"
+KEYWORDS="amd64"
 SLOT="0"
 
 DISTUTILS_USE_PEP517=setuptools

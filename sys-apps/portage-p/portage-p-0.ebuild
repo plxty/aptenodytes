@@ -1,14 +1,12 @@
-EAPI="9"
-KEYWORDS="amd64"
+EAPI="8"
+DESCRIPTION="portage profile"
+KEYWORDS="amd64 arm64-macos"
+SLOT="0"
+
 RDEPEND="
   sys-apps/portage
   dev-vcs/git
 "
-
-DESCRIPTION="portage profile"
-SLOT="0"
-
-# source-less
 S="${T}"
 
 src_install() {
@@ -20,8 +18,16 @@ src_install() {
   envsubst '${GENTOO_BINHOST}' < "${FILESDIR}/gentoobinhost.conf" > "${T}/gentoobinhost.conf"
   doins "${T}/gentoobinhost.conf"
 
+  # /usr/share/portage/config/repos.conf?
   insinto /etc/portage/repos.conf
-  doins "${FILESDIR}/gentoo.conf"
+  local repos_gentoo="gentoo"
+  if use prefix-guest; then
+    # https://github.com/gentoo/prefix/tree/master/scripts/rsync-generation
+    repos_gentoo="gentoo_prefix"
+  fi
+  envsubst '${EPREFIX}' < "${FILESDIR}/${repos_gentoo}.conf" > "${T}/${repos_gentoo}.conf"
+  envsubst '${EPREFIX}' < "${FILESDIR}/aptenodytes.conf" > "${T}/aptenodytes.conf"
+  doins "${T}/${repos_gentoo}.conf" "${T}/aptenodytes.conf"
 
   # organize?
   insinto /etc/portage/patches/app-editors/helix

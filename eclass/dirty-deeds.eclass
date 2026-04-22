@@ -1,0 +1,43 @@
+case "${EAPI}" in
+  "8"|"9") ;;
+  *) die "${ECLASS}: EAPI ${EAPI:-0} not supported" ;;
+esac
+
+if [[ -z ${_DIRTY_DEEDS_ECLASS} ]]; then
+_DIRTY_DEEDS_ECLASS=1
+
+userinsinto() {
+  export __E_USERINSDESTTREE="${1}"
+}
+
+userdoins() {
+  # name group home
+  local users=()
+  if use prefix && use "iglu_lives_${PORTAGE_USERNAME}"; then
+    # TODO: more robust way...
+    if [[ "${ARCH}" == *"-macos" ]]; then
+      local homedest="/Users/${PORTAGE_USERNAME}"
+    else
+      local homedest="/home/${PORTAGE_USERNAME}"
+    fi
+    # Make a relative path to passing by the checks, dirty enough:
+    homedest="/$(realpath -s --relative-to="${EPREFIX}" "${homedest}")"
+    users+=("${PORTAGE_USERNAME}"$'\n'"${PORTAGE_GRPNAME}"$'\n'"${homedest}")
+  else
+    for flag in $USE; do
+      if [[ "${flag}" != "iglu_lives_"* ]]; then
+        continue
+      fi
+      local username="${flag#iglu_lives_}"
+      users+=("${username}"$'\n'"${username}"$'\n'"$(getent passwd "${user}" | cut -d: -f6)")
+    done
+  fi
+
+  for user in "${users[@]}"; do
+    IFS=$'\n' read -d'' -r username groupname homedest <<< "$user"
+    insinto "${homedest}/${__E_USERINSDESTTREE}"
+    insopts --owner "${username}" --group "${groupname}"
+    doins "${@}"
+  done
+}
+fi

@@ -1,10 +1,9 @@
 EAPI="9"
-KEYWORDS="amd64"
-RDEPEND="app-admin/sudo"
-
 DESCRIPTION="sudo profile"
+KEYWORDS="amd64"
 SLOT="0"
 
+RDEPEND="app-admin/sudo"
 S="${T}"
 
 src_install() {

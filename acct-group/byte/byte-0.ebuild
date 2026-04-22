@@ -1,10 +1,12 @@
 EAPI="8"
+DESCRIPTION="byte the group"
 KEYWORDS="amd64"
-
-DESCRIPTION="bye byte byte bye"
 SLOT="0"
 
 inherit acct-group
-
-ACCT_GROUP_ID="1000"
+if use prefix; then
+  ACCT_GROUP_ID="${PORTAGE_INST_GID}"
+else
+  ACCT_GROUP_ID="1000"
+fi
 ACCT_GROUP_ENFORCE_ID="true"
