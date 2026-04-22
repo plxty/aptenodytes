@@ -39,7 +39,7 @@ src_install() {
     echo "LANGUAGE=zh_CN:en_US"
   } > "${T}/locale.conf"
   doins "${T}/locale.conf"
-  dosym ../usr/share/zoneinfo/Asia/Shanghai localtime
+  dosym ../usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
   if use prefix; then
     return

@@ -1,4 +1,4 @@
-EAPI="8" # systemd.eclass requires...
+EAPI="8"
 DESCRIPTION="openssh profile"
 KEYWORDS="amd64"
 SLOT="0"
