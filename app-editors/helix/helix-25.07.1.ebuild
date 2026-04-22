@@ -4,6 +4,8 @@ inherit dirty-deeds
 pkg_overlay
 
 if scopeuse prefix-guest; then
+  KEYWORDS="${KEYWORDS} arm64-macos"
+
   eval __"$(declare -f src_install)"
   src_install() {
     # replacing the install_name of all grammars

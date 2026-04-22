@@ -2,4 +2,5 @@
 *acct-user/byte
 
 # cli world
+*dev-python/xonsh
 *app-editors/helix-p

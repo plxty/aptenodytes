@@ -1,9 +1,12 @@
 # for possiblely furthur using
 =app-portage/getuto-1.16 **
 
-# requires modified rust-toolchain, and using beta version
-=dev-lang/rust-bin-1.95.0 **
+# requires modified rust-toolchain, hating wd40
 =app-eselect/eselect-rust-20210703 **
 
-# hating wd40 now...
-=app-editors/helix-25.07.1 **
+# pythonic, not good nor bad
+=dev-python/ujson-5.12.0 **
+=dev-python/click-8.3.2 **
+
+# other dependencies, hell the what
+=dev-libs/double-conversion-3.4.0 **

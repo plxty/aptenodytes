@@ -5,6 +5,9 @@ inherit dirty-deeds
 pkg_overlay
 
 if scopeuse prefix-guest; then
+  # we're here
+  KEYWORDS="${KEYWORDS} arm64-macos"
+
   # follow upstream beta's path:
   SRC_URI="
     $(rust_all_arch_uris "rust-${PV}")
