@@ -36,7 +36,12 @@ src_install() {
 
   if use prefix; then
     insinto /etc/portage/patches/app-portage/getuto
-    doins "${FILESDIR}/0000-getuto.patch"
+    doins "${FILESDIR}/0000-getuto-prefix.patch"
+  fi
+
+  if use prefix-guest; then
+    insinto /etc/portage/patches/sys-apps/portage
+    doins "${FILESDIR}/0000-portage-prefix.patch"
   fi
 }
 

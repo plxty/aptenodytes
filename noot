@@ -45,7 +45,8 @@ fi
 if [[ ! -f "${PREFIX}/etc/hostname" ]]; then
   echo "\$ emerge boot"
   cp -f {,"${PREFIX}"}/etc/resolv.conf
-  arch-chroot "${PREFIX}" emerge -1 sci-misc/aptenodytes
+  # re-emerge portage to allow us to patch it:
+  arch-chroot "${PREFIX}" emerge -1 sys-apps/portage sci-misc/aptenodytes
 fi
 
 if [[ ! -d "${PREFIX}/usr/lib/modules" ]]; then
