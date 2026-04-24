@@ -1,0 +1,131 @@
+commit 965390678abcfc7fe67fc5b3cd14c212af1f241a
+Author: Zigit Zo <byte@kei.network>
+Date:   Sat Apr 25 03:55:37 2026 +0800
+
+    node: compiles on darwin gcc
+
+diff --git a/common.gypi b/common.gypi
+index c5a7dc9c..9e8e84b9 100644
+--- a/common.gypi
++++ b/common.gypi
+@@ -684,6 +684,16 @@
+               ],
+             },
+           }],
++          ['clang==0', {
++            'xcode_settings': {
++              'OTHER_CPLUSPLUSFLAGS': [
++                '-Wno-extra',
++                '-Wno-deprecated-declarations',
++                '-Wno-return-type',
++                '-std=gnu++20',
++              ],
++            },
++          }],
+           ['clang==1', {
+             'xcode_settings': {
+               'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
+diff --git a/deps/v8/src/inspector/string-16.h b/deps/v8/src/inspector/string-16.h
+index fd542251..67fa5d34 100644
+--- a/deps/v8/src/inspector/string-16.h
++++ b/deps/v8/src/inspector/string-16.h
+@@ -163,8 +163,6 @@ String16 String16::concat(T... args) {
+ 
+ }  // namespace v8_inspector
+ 
+-#if !defined(__APPLE__) || defined(_LIBCPP_VERSION)
+-
+ namespace std {
+ template <>
+ struct hash<v8_inspector::String16> {
+@@ -175,6 +173,4 @@ struct hash<v8_inspector::String16> {
+ 
+ }  // namespace std
+ 
+-#endif  // !defined(__APPLE__) || defined(_LIBCPP_VERSION)
+-
+ #endif  // V8_INSPECTOR_STRING_16_H_
+diff --git a/deps/v8/src/objects/string.h b/deps/v8/src/objects/string.h
+index 3a4d4510..0447631a 100644
+--- a/deps/v8/src/objects/string.h
++++ b/deps/v8/src/objects/string.h
+@@ -21,7 +21,7 @@
+ #include "src/objects/tagged.h"
+ #include "src/sandbox/external-pointer.h"
+ #include "src/strings/unicode-decoder.h"
+-#include "third_party/simdutf/simdutf.h"
++#include "simdutf.h"
+ 
+ // Has to be the last include (doesn't have include guards):
+ #include "src/objects/object-macros.h"
+diff --git a/deps/v8/third_party/abseil-cpp/absl/time/internal/cctz/src/time_zone_format.cc b/deps/v8/third_party/abseil-cpp/absl/time/internal/cctz/src/time_zone_format.cc
+index 0e5f32f1..b0a828d8 100644
+--- a/deps/v8/third_party/abseil-cpp/absl/time/internal/cctz/src/time_zone_format.cc
++++ b/deps/v8/third_party/abseil-cpp/absl/time/internal/cctz/src/time_zone_format.cc
+@@ -20,7 +20,7 @@
+ 
+ #if defined(HAS_STRPTIME) && HAS_STRPTIME
+ #if !defined(_XOPEN_SOURCE) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
+-#define _XOPEN_SOURCE 500  // Exposes definitions for SUSv2 (UNIX 98).
++// https://github.com/abseil/abseil-cpp/issues/2027
+ #endif
+ #endif
+ 
+diff --git a/node.gyp b/node.gyp
+index f5cd416b..62065831 100644
+--- a/node.gyp
++++ b/node.gyp
+@@ -484,7 +484,6 @@
+         '-Wendif-labels',
+         '-W',
+         '-Wno-unused-parameter',
+-        '-Werror=undefined-inline',
+         '-Werror=extra-semi',
+         '-Werror=ctad-maybe-unsupported',
+       ],
+diff --git a/tools/v8_gypfiles/features.gypi b/tools/v8_gypfiles/features.gypi
+index 81272ed9..be457f4e 100644
+--- a/tools/v8_gypfiles/features.gypi
++++ b/tools/v8_gypfiles/features.gypi
+@@ -62,7 +62,7 @@
+       }, {
+         'is_component_build': 0,
+       }],
+-      ['OS == "win" or OS == "mac"', {
++      ['OS == "win"', {
+         # Sets -DENABLE_SYSTEM_INSTRUMENTATION. Enables OS-dependent event tracing
+         'v8_enable_system_instrumentation': 1,
+       }, {
+diff --git a/tools/v8_gypfiles/v8.gyp b/tools/v8_gypfiles/v8.gyp
+index 3b749ba7..9913bce0 100644
+--- a/tools/v8_gypfiles/v8.gyp
++++ b/tools/v8_gypfiles/v8.gyp
+@@ -1076,7 +1076,7 @@
+         'v8_pch',
+         'fp16',
+         'highway',
+-        'simdutf',
++        # simdutf should use the system one instead
+         'abseil.gyp:abseil',
+       ],
+       'includes': ['inspector.gypi'],
+@@ -2348,19 +2348,5 @@
+         '<!@pymod_do_main(GN-scraper "<(HIGHWAY_ROOT)/BUILD.gn"  "source_set.\\"libhwy.*?sources = ")',
+       ],
+     },  # highway
+-    {
+-      'target_name': 'simdutf',
+-      'type': 'static_library',
+-      'toolsets': ['host', 'target'],
+-      'direct_dependent_settings': {
+-        'include_dirs': [
+-          '<(V8_ROOT)/third_party/simdutf',
+-        ],
+-      },
+-      'include_dirs': ['.'],
+-      'sources': [
+-        '<(V8_ROOT)/third_party/simdutf/simdutf.cpp',
+-      ],
+-    },  # simdutf
+   ],
+ }

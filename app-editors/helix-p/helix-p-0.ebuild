@@ -5,16 +5,18 @@ SLOT="0"
 
 inherit dirty-deeds
 
-# fixing rdepends...
-#   llvm-core/clang
-#   dev-util/bash-language-server
-#   dev-util/ty
-
 IUSE="iglu_lives_byte"
 RDEPEND="
   app-editors/helix
   iglu_lives_byte? ( acct-user/byte )
+  dev-util/ty
+  dev-util/bash-language-server
 "
+case "${CHOST}" in
+  *"-linux"*)
+    RDEPEND+="llvm-core/clang" ;;
+  # darwin has a builtin clangd, we now use it instead...
+esac
 S="${T}"
 
 src_install() {

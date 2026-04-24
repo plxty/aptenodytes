@@ -3,10 +3,20 @@
 
 # requires modified rust-toolchain, hating wd40
 =app-eselect/eselect-rust-20210703 **
+=dev-util/ty-0.0.7 **
 
 # pythonic, not good nor bad
 =dev-python/ujson-5.12.0 **
 =dev-python/click-8.3.2 **
 
+# nodejs, typescript, blablabla
+=net-libs/nodejs-24.14.0 **
+=dev-util/bash-language-server-5.6.0 **
+
 # other dependencies, hell the what
 =dev-libs/double-conversion-3.4.0 **
+=app-arch/brotli-1.2.0-r1 **
+=dev-cpp/ada-3.4.4 **
+=dev-cpp/simdutf-7.7.1 **
+=dev-libs/simdjson-4.6.2 **
+=dev-libs/icu-78.3 **

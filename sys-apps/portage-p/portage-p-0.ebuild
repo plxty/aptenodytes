@@ -42,6 +42,9 @@ src_install() {
   if use prefix-guest; then
     insinto /etc/portage/patches/sys-apps/portage
     doins "${FILESDIR}/0000-portage-prefix.patch"
+
+    insinto /etc/portage/patches/net-libs/nodejs
+    doins "${FILESDIR}/0000-nodejs-darwin.patch"
   fi
 }
 
