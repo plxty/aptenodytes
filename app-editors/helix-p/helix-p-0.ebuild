@@ -11,6 +11,7 @@ RDEPEND="
   iglu_lives_byte? ( acct-user/byte )
   dev-util/ty
   dev-util/bash-language-server
+  dev-util/shellcheck-bin
 "
 case "${CHOST}" in
   *"-linux"*)
