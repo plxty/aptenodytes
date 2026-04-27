@@ -1,6 +1,6 @@
 EAPI=8
 DESCRIPTION="opencode cli"
-KEYWORDS="amd64 arm64-macos"
+KEYWORDS="amd64 ~arm64-macos"
 SLOT="0"
 
 # https://github.com/microcai/gentoo-zh/blob/master/dev-util/opencode-bin/opencode-bin-1.14.22.ebuild

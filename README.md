@@ -2,6 +2,12 @@
 
 in pseudo-declarative style :)
 
+# darwin
+
+heavily fixing many darwin prefix issues, you can use this repository to have it.
+
+note don't emerge `sci-misc/aptenodytes` and `*/*-p` packages.
+
 # profiling
 
 * `IGLU_ID`, the hostname
@@ -19,8 +25,3 @@ curl -L "https://ptr.kei.network/noot" | bash -s -- ${IGLU_ID} /mnt/gentoo
 ```
 
 (still incomplete, broken now)
-
-# things one more
-
-* supporting prefix, both linux and darwin
-* nix-like parsing config while in ebuild

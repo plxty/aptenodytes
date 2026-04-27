@@ -4,9 +4,9 @@ EAPI="8"
 inherit dirty-deeds
 pkg_overlay
 
-if scopeuse prefix-guest; then
+if [[ "${ARCH}" == "arm64-macos" ]]; then
   # we're here
-  KEYWORDS="${KEYWORDS} arm64-macos"
+  KEYWORDS="${KEYWORDS} ~arm64-macos"
 
   # follow upstream beta's path:
   SRC_URI="

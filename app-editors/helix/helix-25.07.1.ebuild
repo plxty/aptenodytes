@@ -3,8 +3,8 @@ EAPI="8"
 inherit dirty-deeds
 pkg_overlay
 
-if scopeuse prefix-guest; then
-  KEYWORDS="${KEYWORDS} arm64-macos"
+if [[ "${ARCH}" == "arm64-macos" ]]; then
+  KEYWORDS="${KEYWORDS} ~arm64-macos"
 
   eval __"$(declare -f src_install)"
   src_install() {

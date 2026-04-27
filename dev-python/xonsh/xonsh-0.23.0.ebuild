@@ -1,6 +1,6 @@
 EAPI="8"
 DESCRIPTION="xonsh shell"
-KEYWORDS="amd64 arm64-macos"
+KEYWORDS="amd64 ~arm64-macos"
 SLOT="0"
 
 DISTUTILS_USE_PEP517=setuptools

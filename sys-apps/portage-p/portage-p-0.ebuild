@@ -35,16 +35,12 @@ src_install() {
   doins "${FILESDIR}/0000-helix.patch"
 
   if use prefix; then
-    insinto /etc/portage/patches/app-portage/getuto
-    doins "${FILESDIR}/0000-getuto-prefix.patch"
-  fi
-
-  if use prefix-guest; then
+    # https://github.com/gentoo/portage/tree/prefix
     insinto /etc/portage/patches/sys-apps/portage
     doins "${FILESDIR}/0000-portage-prefix.patch"
 
-    insinto /etc/portage/patches/net-libs/nodejs
-    doins "${FILESDIR}/0000-nodejs-darwin.patch"
+    insinto /etc/portage/patches/app-portage/getuto
+    doins "${FILESDIR}/0000-getuto-prefix.patch"
   fi
 }
 
