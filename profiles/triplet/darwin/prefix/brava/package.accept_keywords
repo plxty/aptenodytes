@@ -1,5 +1,5 @@
 # for possiblely furthur using
-=app-portage/getuto-1.16 **
+# :)
 
 # requires modified rust-toolchain, hating wd40
 =app-eselect/eselect-rust-20210703 **

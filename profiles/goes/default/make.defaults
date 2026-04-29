@@ -1,6 +1,2 @@
-# portage
-BINPKG_FORMAT="gpkg"
-FEATURES="getbinpkg binpkg-request-signature"
-
 # /etc/portage/mirrors?
 GENTOO_MIRRORS="https://mirrors.tuna.tsinghua.edu.cn/gentoo"

@@ -5,7 +5,6 @@ SLOT="0"
 
 RDEPEND="
   sys-apps/portage
-  app-portage/getuto
   dev-vcs/git
 "
 S="${T}"
@@ -14,10 +13,11 @@ src_install() {
   # mostly portage things
   keepdir /etc/portage/make.conf
 
-  # make fallbacks?
-  insinto /etc/portage/binrepos.conf
-  envsubst '${GENTOO_BINHOST}' < "${FILESDIR}/gentoobinhost.conf" > "${T}/gentoobinhost.conf"
-  doins "${T}/gentoobinhost.conf"
+  if [[ "${GENTOO_BINHOST:-}" != "" ]]; then
+    insinto /etc/portage/binrepos.conf
+    envsubst '${GENTOO_BINHOST}' < "${FILESDIR}/gentoobinhost.conf" > "${T}/gentoobinhost.conf"
+    doins "${T}/gentoobinhost.conf"
+  fi
 
   # /usr/share/portage/config/repos.conf?
   insinto /etc/portage/repos.conf
@@ -38,9 +38,6 @@ src_install() {
     # https://github.com/gentoo/portage/tree/prefix
     insinto /etc/portage/patches/sys-apps/portage
     doins "${FILESDIR}/0000-portage-prefix.patch"
-
-    insinto /etc/portage/patches/app-portage/getuto
-    doins "${FILESDIR}/0000-getuto-prefix.patch"
   fi
 }
 

@@ -10,6 +10,7 @@ note don't emerge `sci-misc/aptenodytes` and `*/*-p` packages.
 
 # profiling
 
+* `GENTOO_BINHOST`, binary package for platforms
 * `IGLU_ID`, the hostname
 * `IGLU_LIVES, iglu_lives_`, the username(s)
 * `IGLU_NETWORK`, the network topo
