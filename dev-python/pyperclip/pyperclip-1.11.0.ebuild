@@ -9,5 +9,6 @@ if [[ "${ARCH}" == "arm64-macos" ]]; then
   KEYWORDS="${KEYWORDS} ~arm64-macos"
 
   # avoid using FILESDIR, we can't handle it
-  eval "$(declare -f src_prepare | sed 's/PATCHES/PATCHES_DISABLED/')"
+  src_prepare_text="$(declare -f src_prepare)"
+  eval "${src_prepare_text//PATCHES/_}"
 fi

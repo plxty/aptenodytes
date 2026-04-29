@@ -2,6 +2,10 @@
 *acct-user/byte
 
 # cli world
+*sys-apps/ripgrep
+*sys-apps/fd
+*app-shells/fzf
+*app-shells/zoxide
 *dev-python/xonsh
 *app-editors/helix-p
 *dev-util/opencode-bin
