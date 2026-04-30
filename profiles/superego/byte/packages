@@ -2,6 +2,7 @@
 *acct-user/byte
 
 # cli world
+*app-misc/tmux
 *sys-apps/ripgrep
 *sys-apps/fd
 *app-shells/fzf

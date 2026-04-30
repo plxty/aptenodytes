@@ -22,7 +22,11 @@ pkg_overlay() {
     gentoo_repo="gentoo_prefix"
   fi
   # in global scope, the EPREFIX seems not set yet:
-  source "${PORTAGE_CONFIGROOT}/var/db/repos/${gentoo_repo}/${CATEGORY}/${PN}/${PF}.ebuild"
+  local layer="${PORTAGE_CONFIGROOT}/var/db/repos/${gentoo_repo}/${CATEGORY}/${PN}"
+  # workaround for FILESDIR (readonly):
+  export OLDFILESDIR="${layer}/files"
+  local text="$(<"${layer}/${PF}.ebuild")"
+  eval "${text//FILESDIR/OLDFILESDIR}"
 }
 
 class_overlay() {
