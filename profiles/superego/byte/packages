@@ -10,3 +10,15 @@
 *dev-python/xonsh
 *app-editors/helix-p
 *dev-util/opencode-bin
+*sys-apps/moreutils
+
+# ebuild dev
+*app-portage/pycargoebuild
+*dev-python/babel
+*dev-util/pkgdev
+
+# debugging
+*dev-util/inferno
+
+# hardware
+*sys-apps/smartmontools

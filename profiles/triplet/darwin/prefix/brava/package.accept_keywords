@@ -1,5 +1,6 @@
-# requires modified rust-toolchain, hating wd40
+# rust-toolchain, hating wd40
 =app-eselect/eselect-rust-20210703 **
+=app-portage/pycargoebuild-0.15.1 **
 =dev-util/ty-0.0.7 **
 =sys-apps/ripgrep-15.1.0 **
 =sys-apps/fd-10.4.2 **
@@ -8,6 +9,14 @@
 # pythonic, not good nor bad
 =dev-python/ujson-5.12.0 **
 =dev-python/click-8.3.2 **
+=dev-python/jinja2-3.1.6 **
+=dev-python/license-expression-30.4.4 **
+=dev-python/boolean-py-5.0 **
+=dev-python/markupsafe-3.0.3 **
+=dev-python/babel-2.18.0 **
+=dev-python/snakeoil-0.11.0 **
+=dev-python/chardet-6.0.0_p1 **
+=dev-python/tree-sitter-0.25.2-r1 **
 
 # nodejs, typescript, blablabla
 =net-libs/nodejs-24.14.0 **
@@ -19,6 +28,35 @@
 
 # misc, misc, misc
 =app-misc/tmux-3.6a **
+=sys-apps/smartmontools-7.5-r1 **
+=dev-util/pkgdev-0.2.14 **
+=sys-apps/pkgcore-0.12.32 **
+=dev-util/pkgcheck-0.10.39 **
+=sys-apps/moreutils-0.70 **
+
+# perl, not very fun
+=app-text/docbook2X-0.8.8-r5 **
+=dev-perl/IPC-Run-20250809.0.0 **
+=dev-perl/Time-Duration-1.210.0 **
+=dev-perl/XML-NamespaceSupport-1.120.0-r1 **
+=dev-perl/XML-SAX-1.20.0-r2 **
+=dev-perl/XML-LibXML-2.21.0-r1 **
+=dev-perl/XML-SAX-Base-1.90.0-r1 **
+=dev-perl/Alien-Build-2.840.0-r1 **
+=dev-perl/Alien-Libxml2-0.170.0-r1 **
+=dev-perl/FFI-CheckLib-0.310.0-r1 **
+=dev-perl/File-Which-1.270.0-r1 **
+=dev-perl/File-chdir-0.101.100-r1 **
+=dev-perl/Path-Tiny-0.150.0 **
+=dev-perl/Unicode-UTF8-0.620.0-r1 **
+=dev-perl/Readonly-2.50.0-r1 **
+=dev-perl/Module-Build-Tiny-0.52.0 **
+=dev-perl/ExtUtils-Config-0.10.0 **
+=dev-perl/ExtUtils-Helpers-0.28.0 **
+=dev-perl/ExtUtils-InstallPaths-0.15.0 **
+=dev-perl/CPAN-Requirements-Dynamic-0.1.0 **
+=dev-perl/CPAN-Meta-Requirements-2.145.0 **
+=dev-perl/ExtUtils-HasCompiler-0.25.0 **
 
 # other dependencies, hell the what
 =dev-libs/double-conversion-3.4.0 **
@@ -30,3 +68,6 @@
 =dev-libs/jemalloc-5.3.0-r3 **
 =dev-libs/libevent-2.2.1-r4 **
 =dev-libs/libutf8proc-2.11.3 **
+=net-libs/libpcap-1.10.6 **
+=dev-libs/tree-sitter-0.26.8 **
+=dev-libs/tree-sitter-bash-0.25.1 **

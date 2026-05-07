@@ -8,7 +8,7 @@ PYTHON_COMPAT=( python3_13 )
 inherit distutils-r1 pypi
 
 # sources and patches
-PATCHES=("${FILESDIR}/0000-remove-blink.patch")
+PATCHES=("${FILESDIR}/${P}-blink.patch")
 
 # https://github.com/xonsh/xonsh/blob/main/pyproject.toml
 RDEPEND="

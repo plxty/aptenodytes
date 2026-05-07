@@ -15,7 +15,7 @@ src_install() {
 
   if [[ "${GENTOO_BINHOST:-}" != "" ]]; then
     insinto /etc/portage/binrepos.conf
-    envsubst '${GENTOO_BINHOST}' < "${FILESDIR}/gentoobinhost.conf" > "${T}/gentoobinhost.conf"
+    envsubst '${EPREFIX},${GENTOO_BINHOST}' < "${FILESDIR}/gentoobinhost.conf" > "${T}/gentoobinhost.conf"
     doins "${T}/gentoobinhost.conf"
   fi
 

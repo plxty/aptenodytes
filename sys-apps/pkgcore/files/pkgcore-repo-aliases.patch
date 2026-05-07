@@ -1,0 +1,25 @@
+commit 4f05da166769141566e6e8a7e84d655a472180af
+Author: Zigit Zo <byte@kei.network>
+Date:   Thu May 7 12:11:31 2026 +0800
+
+    ebuild: respect the aliases in repos.conf
+
+diff --git a/src/pkgcore/ebuild/portage_conf.py b/src/pkgcore/ebuild/portage_conf.py
+index 59f3b532..551fd093 100644
+--- a/src/pkgcore/ebuild/portage_conf.py
++++ b/src/pkgcore/ebuild/portage_conf.py
+@@ -444,6 +444,14 @@ class PortageConfig(DictMixin):
+                 # register repo
+                 repos[name] = repo_conf
+ 
++                # register the aliases as well
++                for alias in repo_conf.get("aliases", "").split():
++                    if alias in repos:
++                        raise config_errors.UserConfigError(
++                            f"repos.conf: aliasing an existing repo {alias}, check it"
++                        )
++                    repos[alias] = repo_conf.copy()
++
+         if repos:
+             # the default repo is gentoo if unset and gentoo exists
+             default_repo = main_defaults.get("main-repo", "gentoo")

@@ -23,7 +23,13 @@ there might be some hidden dependency-chain, so, good luck.
 # bring it up
 
 ```bash
-curl -L "https://ptr.kei.network/noot" | bash -s -- ${IGLU_ID} /mnt/gentoo
+# stages follow gentoo handbook first
+arch-chroot "${EPREFIX}" eselect profile set "aptenodytes:iglu/${IGLU_ID}"
+arch-chroot "${EPREFIX}" emerge -1 sci-misc/aptenodytes
+# apply patching the portage if you're using prefix:
+arch-chroot "${EPREFIX}" emerge -1 sys-apps/portage
+arch-chroot "${EPREFIX}" emerge -uNDv @world
+arch-chroot "${EPREFIX}" passwd "${IGLU_LIVES}"
 ```
 
 (still incomplete, broken now)
