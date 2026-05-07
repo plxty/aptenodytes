@@ -1,0 +1,19 @@
+commit b7016c7be39bcff0432749fe0e69022182d5e3dc
+Author: Zigit Zo <byte@kei.network>
+Date:   Thu May 7 15:10:59 2026 +0800
+
+    absl: cctz: darwin gcc compiles
+
+diff --git a/absl/time/internal/cctz/src/time_zone_format.cc b/absl/time/internal/cctz/src/time_zone_format.cc
+index f739e026..95359d54 100644
+--- a/absl/time/internal/cctz/src/time_zone_format.cc
++++ b/absl/time/internal/cctz/src/time_zone_format.cc
+@@ -20,7 +20,7 @@
+ 
+ #if defined(HAS_STRPTIME) && HAS_STRPTIME
+ #if !defined(_XOPEN_SOURCE) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
+-#define _XOPEN_SOURCE 500  // Exposes definitions for SUSv2 (UNIX 98).
++/* https://github.com/abseil/abseil-cpp/issues/2027 */
+ #endif
+ #endif
+ 

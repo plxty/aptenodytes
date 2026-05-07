@@ -19,6 +19,8 @@
 
 # debugging
 *dev-util/inferno
+*dev-util/flamelens
+*dev-libs/protobuf
 
 # hardware
 *sys-apps/smartmontools
