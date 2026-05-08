@@ -6,19 +6,20 @@ case "${EAPI}" in
   *) die "${ECLASS}: EAPI ${EAPI:-0} not supported" ;;
 esac
 
-scopeuse() {
-  # the USE is deduced from profile, not packages, so safe:
+suse() {
+  # use in global-scope...
   for flag in $USE; do
     if [[ "${1}" == "${flag}" ]]; then
       return 0
     fi
   done
+  # the USE is deduced from profile, not packages, so safe:
   return 1
 }
 
 pkg_overlay() {
   local gentoo_repo="gentoo"
-  if scopeuse prefix-guest; then
+  if suse prefix-guest; then
     gentoo_repo="gentoo_prefix"
   fi
   # in global scope, the EPREFIX seems not set yet:
@@ -32,7 +33,7 @@ pkg_overlay() {
 class_overlay() {
   # unify with pkg_overlay?
   local gentoo_repo="gentoo"
-  if scopeuse prefix-guest; then
+  if suse prefix-guest; then
     gentoo_repo="gentoo_prefix"
   fi
   source "${PORTAGE_CONFIGROOT}/var/db/repos/${gentoo_repo}/eclass/${ECLASS}.eclass"

@@ -4,7 +4,7 @@ KEYWORDS="amd64"
 SLOT="0"
 
 inherit acct-group dirty-deeds
-if scopeuse prefix; then
+if suse prefix; then
   ACCT_GROUP_ID="${PORTAGE_INST_GID}"
 else
   ACCT_GROUP_ID="1000"
