@@ -2,7 +2,7 @@ EAPI="8"
 
 # this is an package overlay:
 inherit dirty-deeds
-pkg_overlay
+eval "$(pkg_overlay)"
 
 if [[ "${ARCH}" == "arm64-macos" ]]; then
   # we're here
@@ -20,6 +20,6 @@ if [[ "${ARCH}" == "arm64-macos" ]]; then
   }
 
   # remove some un-buildable depends:
-  RDEPEND="${RDEPEND//sys-apps\/lsb-release/}"
-  BDEPEND="${BDEPEND//prefix? ( dev-util\/patchelf )/}"
+  RDEPEND="${RDEPEND/sys-apps\/lsb-release/}"
+  BDEPEND="${BDEPEND/prefix? ( dev-util\/patchelf )/}"
 fi

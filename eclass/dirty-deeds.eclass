@@ -2,7 +2,7 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS} ]]; then
 _DIRTY_DEEDS_ECLASS=1
 
 case "${EAPI}" in
-  "8"|"9") ;;
+  "7"|"8"|"9") ;;
   *) die "${ECLASS}: EAPI ${EAPI:-0} not supported" ;;
 esac
 
@@ -18,16 +18,24 @@ suse() {
 }
 
 pkg_overlay() {
-  local gentoo_repo="gentoo"
-  if suse prefix-guest; then
-    gentoo_repo="gentoo_prefix"
+  # defaults to overlay the main repo:
+  local repo="gentoo"
+  if [[ "${1:-}" == "--repo" ]]; then
+    repo="${2}"
+    shift 2
+  elif suse prefix-guest; then
+    repo="gentoo_prefix"
   fi
+
   # in global scope, the EPREFIX seems not set yet:
-  local layer="${PORTAGE_CONFIGROOT}/var/db/repos/${gentoo_repo}/${CATEGORY}/${PN}"
-  # workaround for FILESDIR (readonly):
-  export OLDFILESDIR="${layer}/files"
+  local layer="${PORTAGE_CONFIGROOT}/var/db/repos/${repo}/${CATEGORY}/${PN}"
+
+  # should eval in the outside, to keep things:
   local text="$(<"${layer}/${PF}.ebuild")"
-  eval "${text//FILESDIR/OLDFILESDIR}"
+
+  # workaround for FILESDIR (readonly):
+  echo "OLDFILESDIR='${layer}/files'"
+  echo -n "${text//FILESDIR/OLDFILESDIR}"
 }
 
 class_overlay() {
@@ -36,7 +44,9 @@ class_overlay() {
   if suse prefix-guest; then
     gentoo_repo="gentoo_prefix"
   fi
-  source "${PORTAGE_CONFIGROOT}/var/db/repos/${gentoo_repo}/eclass/${ECLASS}.eclass"
+
+  local text="$(<"${PORTAGE_CONFIGROOT}/var/db/repos/${gentoo_repo}/eclass/${ECLASS}.eclass")"
+  echo -n "${text}"
 }
 
 userinsinto() {

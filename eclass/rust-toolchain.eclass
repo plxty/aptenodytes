@@ -2,7 +2,7 @@ if [[ -z ${_RUST_TOOLCHAIN_ECLASS} ]]; then
 _RUST_TOOLCHAIN_ECLASS=1
 
 inherit dirty-deeds
-class_overlay
+eval "$(class_overlay)"
 
 # workaround for darwin prefix:
 if [[ "${ARCH}" == "arm64-macos" ]]; then

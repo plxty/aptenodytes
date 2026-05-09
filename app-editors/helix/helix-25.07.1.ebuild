@@ -1,7 +1,7 @@
 EAPI="8"
 
 inherit dirty-deeds
-pkg_overlay
+eval "$(pkg_overlay)"
 
 if [[ "${ARCH}" == "arm64-macos" ]]; then
   KEYWORDS="${KEYWORDS} ~arm64-macos"

@@ -1,7 +1,7 @@
 EAPI="8"
 
 inherit dirty-deeds
-pkg_overlay
+eval "$(pkg_overlay)"
 
 if [[ "${CHOST}" == *"-darwin"* ]]; then
   KEYWORDS="${KEYWORDS} ~arm64-macos"
