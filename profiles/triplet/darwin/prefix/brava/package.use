@@ -1,10 +1,19 @@
 dev-cpp/eigen boost
 sys-apps/smartmontools -daemon
 
-# try to be simple:
-llvm-runtimes/clang-runtime -compiler-rt -sanitize libcxx
+# to make it one stage:
+llvm-runtimes/clang-runtime -sanitize libcxx
 llvm-runtimes/libcxx -clang
 llvm-runtimes/libcxxabi -clang
+
+# don't rely on gcc and ld.bfd for clang, darwin won't support it:
+llvm-core/clang-common default-compiler-rt default-lld default-libcxx llvm-libunwind
+llvm-core/clang-linker-config default-lld
+llvm-runtimes/clang-runtime default-compiler-rt default-lld default-libcxx llvm-libunwind
+llvm-runtimes/clang-rtlib-config default-compiler-rt
+llvm-runtimes/clang-unwindlib-config default-compiler-rt llvm-libunwind
+llvm-runtimes/clang-stdlib-config default-libcxx
+llvm-runtimes/libunwind static-libs
 
 # the extra tools like clangd requires apple blocks extension...
 # if you want, you might need

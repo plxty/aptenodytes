@@ -10,6 +10,7 @@
 *dev-python/xonsh
 *app-editors/helix-p
 *dev-util/opencode-bin
+*dev-util/codex
 *sys-apps/moreutils
 
 # ebuild dev

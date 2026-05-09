@@ -1,5 +1,3 @@
-# build with gcc, avoid circular dependencies in kernel_Darwin? ( ... )
-# against gentoo/profiles/base/package.use.force, it's not supported by upstream
-# try DARWIN_USE_GCC=0 then emerge gcc?
+# don't force, so you can set USE=-xxx to build things:
 llvm-runtimes/libcxx -clang
 llvm-runtimes/libcxxabi -clang
