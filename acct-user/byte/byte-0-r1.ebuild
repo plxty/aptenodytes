@@ -11,7 +11,7 @@ else
   ACCT_USER_ID="1000"
   ACCT_USER_SHELL="/usr/bin/bash"
   ACCT_USER_HOME="/home/byte"
-  ACCT_USER_GROUPS=("byte" "wheel" "kvm")
+  ACCT_USER_GROUPS=("byte" "wheel" "portage" "kvm")
 fi
 ACCT_USER_ENFORCE_ID="true"
 ACCT_USER_HOME_PERMS="0750"

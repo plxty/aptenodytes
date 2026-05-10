@@ -57,7 +57,7 @@ userdoins() {
   # name group home
   local users=()
   if use prefix && use "iglu_lives_${PORTAGE_USERNAME}"; then
-    # TODO: more robust way...
+    # FIXME: more robust way...
     if [[ "${ARCH}" == *"-macos" ]]; then
       local homedest="/Users/${PORTAGE_USERNAME}"
     else
@@ -72,7 +72,7 @@ userdoins() {
         continue
       fi
       local username="${flag#iglu_lives_}"
-      users+=("${username}"$'\n'"${username}"$'\n'"$(getent passwd "${user}" | cut -d: -f6)")
+      users+=("${username}"$'\n'"${username}"$'\n'"$(getent passwd "${username}" | cut -d: -f6)")
     done
   fi
 
