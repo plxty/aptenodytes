@@ -17,6 +17,6 @@ llvm-runtimes/libunwind static-libs
 
 # the extra tools like clangd requires apple blocks extension...
 # if you want, you might need
-# > llvm-core/clang +extra compiler-clang
-# in the system-wide package.use, then re-emerge the clang to make it work.
+# > llvm-core/clang +extra
+# in the package.use, then re-emerge with CC=clang to make it works
 llvm-core/clang -extra
