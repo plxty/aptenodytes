@@ -25,6 +25,7 @@
 # golang, less-is-more, or?
 =dev-lang/go-1.26.2 **
 =app-shells/fzf-0.72.0 **
+=app-misc/glow-2.1.2 **
 
 # misc, misc, misc
 =app-misc/tmux-3.6a **

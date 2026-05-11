@@ -12,6 +12,7 @@
 *dev-util/opencode-bin
 *dev-util/codex
 *sys-apps/moreutils
+*app-misc/glow
 
 # ebuild dev
 *app-portage/pycargoebuild
