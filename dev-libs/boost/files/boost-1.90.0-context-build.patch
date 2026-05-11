@@ -1,0 +1,56 @@
+From fda3986b10926fa94103abca0190cd063f14544c Mon Sep 17 00:00:00 2001
+From: Sven Wehner <sven.wehner@sixt.com>
+Date: Fri, 13 Mar 2026 15:41:37 +0100
+Subject: [PATCH] Remove duplicate build configuration for ARM64/AAPCS/ELF
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Remove duplicate entry from `Jamfile.v2` that prevented the selection of `fcontext` implementation with the following configuration:
+```
+<abi>aapcs <address-model>64 <architecture>arm <binary-format>mach-o <threading>multi <toolset>gcc
+```
+The error was as follows:
+```
+error: No best alternative for …/libs/context/build/asm_sources with <abi>aapcs <address-model>64 <architecture>arm <asynch-exceptions>off <binary-format>mach-o <boost.beast.allow-deprecated>on <boost.beast.separate-compilation>on <boost.cobalt.executor>any_io_executor <boost.cobalt.pmr>std <boost.process.fs>boost <context-impl>fcontext <coverage>off <debug-symbols>off <exception-handling>on <extern-c-nothrow>off <inlining>full <known-warnings>hide <link>shared <optimization>speed <os>MACOSX <pch>on <preserve-test-targets>on <profiling>off <python-debugging>off <python>3.14 <relevant>abi <relevant>address-model <relevant>architecture <relevant>binary-format <relevant>toolset <rtti>on <runtime-debugging>off <runtime-link>shared <stdlib>native <strip>off <target-os>darwin <testing.execute>on <threadapi>pthread <threading>multi <toolset-gcc:version>15 <toolset>gcc <variant>release <vectorize>off <visibility>hidden <warnings-as-errors>off <warnings>on <x-deduced-platform>arm_64
+    no match: <abi>aapcs <address-model>32 <architecture>arm <binary-format>elf <threading>multi <toolset>clang
+    no match: <abi>aapcs <address-model>32 <architecture>arm <binary-format>elf <threading>multi <toolset>gcc
+    no match: <abi>aapcs <address-model>32 <architecture>arm <binary-format>elf <threading>multi <toolset>qcc
+    no match: <abi>aapcs <address-model>32 <architecture>arm <binary-format>mach-o <threading>multi <toolset>clang
+    matched: <abi>aapcs <address-model>64 <architecture>arm <binary-format>mach-o <threading>multi <toolset>gcc
+    no match: <abi>aapcs <address-model>32 <architecture>arm <binary-format>mach-o <threading>multi <toolset>darwin
+    no match: <abi>aapcs <address-model>32 <architecture>arm <binary-format>pe <threading>multi <toolset>msvc
+    no match: <abi>aapcs <address-model>64 <architecture>arm <binary-format>elf <threading>multi <toolset>clang
+    no match: <abi>aapcs <address-model>64 <architecture>arm <binary-format>elf <threading>multi <toolset>gcc
+    no match: <abi>aapcs <address-model>64 <architecture>arm <binary-format>mach-o <threading>multi <toolset>clang
+    no match: <abi>aapcs <address-model>64 <architecture>arm <binary-format>mach-o <threading>multi <toolset>darwin
+    matched: <abi>aapcs <address-model>64 <architecture>arm <binary-format>mach-o <threading>multi <toolset>gcc
+```
+
+The duplicate code was introduced in d81d611fa22e83e7a71ced2e3e354a3d776a9bd4 and 35ddf2103e1e38573e6f80e711154e7956abd425.
+---
+ libs/context/build/Jamfile.v2 | 11 -----------
+ 1 file changed, 11 deletions(-)
+
+diff --git a/boost_1_90_0/libs/context/build/Jamfile.v2 b/boost_1_90_0/libs/context/build/Jamfile.v2
+index b9a34958..1ba8a52b 100644
+--- a/libs/context/build/Jamfile.v2
++++ b/libs/context/build/Jamfile.v2
+@@ -97,17 +97,6 @@ alias asm_sources
+      <toolset>clang
+    ;
+ 
+-alias asm_sources
+-   : asm/make_arm64_aapcs_macho_gas.S
+-     asm/jump_arm64_aapcs_macho_gas.S
+-     asm/ontop_arm64_aapcs_macho_gas.S
+-   : <abi>aapcs
+-     <address-model>64
+-     <architecture>arm
+-     <binary-format>mach-o
+-     <toolset>gcc
+-   ;
+-
+ alias asm_sources
+    : asm/make_arm_aapcs_macho_gas.S
+      asm/jump_arm_aapcs_macho_gas.S

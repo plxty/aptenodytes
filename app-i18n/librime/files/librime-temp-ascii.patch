@@ -1,0 +1,214 @@
+commit 75adf7c3f31d1ae4978a9bf94fc933fed706cd76
+Author: Zigit Zo <byte@kei.network>
+Date:   Mon May 11 17:43:10 2026 +0800
+
+    rime: temp_ascii: add
+
+diff --git a/src/rime/gear/ascii_composer.cc b/src/rime/gear/ascii_composer.cc
+index e49dc387..ff7abf27 100644
+--- a/src/rime/gear/ascii_composer.cc
++++ b/src/rime/gear/ascii_composer.cc
+@@ -222,6 +222,28 @@ void AsciiComposer::LoadConfig(Schema* schema) {
+   }
+ }
+ 
++static inline bool TempAsciiOnOff(Context* ctx, bool on_off) {
++  if (ctx->get_option("temp_ascii") == on_off)
++    return false;
++  ctx->set_option("temp_ascii", on_off);
++  // Will clear the commit_history to (try to) avoid inconsistence.
++  // Maybe it's unneccessary.
++  ctx->commit_history().clear();
++  return true;
++}
++
++static ProcessResult TempAsciiOff(Context* ctx) {
++  // To send one more ascii_mode notification, make the frontend aware.
++  if (TempAsciiOnOff(ctx, false))
++    ctx->set_option("ascii_mode", ctx->get_option("ascii_mode"));
++  return kNoop;
++}
++
++static ProcessResult TempAsciiOn(Context* ctx) {
++  TempAsciiOnOff(ctx, true);
++  return kRejected;
++}
++
+ bool AsciiComposer::ToggleAsciiModeWithKey(int key_code) {
+   auto it = bindings_.find(key_code);
+   if (it == bindings_.end())
+@@ -236,6 +258,7 @@ bool AsciiComposer::ToggleAsciiModeWithKey(int key_code) {
+     return false;
+   }
+   SwitchAsciiMode(new_mode, style);
++  TempAsciiOff(ctx);  // make sure temp_ascii exited, TODO: OnContextUpdate?
+   toggle_with_caps_ = (key_code == XK_Caps_Lock);
+   return true;
+ }
+@@ -276,4 +299,109 @@ void AsciiComposer::OnContextUpdate(Context* ctx) {
+   }
+ }
+ 
++/**
++ * Temporary ASCII Mode:
++ *
++ * 这个模式只是用来快速编辑英文而不需要频繁 shift 切换输入法的一种尝试。
++ * 它的设计目的在于保证以中文为主、英文为辅下输入的连贯性。因此，它并不适用于
++ * 需要输入大量英文的情况，那种情况下最好的方式就是使用 shift key。
++ *
++ * 在输入中文后可以直接通过按下空格键进入到临时 ASCII 模式，也可以通过大写字母的
++ * 方式进入。直到输入特殊字符（频率最高的应该就是空格了）后解除临时 ASCII 模式。
++ */
++TempAsciiComposer::TempAsciiComposer(const Ticket& ticket)
++    : Processor(ticket), shift_pressing_() {}
++
++TempAsciiComposer::~TempAsciiComposer() {}
++
++// Transform means ascii to half or full width symbol in cn, like . to 。.
++// We treat 'a' to 'z' as a transformable character, because in cn, they're
++// "transformed" into real chinese words, huh.
++static bool CanTransform(int ch, bool optional) {
++  if (optional) {
++    switch (ch) {
++      case XK_a ... XK_z:  // regular keys
++      case '.':            // namespace.method, 1.2.3.
++      case '\'':           // it's
++      case '"':            // "string"
++      case '<':            // 1<3
++      case '>':            // pointer->member
++      case ':':            // namespace::nested
++      case '(':            // invoke()
++      case ')':            // revoke()
++      case '[':            // a[4]
++      case ']':            // b[2]
++      case '{':            // {"foh"}
++      case '}':            // {"bah"}
++        return true;
++    }
++  }
++
++  switch (ch) {
++    case ',':
++    case '^':  // true^false?
++    case '\\':
++    case '!':
++    case '?':
++    case ';':
++      return true;
++  }
++
++  return false;
++}
++
++ProcessResult TempAsciiComposer::ProcessKeyEvent(const KeyEvent& key_event) {
++  if (key_event.release())
++    return kNoop;
++
++  // Here we MUST be !ascii_mode, it isn't in the consideration.
++  Context* ctx = engine_->context();
++  if (ctx->get_option("ascii_mode"))
++    return kNoop;
++
++  const int ch = key_event.keycode();
++  if (ch == XK_Eisu_toggle || ch == XK_Caps_Lock || ch == XK_Shift_R ||
++      key_event.ctrl() || key_event.alt() || key_event.super()) {
++    // e.g. ctrl in temp_ascii: to cn, @see AsciiComposer::ProcessKeyEvent
++    return TempAsciiOff(ctx);
++  }
++
++  if (ch == XK_Return) {
++    // return in cn: to temp_ascii if composing
++    if (ctx->IsComposing())
++      TempAsciiOn(ctx);
++    // return in temp_ascii: to cn
++    else
++      TempAsciiOff(ctx);
++    return kNoop;
++  }
++
++  if (ctx->IsComposing())
++    return kNoop;
++
++  if (ch == XK_space) {
++    // space (or +shift) in cn: to temp_ascii
++    if (!ctx->get_option("temp_ascii"))
++      return TempAsciiOn(ctx);
++    // shift+space in temp_ascii: to ascii_mode (behave as shift then space)
++    if (key_event.shift()) {
++      ctx->set_option("ascii_mode", true);
++      return TempAsciiOff(ctx);
++    }
++    // space in temp_ascii: to cn
++    return TempAsciiOff(ctx);
++  }
++
++  if (XK_space <= ch && ch <= XK_asciitilde) {
++    // other in cn: to temp_ascii if !transformable (including space)
++    if (!ctx->get_option("temp_ascii"))
++      return CanTransform(ch, true) ? kNoop : TempAsciiOn(ctx);
++    // other in temp_ascii: to cn if transformable
++    return CanTransform(ch, false) ? TempAsciiOff(ctx) : kRejected;
++  }
++
++  // keys like backspace or else:
++  return kNoop;
++}
++
+ }  // namespace rime
+diff --git a/src/rime/gear/ascii_composer.h b/src/rime/gear/ascii_composer.h
+index 756771ff..183a53d9 100644
+--- a/src/rime/gear/ascii_composer.h
++++ b/src/rime/gear/ascii_composer.h
+@@ -58,6 +58,17 @@ class AsciiComposer : public Processor {
+   connection connection_;
+ };
+ 
++class TempAsciiComposer : public Processor {
++ public:
++  TempAsciiComposer(const Ticket& ticket);
++  ~TempAsciiComposer();
++  virtual ProcessResult ProcessKeyEvent(const KeyEvent& key_event);
++
++ protected:
++  using TimePoint = std::chrono::steady_clock::time_point;
++  TimePoint shift_pressing_;
++};
++
+ }  // namespace rime
+ 
+ #endif  // RIME_ASCII_COMPOSER_H_
+diff --git a/src/rime/gear/gears_module.cc b/src/rime/gear/gears_module.cc
+index 59679b07..4dc83deb 100644
+--- a/src/rime/gear/gears_module.cc
++++ b/src/rime/gear/gears_module.cc
+@@ -44,6 +44,7 @@ static void rime_gears_initialize() {
+ 
+   // processors
+   r.Register("ascii_composer", new Component<AsciiComposer>);
++  r.Register("temp_ascii_composer", new Component<TempAsciiComposer>);
+   r.Register("chord_composer", new Component<ChordComposer>);
+   r.Register("express_editor", new Component<ExpressEditor>);
+   r.Register("fluid_editor", new Component<FluidEditor>);
+diff --git a/src/rime/gear/punctuator.cc b/src/rime/gear/punctuator.cc
+index 435babc0..0507a0b6 100644
+--- a/src/rime/gear/punctuator.cc
++++ b/src/rime/gear/punctuator.cc
+@@ -120,7 +120,7 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
+     return kNoop;
+   DLOG(INFO) << "punct key: '" << key << "'";
+   if (AlternatePunct(key, punct_definition)) {
+-    return kAccepted;
++    goto accept;
+   }
+   if (ReconvertDigitSeparatorAsPunct(key) || ctx->PushInput(ch)) {
+     if (punctuation_is_translated(ctx, "punct")) {
+@@ -128,6 +128,9 @@ ProcessResult Punctuator::ProcessKeyEvent(const KeyEvent& key_event) {
+           AutoCommitPunct(punct_definition) || PairPunct(punct_definition);
+     }
+   }
++accept:
++  // Drop punctuator in words, to make temp_ascii works:
++  ctx->commit_history().clear();
+   return kAccepted;
+ }
+ 

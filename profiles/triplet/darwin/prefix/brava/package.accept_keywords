@@ -59,6 +59,11 @@
 =dev-perl/CPAN-Meta-Requirements-2.145.0 **
 =dev-perl/ExtUtils-HasCompiler-0.25.0 **
 
+# lua, scripting typing
+=dev-lang/luajit-2.1.1770848219 **
+=app-eselect/eselect-lua-4-r1 **
+=app-i18n/librime-lua-20250707183812 **
+
 # other dependencies, hell the what
 =dev-libs/double-conversion-3.4.0 **
 =app-arch/brotli-1.2.0-r1 **
@@ -73,6 +78,16 @@
 =dev-libs/tree-sitter-0.26.8 **
 =dev-libs/tree-sitter-bash-0.25.1 **
 =sys-apps/dbus-1.16.2 **
+=app-i18n/opencc-1.1.9 **
+=dev-cpp/glog-0.6.0-r1 **
+=dev-cpp/yaml-cpp-0.9.0-r1 **
+=dev-libs/leveldb-1.23-r6 **
+=dev-libs/marisa-0.3.1-r2 **
+=dev-libs/crc32c-1.1.2-r2 **
+=app-arch/snappy-1.2.2-r1 **
+=dev-cpp/tclap-1.2.5 **
+=dev-libs/darts-0.32h_pre20181117064816 **
+=dev-libs/rapidjson-1.1.0_p20250205 **
 
 # prefix with clang, try DARWIN_USE_GCC=0?
 =sys-devel/binutils-2.44 **

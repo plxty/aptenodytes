@@ -20,3 +20,9 @@ llvm-runtimes/libunwind static-libs
 # > llvm-core/clang +extra
 # in the package.use, then re-emerge with CC=clang to make it works
 llvm-core/clang -extra
+
+# packages that use unwind:
+dev-cpp/glog -libunwind llvm-libunwind
+
+# providing squirrel libraries:
+app-i18n/librime-lua -lua_single_target_lua5-1 lua_single_target_luajit
