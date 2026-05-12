@@ -6,7 +6,7 @@ eval "$(pkg_overlay)"
 if [[ "${ARCH}" == *"-macos" ]]; then
   eval __"$(declare -f src_install)"
   src_install() {
-    __src_install
+    __src_install "${@}"
 
     for abi in $(get_all_abis); do
       # append the runtime directory actually, for -lclang_rt.osx to work:

@@ -14,6 +14,6 @@ if [[ "${ARCH}" == "arm64-macos" ]]; then
         install_name_tool -id "${EPREFIX}/usr/$(get_libdir)/${PN}/$(basename "${lib}")" "${lib}"
       done
     fi
-    __src_install
+    __src_install "${@}"
   }
 fi

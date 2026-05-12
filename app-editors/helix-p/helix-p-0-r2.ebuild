@@ -24,3 +24,8 @@ src_install() {
   userinsinto .config/helix
   userdoins "${FILESDIR}/"{config.toml,languages.toml}
 }
+
+pkg_postinst() {
+  # ${EPREFIX}/etc/env.d/99editor
+  eselect editor set hx
+}

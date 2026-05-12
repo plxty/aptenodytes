@@ -12,6 +12,6 @@ if suse prefix; then
   cmake_src_configure() {
     # for darwin. it searches SDK's marisa, instead of gentoo, so correct it:
     mycmakeargs+=("-DMarisa_ROOT=${EPREFIX}")
-    __cmake_src_configure
+    __cmake_src_configure "${@}"
   }
 fi

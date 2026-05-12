@@ -16,7 +16,16 @@ RDEPEND="
 S="${T}"
 
 src_install() {
-  # no need for non-glibc
+  # eselect locale? darwin don't support it...
+  insinto /etc/env.d
+  {
+    echo "# sci-misc/aptenodytes"
+    echo "LANG=zh_CN.UTF-8"
+    echo "LANGUAGE=zh_CN:en_US"
+  } > "${T}/02locale"
+  doins "${T}/02locale"
+
+  # we use libiconv for non-glibc, so no need to proceed:
   if use prefix-guest; then
     return
   fi
@@ -32,13 +41,6 @@ src_install() {
     echo "zh_CN GB2312"
   } > "${T}/locale.gen"
   doins "${T}/locale.gen"
-
-  # https://wiki.archlinux.org/title/Locale
-  {
-    echo "LANG=zh_CN.UTF-8"
-    echo "LANGUAGE=zh_CN:en_US"
-  } > "${T}/locale.conf"
-  doins "${T}/locale.conf"
   dosym ../usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
   if use prefix; then

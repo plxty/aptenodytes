@@ -39,13 +39,16 @@ pkg_overlay() {
 }
 
 class_overlay() {
-  # unify with pkg_overlay?
-  local gentoo_repo="gentoo"
-  if suse prefix-guest; then
-    gentoo_repo="gentoo_prefix"
+  # defaults to overlay the main repo:
+  local repo="gentoo"
+  if [[ "${1:-}" == "--repo" ]]; then
+    repo="${2}"
+    shift 2
+  elif suse prefix-guest; then
+    repo="gentoo_prefix"
   fi
 
-  local text="$(<"${PORTAGE_CONFIGROOT}/var/db/repos/${gentoo_repo}/eclass/${ECLASS}.eclass")"
+  local text="$(<"${PORTAGE_CONFIGROOT}/var/db/repos/${repo}/eclass/${ECLASS}.eclass")"
   echo -n "${text}"
 }
 

@@ -9,7 +9,7 @@ if [[ "${ARCH}" == *"-macos" ]]; then
 
   eval __"$(declare -f src_install)"
   src_install() {
-    __src_install
+    __src_install "${@}"
 
     # workaround to use system compiler-rt in darwin, instead of libgcc:
     # @see clang-rtlib-config

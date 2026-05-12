@@ -16,6 +16,7 @@
 
 # ebuild dev
 *app-portage/pycargoebuild
+*app-portage/gentoolkit
 *dev-python/babel
 *dev-util/pkgdev
 
