@@ -1,11 +1,11 @@
-commit 4800b868ff9acfeafffbee8d7547d6529539f709
+commit 39467796fbf3866a88e279d35d26b9406a32f2b3
 Author: Zigit Zo <byte@kei.network>
 Date:   Tue May 12 11:47:09 2026 +0800
 
     double_pinyin_abc: flavor
 
 diff --git a/default.yaml b/default.yaml
-index 6bf7c1c..7dc23d3 100644
+index 6bf7c1c..7bcef14 100644
 --- a/default.yaml
 +++ b/default.yaml
 @@ -10,20 +10,11 @@ config_version: '2026-02-06'
@@ -35,12 +35,21 @@ index 6bf7c1c..7dc23d3 100644
    caption: 「方案选单」
    hotkeys:
 -    - F4
-     - Control+grave
--    - Control+Shift+grave
+-    - Control+grave
+     - Control+Shift+grave
 -    # - Alt+grave
    # 开关记忆（方案中的 switches），从方案选单（而非快捷键）切换时会记住的选项，需要记忆的开关不能设定 reset
    # 部分前端（如小企鹅），实现了全局状态，切换后在任何焦点都会记住；
    # 部分前端（如鼠须管），仅在当前会话中记住，每个App或一个App的不同输入框都会单独管理；
+@@ -46,7 +34,7 @@ switcher:
+     - emoji
+     - full_shape
+     - search_single_char
+-  fold_options: true            # 呼出时是否折叠，多方案时建议折叠 true ，一个方案建议展开 false
++  fold_options: false           # 呼出时是否折叠，多方案时建议折叠 true ，一个方案建议展开 false
+   abbreviate_options: true      # 折叠时是否缩写选项
+   option_list_separator: ' / '  # 折叠时的选项分隔符
+ 
 @@ -73,8 +61,8 @@ ascii_composer:
    good_old_caps_lock: true  # true | false
    switch_key:
