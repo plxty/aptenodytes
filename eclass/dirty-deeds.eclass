@@ -32,6 +32,9 @@ pkg_overlay() {
 
   # should eval in the outside, to keep things:
   local text="$(<"${layer}/${PF}.ebuild")"
+  if [[ "${text}" == "" ]]; then
+    die "overlay for ${PF}::${repo} doesn't exist, maybe you need updates?"
+  fi
 
   # workaround for FILESDIR (readonly):
   echo "OLDFILESDIR='${layer}/files'"

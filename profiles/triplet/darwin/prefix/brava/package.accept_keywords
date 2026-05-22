@@ -88,6 +88,7 @@
 =dev-cpp/tclap-1.2.5 **
 =dev-libs/darts-0.32h_pre20181117064816 **
 =dev-libs/rapidjson-1.1.0_p20250205 **
+=net-misc/aria2-1.37.0 **
 
 # prefix with clang, try DARWIN_USE_GCC=0?
 =sys-devel/binutils-2.44 **
