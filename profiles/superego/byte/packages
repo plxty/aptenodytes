@@ -13,6 +13,7 @@
 *sys-apps/moreutils
 *app-misc/glow
 *net-misc/aria2
+*app-office/lark-cli
 
 # ebuild dev
 *app-portage/pycargoebuild
@@ -27,3 +28,6 @@
 
 # hardware
 *sys-apps/smartmontools
+
+# graphical?
+*app-i18n/rime-ice-p
