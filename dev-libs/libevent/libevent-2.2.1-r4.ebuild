@@ -3,6 +3,7 @@ EAPI="8"
 inherit dirty-deeds
 eval "$(pkg_overlay)"
 
+# [aptenodytes] pin_until_stable=1
 if [[ "${ARCH}" == "arm64-macos" ]]; then
   # upstream has no any keywords available, wait for stable...
   # KEYWORDS="${KEYWORDS} ~arm64-macos"

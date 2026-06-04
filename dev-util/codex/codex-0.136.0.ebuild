@@ -3,10 +3,10 @@ EAPI="8"
 inherit dirty-deeds
 eval "$(pkg_overlay --repo gentoo-zh)"
 
+# [aptenodytes] accept_keywords=~amd64
 KEYWORDS="${KEYWORDS} ~arm64-macos"
 
-# with newer rusty that ships darwin release:
-RUSTY_V8_TAG="147.4.0"
+# For 147.4.0, only ptrcomp_sandbox version is provided, seems work...
 SRC_URI+="
   arm64-macos? (
     https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/librusty_v8_ptrcomp_sandbox_release_aarch64-apple-darwin.a.gz
