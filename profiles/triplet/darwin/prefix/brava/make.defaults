@@ -3,3 +3,7 @@ ACCEPT_KEYWORDS="arm64-macos"
 
 # prefix already has one built-in, in:
 # etc/portage/make.conf/0100_bootstrap_prefix_make.conf
+
+# stick to python 3.13 for a while, upstream prefix hasn't ready for 3.14:
+PYTHON_SINGLE_TARGET="python3_13 -python3_14"
+PYTHON_TARGETS="python3_13 -python3_14"
