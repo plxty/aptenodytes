@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-from unittest.mock import DEFAULT
 
-from dataclasses import dataclass, astuple
-from pathlib import Path
-from typing import List, Set, Dict, Optional, Tuple
-from configparser import ConfigParser
-import portage
-from portage.package.ebuild import doebuild
-from portage.versions import catpkgsplit, best, pkgsplit, pkgcmp
-from portage.exception import UnsupportedAPIException, PortageKeyError
 import json
+import os
+import re
+from configparser import ConfigParser
+from dataclasses import astuple, dataclass
+from pathlib import Path
+from time import sleep
+from typing import Dict, List, Optional, Set, Tuple
 from urllib.parse import quote
 from urllib.request import Request, urlopen
-from time import sleep
-import os
-import sys
-import re
+
+import portage
+from portage.exception import PortageKeyError, UnsupportedAPIException
+from portage.package.ebuild import doebuild
+from portage.versions import best, catpkgsplit, pkgcmp, pkgsplit
+from portage.dbapi.porttree import portdbapi
+
 
 @dataclass
 class EbuildPackage:
@@ -24,21 +25,25 @@ class EbuildPackage:
     repo_name: str
     keywords: Set[str]
 
+
 @dataclass
 class OverlayPackage(EbuildPackage):
     repo_overlay: Optional[str]
     config: ConfigParser  # TODO: Remove
 
+
 @dataclass
 class ProfilePackage(EbuildPackage):
     config: ConfigParser  # TODO: Remove
+
 
 class WorkingEnvironment:
     repo_name: str = "aptenodytes"
     default_repo_name: str = Path(portage.settings["PORTDIR"]).name
     repos_path: Path = Path(portage.settings["PORTDIR"]).parent
-    portdbapi: portage.dbapi.porttree.portdbapi = portage.db[portage.settings["EROOT"]]["porttree"].dbapi
+    portdbapi: portdbapi = portage.db[portage.settings["EROOT"]]["porttree"].dbapi
     accept_keywords: Set[str] = {"amd64", "arm64", "arm64-macos", "~arm64-macos"}
+
 
 def progress(text: str) -> None:
     columns = os.get_terminal_size().columns
@@ -47,11 +52,13 @@ def progress(text: str) -> None:
     padding = columns - len(text)
     print(text, " " * padding, sep="", end="\r")
 
+
 def cpv_to_path(cpv: str) -> Path:
     # TODO: any other helpers?
     category, name, *_ = catpkgsplit(cpv)
     p: Path = Path(category) / name / (cpv.split("/", maxsplit=1)[1] + ".ebuild")
     return p.resolve()
+
 
 def find_repology_cpv(category: str, name: str) -> Optional[str]:
     # deal with my special -p suffix...
@@ -75,9 +82,11 @@ def find_repology_cpv(category: str, name: str) -> Optional[str]:
     assert not version.startswith("v")
     return f"{category}/{name}-{version}"
 
+
 def cpv_is_meta_or_live(cpv: str) -> bool:
     _, _, ver, _ = catpkgsplit(cpv)
     return ver == "0" or "9999" in ver
+
 
 def find_best_cpv(env: WorkingEnvironment, package: EbuildPackage) -> Tuple[str, str]:
     # sanity check, if we're special packages, there's no need to check best:
@@ -90,7 +99,9 @@ def find_best_cpv(env: WorkingEnvironment, package: EbuildPackage) -> Tuple[str,
 
     # respect package config, some may needs to be unstable:
     if type(package) is OverlayPackage or type(package) is ProfilePackage:
-        accept_keywords = set(package.config.get("aptenodytes", "accept_keywords", fallback="").split())
+        accept_keywords = set(
+            package.config.get("aptenodytes", "accept_keywords", fallback="").split()
+        )
         accept_keywords.update(env.accept_keywords)
     else:
         accept_keywords = env.accept_keywords
@@ -122,6 +133,7 @@ def find_best_cpv(env: WorkingEnvironment, package: EbuildPackage) -> Tuple[str,
     cpv = best(list(cpvs.keys()))
     return cpvs[cpv], cpv
 
+
 def cpv_find_repo(env: WorkingEnvironment, cpv: str, exact_v: bool) -> str:
     # find exactly match first:
     ebuild, overlay = env.portdbapi.findname2(cpv)
@@ -137,16 +149,22 @@ def cpv_find_repo(env: WorkingEnvironment, cpv: str, exact_v: bool) -> str:
         return env.default_repo_name
     return cpv_find_repo(env, cpvs[0], True)
 
-def path_to_cpv(path: Path) -> str:
-    return f"{path.parts[-3]}/{path.parts[-1].removesuffix(".ebuild")}"
 
-def collect_ebuild_package(env: WorkingEnvironment, repo_name: str, cpv: str) -> EbuildPackage:
+def path_to_cpv(path: Path) -> str:
+    return f"{path.parts[-3]}/{path.parts[-1].removesuffix('.ebuild')}"
+
+
+def collect_ebuild_package(
+    env: WorkingEnvironment, repo_name: str, cpv: str
+) -> EbuildPackage:
     # fetching things from ebuild:
     ebuild = str(env.repos_path / repo_name / cpv_to_path(cpv))
     try:
         settings = portage.config(clone=portage.settings)
         settings.setcpv(cpv, mydb=env.portdbapi)
-        doebuild.doebuild_environment(ebuild, "depend", settings=settings, db=env.portdbapi)
+        doebuild.doebuild_environment(
+            ebuild, "depend", settings=settings, db=env.portdbapi
+        )
         keywords = set(settings["KEYWORDS"].split())
     except (PortageKeyError, UnsupportedAPIException):
         keywords = env.accept_keywords
@@ -154,7 +172,10 @@ def collect_ebuild_package(env: WorkingEnvironment, repo_name: str, cpv: str) ->
     # verbosity package...
     return EbuildPackage(cpv, ebuild, repo_name, keywords)
 
+
 OVERLAY_REGEX = re.compile(r"pkg_overlay(\s[\-\w\s]+)?")
+
+
 def parse_pkg_overlay(text: str, default: str) -> Optional[str]:
     match = OVERLAY_REGEX.search(text)
     if match is None:
@@ -162,8 +183,9 @@ def parse_pkg_overlay(text: str, default: str) -> Optional[str]:
     args = match[0].split()
     for i, arg in enumerate(args):
         if arg == "--repo":
-            return args[i+1]
+            return args[i + 1]
     return default
+
 
 def collect_overlay_package(env: WorkingEnvironment, cpv: str) -> OverlayPackage:
     # TODO: PORTDIR_OVERLAY
@@ -185,7 +207,10 @@ def collect_overlay_package(env: WorkingEnvironment, cpv: str) -> OverlayPackage
     # hey i'm over laying:
     return OverlayPackage(*astuple(ebuild_package), repo_overlay, config)
 
-def collect_profile_packages(env: WorkingEnvironment, fullpath: Path) -> List[ProfilePackage]:
+
+def collect_profile_packages(
+    env: WorkingEnvironment, fullpath: Path
+) -> List[ProfilePackage]:
     # reading the whole profile package list:
     packages: List[ProfilePackage] = list()
     with open(fullpath, "r") as reader:
@@ -216,7 +241,8 @@ def collect_profile_packages(env: WorkingEnvironment, fullpath: Path) -> List[Pr
     # TODO: List[OverlayPackage]?
     return packages
 
-def main():
+
+def main() -> None:
     # prepare things up:
     env = WorkingEnvironment()
     overlay_packages: List[OverlayPackage] = list()
@@ -232,7 +258,9 @@ def main():
     # obtain profiles packages, to show if they needs update:
     repo_profiles_path = repo_path / "profiles"
     for profile in ["package.accept_keywords"]:
-        for profile_path in repo_profiles_path.glob(f"**/{profile}", recurse_symlinks=True):
+        for profile_path in repo_profiles_path.glob(
+            f"**/{profile}", recurse_symlinks=True
+        ):
             for package in collect_profile_packages(env, profile_path):
                 progress(f"profile: {profile_path}: {package.cpv}")
                 profile_packages.append(package)
@@ -245,10 +273,13 @@ def main():
             continue
 
         # we might go a little bit too far:
-        pin_until_stable = package.config.getboolean("aptenodytes", "pin_until_stable", fallback=False)
+        pin_until_stable = package.config.getboolean(
+            "aptenodytes", "pin_until_stable", fallback=False
+        )
         if pin_until_stable and pkgcmp(pkgsplit(package.cpv), pkgsplit(cpv)) > 0:
             continue
         print(f"{package.cpv} ({package.repo_name}) -> {cpv} ({repo_name})")
+
 
 if __name__ == "__main__":
     main()

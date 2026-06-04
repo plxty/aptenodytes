@@ -5,6 +5,7 @@
 =sys-apps/ripgrep-15.1.0 **
 =sys-apps/fd-10.4.2 **
 =app-shells/zoxide-0.9.9 **
+=dev-util/ruff-0.14.9 **
 
 # pythonic, not good nor bad
 =dev-python/ujson-5.12.0 **

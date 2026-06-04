@@ -9,6 +9,7 @@ IUSE="iglu_lives_byte"
 RDEPEND="
   app-editors/helix
   iglu_lives_byte? ( acct-user/byte )
+  dev-util/ruff
   dev-util/ty
   dev-util/bash-language-server
   dev-util/shellcheck-bin
