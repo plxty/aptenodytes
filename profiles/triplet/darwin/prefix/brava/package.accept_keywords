@@ -27,7 +27,7 @@
 =dev-lang/go-1.26.2 **
 # [aptenodytes] pin_until_stable=1
 =app-shells/fzf-0.72.0 **
-# [aptenodytes] accept_keywords=~amd64
+# [aptenodytes] accept_keywords=~amd64,~arm64
 =app-misc/glow-2.1.2-r1 **
 =dev-go/get-ego-vendor-0.2.0 **
 

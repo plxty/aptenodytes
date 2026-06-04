@@ -154,6 +154,19 @@ def path_to_cpv(path: Path) -> str:
     return f"{path.parts[-3]}/{path.parts[-1].removesuffix('.ebuild')}"
 
 
+def parse_comment_config(text: str) -> Optional[ConfigParser]:
+    if not text.startswith("# [aptenodytes] "):
+        return None
+
+    # space as return, comma as space:
+    config_text = text.replace(" ", "\n").replace(",", " ")
+
+    # then we're:
+    config = ConfigParser()
+    config.read_string(config_text)
+    return config
+
+
 def collect_ebuild_package(
     env: WorkingEnvironment, repo_name: str, cpv: str
 ) -> EbuildPackage:
@@ -194,17 +207,22 @@ def collect_overlay_package(env: WorkingEnvironment, cpv: str) -> OverlayPackage
     assert ebuild is not None
 
     # deducing the comment config and actual overlay:
-    config = ConfigParser()
+    config: Optional[ConfigParser] = None
     repo_overlay: Optional[str] = None
     with open(ebuild, "r") as reader:
         lines = reader.readlines()
     for line in lines:
-        if line.startswith("# [aptenodytes]"):
-            config.read_string(line.replace(" ", "\n"))
-        elif repo_overlay is None:
+        if config is None:
+            config = parse_comment_config(line)
+            if config is not None:
+                continue
+
+        if repo_overlay is None:
             repo_overlay = parse_pkg_overlay(line, env.default_repo_name)
 
     # hey i'm over laying:
+    if config is None:
+        config = ConfigParser()
     return OverlayPackage(*astuple(ebuild_package), repo_overlay, config)
 
 
@@ -217,10 +235,13 @@ def collect_profile_packages(
         lines = reader.readlines()
 
     # parsing the list into ebuild packages:
-    config_text: Optional[str] = None
+    config: Optional[ConfigParser] = None
     for line in lines:
-        if line.startswith("# [aptenodytes]"):
-            config_text = line.replace(" ", "\n")
+        if config is None:
+            config = parse_comment_config(line)
+            if config is not None:
+                continue
+
         cpv = line.removeprefix("=")
         if cpv == line:
             continue
@@ -228,17 +249,16 @@ def collect_profile_packages(
 
         # it may not exists in the repo, so we need searching:
         repo_name = cpv_find_repo(env, cpv, False)
-
-        # as always, we hint by the comment config:
         ebuild_package = collect_ebuild_package(env, repo_name, cpv)
-        config = ConfigParser()
-        if config_text is not None:
-            config.read_string(config_text)
-            config_text = None
+
+        if config is None:
+            config = ConfigParser()
         profile_package = ProfilePackage(*astuple(ebuild_package), config)
         packages.append(profile_package)
 
-    # TODO: List[OverlayPackage]?
+        # start over for next line:
+        config = None
+
     return packages
 
 

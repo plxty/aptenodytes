@@ -1,9 +1,9 @@
 # accept all ~amd64?
-# [aptenodytes] accept_keywords=~amd64
+# [aptenodytes] accept_keywords=~amd64,~arm64
 =app-shells/zoxide-0.9.9 **
-# [aptenodytes] accept_keywords=~amd64
+# [aptenodytes] accept_keywords=~amd64,~arm64
 =dev-util/codex-0.136.0 **
 =dev-util/flamelens-0.4.0 **
 =dev-util/inferno-0.12.6 **
-# [aptenodytes] accept_keywords=~amd64
+# [aptenodytes] accept_keywords=~amd64,~arm64
 =app-misc/glow-2.1.2-r1 **

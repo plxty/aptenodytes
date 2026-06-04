@@ -3,7 +3,7 @@ EAPI="8"
 inherit dirty-deeds
 eval "$(pkg_overlay --repo gentoo-zh)"
 
-# [aptenodytes] accept_keywords=~amd64
+# [aptenodytes] accept_keywords=~amd64,~arm64
 KEYWORDS="${KEYWORDS} ~arm64-macos"
 
 # For 147.4.0, only ptrcomp_sandbox version is provided, seems work...
