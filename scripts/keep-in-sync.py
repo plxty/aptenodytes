@@ -9,31 +9,19 @@ import portage
 from portage.package.ebuild import doebuild
 from portage.versions import catpkgsplit, best, pkgsplit, pkgcmp
 from portage.exception import UnsupportedAPIException, PortageKeyError
+import json
+from urllib.parse import quote
+from urllib.request import Request, urlopen
+from time import sleep
 import os
 import sys
 import re
 
 @dataclass
-class Version:
-    version: str
-    revision: Optional[str]
-
-    def full(self) -> str:
-        return self.version if self.revision is None else f"{self.version}-{self.revision}"
-
-    def __lt__(self, other) -> bool:
-        return portage.versions.vercmp(self.full(), other.full()) < 0
-
-@dataclass
-class Package:
-    name: str
-    version: Version
-    source: Optional[str]
-
-@dataclass
-class EbuildPackage(Package):
-    repo_name: str
+class EbuildPackage:
     cpv: str
+    source: Optional[str]
+    repo_name: str
     keywords: Set[str]
 
 @dataclass
@@ -45,10 +33,6 @@ class OverlayPackage(EbuildPackage):
 class ProfilePackage(EbuildPackage):
     config: ConfigParser  # TODO: Remove
 
-@dataclass
-class RepologyPackage(Package):
-    pass
-
 class WorkingEnvironment:
     repo_name: str = "aptenodytes"
     default_repo_name: str = Path(portage.settings["PORTDIR"]).name
@@ -56,44 +40,87 @@ class WorkingEnvironment:
     portdbapi: portage.dbapi.porttree.portdbapi = portage.db[portage.settings["EROOT"]]["porttree"].dbapi
     accept_keywords: Set[str] = {"amd64", "arm64", "arm64-macos", "~arm64-macos"}
 
+def progress(text: str) -> None:
+    columns = os.get_terminal_size().columns
+    if len(text) > columns:
+        text = text[:columns]
+    padding = columns - len(text)
+    print(text, " " * padding, sep="", end="\r")
+
 def cpv_to_path(cpv: str) -> Path:
     # TODO: any other helpers?
     category, name, *_ = catpkgsplit(cpv)
     p: Path = Path(category) / name / (cpv.split("/", maxsplit=1)[1] + ".ebuild")
     return p.resolve()
 
-def find_best_cpv(env: WorkingEnvironment, cpv: str, config: ConfigParser) -> Tuple[str, str]:
+def find_repology_cpv(category: str, name: str) -> Optional[str]:
+    # deal with my special -p suffix...
+    normalized = quote(name.removesuffix("-p"))
+
+    # land a rocket:
+    url = f"https://repology.org/api/v1/project/{normalized}"
+    req = Request(url, headers={"User-Agent": "github.com/plxty/aptenodytes"})
+    with urlopen(req) as r:
+        packages = json.load(r)
+
+    # the repology is very strict for qps, only 1 request per second is allowed...
+    sleep(1)
+
+    # filter out newest:
+    if not packages:
+        return None
+    package = next(filter(lambda package: package["status"] == "newest", packages))
+    version: str = package["version"]
+
+    assert not version.startswith("v")
+    return f"{category}/{name}-{version}"
+
+def cpv_is_meta_or_live(cpv: str) -> bool:
+    _, _, ver, _ = catpkgsplit(cpv)
+    return ver == "0" or "9999" in ver
+
+def find_best_cpv(env: WorkingEnvironment, package: EbuildPackage) -> Tuple[str, str]:
+    # sanity check, if we're special packages, there's no need to check best:
+    if cpv_is_meta_or_live(package.cpv):
+        return package.repo_name, package.cpv
+
     # list all cpvs from all available repos:
-    category, name, *_ = catpkgsplit(cpv)
+    category, name, *_ = catpkgsplit(package.cpv)
     candidate_cpvs: List[str] = env.portdbapi.cp_list(f"{category}/{name}")
 
     # respect package config, some may needs to be unstable:
-    accept_keywords = set(config.get("aptenodytes", "accept_keywords", fallback="").split())
-    accept_keywords.update(env.accept_keywords)
+    if type(package) is OverlayPackage or type(package) is ProfilePackage:
+        accept_keywords = set(package.config.get("aptenodytes", "accept_keywords", fallback="").split())
+        accept_keywords.update(env.accept_keywords)
+    else:
+        accept_keywords = env.accept_keywords
 
-    # filtering the cpvs, we pick only what we want:
-    cpvs: List[str] = list()
-    for next_cpv in candidate_cpvs:
-        # don't include live packages:
-        if "-9999" in next_cpv:
+    # filtering the cpvs, we pick only what we want, no live packages, etc.
+    cpvs: Dict[str, str] = dict()
+    for cpv in candidate_cpvs:
+        if cpv_is_meta_or_live(cpv):
             continue
-
-        # keyword match test:
         try:
-            keywords = set(env.portdbapi.aux_get(next_cpv, ["KEYWORDS"])[0].split())
+            keywords = set(env.portdbapi.aux_get(cpv, ["KEYWORDS"])[0].split())
         except PortageKeyError:
             continue
         if len(keywords.intersection(accept_keywords)) == 0:
             continue
-        cpvs.append(next_cpv)
+        cpvs[cpv] = cpv_find_repo(env, cpv, True)
+
+    # for non-overlay, we also add a repology version:
+    if type(package) is OverlayPackage and package.repo_overlay is None:
+        repology_cpv = find_repology_cpv(category, name)
+        if repology_cpv is not None:
+            cpvs[repology_cpv] = "repology"
 
     # falling back...
     if len(cpvs) == 0:
-        cpvs.append(cpv)
+        cpvs[package.cpv] = package.repo_name
 
     # best!
-    next_cpv = best(cpvs)
-    return cpv_find_repo(env, next_cpv, True), next_cpv
+    cpv = best(list(cpvs.keys()))
+    return cpvs[cpv], cpv
 
 def cpv_find_repo(env: WorkingEnvironment, cpv: str, exact_v: bool) -> str:
     # find exactly match first:
@@ -114,13 +141,6 @@ def path_to_cpv(path: Path) -> str:
     return f"{path.parts[-3]}/{path.parts[-1].removesuffix(".ebuild")}"
 
 def collect_ebuild_package(env: WorkingEnvironment, repo_name: str, cpv: str) -> EbuildPackage:
-    # check rev, if the package doesn't contains it, then don't make it:
-    rev: Optional[str]
-    category, name, ver, rev = catpkgsplit(cpv)
-    if not cpv.endswith(rev):
-        rev = None
-    version = Version(ver, rev)
-
     # fetching things from ebuild:
     ebuild = str(env.repos_path / repo_name / cpv_to_path(cpv))
     try:
@@ -132,7 +152,7 @@ def collect_ebuild_package(env: WorkingEnvironment, repo_name: str, cpv: str) ->
         keywords = env.accept_keywords
 
     # verbosity package...
-    return EbuildPackage(name, version, ebuild, repo_name, cpv, keywords)
+    return EbuildPackage(cpv, ebuild, repo_name, keywords)
 
 OVERLAY_REGEX = re.compile(r"pkg_overlay(\s[\-\w\s]+)?")
 def parse_pkg_overlay(text: str, default: str) -> Optional[str]:
@@ -196,9 +216,6 @@ def collect_profile_packages(env: WorkingEnvironment, fullpath: Path) -> List[Pr
     # TODO: List[OverlayPackage]?
     return packages
 
-def collect_repology_package() -> RepologyPackage:
-    return None
-
 def main():
     # prepare things up:
     env = WorkingEnvironment()
@@ -208,31 +225,30 @@ def main():
     # obtain every normal packages, filter only really overlays:
     repo_path = env.repos_path / env.repo_name
     for ebuild_path in repo_path.glob("**/*.ebuild", recurse_symlinks=True):
+        progress(f"ebuild: {ebuild_path}")
         cpv = path_to_cpv(ebuild_path)
-        package = collect_overlay_package(env, cpv)
-        if package.repo_overlay is None:
-            continue
-        overlay_packages.append(package)
+        overlay_packages.append(collect_overlay_package(env, cpv))
 
     # obtain profiles packages, to show if they needs update:
     repo_profiles_path = repo_path / "profiles"
     for profile in ["package.accept_keywords"]:
         for profile_path in repo_profiles_path.glob(f"**/{profile}", recurse_symlinks=True):
             for package in collect_profile_packages(env, profile_path):
+                progress(f"profile: {profile_path}: {package.cpv}")
                 profile_packages.append(package)
 
     # find the best cpv, check if any updates:
     for package in overlay_packages + profile_packages:
-        ebuild_package: EbuildPackage = package
-        repo_name, cpv = find_best_cpv(env, ebuild_package.cpv, package.config)
-        if cpv == ebuild_package.cpv:
+        progress(f"overlay: {package.cpv}")
+        repo_name, cpv = find_best_cpv(env, package)
+        if cpv == package.cpv:
             continue
 
         # we might go a little bit too far:
         pin_until_stable = package.config.getboolean("aptenodytes", "pin_until_stable", fallback=False)
-        if pin_until_stable and pkgcmp(pkgsplit(ebuild_package.cpv), pkgsplit(cpv)) > 0:
+        if pin_until_stable and pkgcmp(pkgsplit(package.cpv), pkgsplit(cpv)) > 0:
             continue
-        print(f"{ebuild_package.cpv} ({ebuild_package.repo_name}) -> {cpv} ({repo_name})")
+        print(f"{package.cpv} ({package.repo_name}) -> {cpv} ({repo_name})")
 
 if __name__ == "__main__":
     main()
