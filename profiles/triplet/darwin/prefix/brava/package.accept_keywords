@@ -66,8 +66,7 @@
 =dev-perl/ExtUtils-HasCompiler-0.25.0 **
 
 # lua, scripting typing
-# [aptenodytes] pin_until_stable=1
-=dev-lang/luajit-2.1.1770848219 **
+=dev-lang/lua-5.1.5-r200 **
 =app-eselect/eselect-lua-4-r1 **
 =app-i18n/librime-lua-20250707183812 **
 
