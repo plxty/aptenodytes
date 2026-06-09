@@ -21,7 +21,6 @@
 *app-portage/gentoolkit
 *dev-python/babel
 *dev-util/pkgdev
-*dev-go/get-ego-vendor
 
 # debugging
 *dev-util/inferno

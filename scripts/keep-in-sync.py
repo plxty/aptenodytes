@@ -18,6 +18,10 @@ from portage.versions import best, catpkgsplit, pkgcmp, pkgsplit
 from portage.dbapi.porttree import portdbapi
 
 
+# constants:
+OVERLAY_REGEX = re.compile(r"pkg_overlay(\s[\-\w\s]+)?")
+
+
 @dataclass
 class EbuildPackage:
     cpv: str
@@ -195,9 +199,6 @@ def collect_ebuild_package(
 
     # verbosity package...
     return EbuildPackage(cpv, ebuild, repo_name, keywords)
-
-
-OVERLAY_REGEX = re.compile(r"pkg_overlay(\s[\-\w\s]+)?")
 
 
 def parse_pkg_overlay(text: str, default: str) -> Optional[str]:
