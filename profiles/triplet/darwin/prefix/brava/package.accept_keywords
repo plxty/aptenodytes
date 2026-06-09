@@ -1,6 +1,6 @@
 # rust-toolchain, hating wd40
 =app-eselect/eselect-rust-20210703 **
-=app-portage/pycargoebuild-0.15.1 **
+=app-portage/pycargoebuild-0.15.2 **
 =dev-util/ty-0.0.7 **
 =sys-apps/ripgrep-15.1.0 **
 =sys-apps/fd-10.4.2 **
@@ -8,7 +8,7 @@
 =dev-util/ruff-0.14.9 **
 
 # pythonic, not good nor bad
-=dev-python/ujson-5.12.0 **
+=dev-python/ujson-5.12.1 **
 =dev-python/click-8.3.2 **
 =dev-python/jinja2-3.1.6 **
 =dev-python/license-expression-30.4.4 **
@@ -66,6 +66,7 @@
 =dev-perl/ExtUtils-HasCompiler-0.25.0 **
 
 # lua, scripting typing
+# [aptenodytes] pin_version_prefix=5.1.
 =dev-lang/lua-5.1.5-r200 **
 =app-eselect/eselect-lua-4-r1 **
 =app-i18n/librime-lua-20250707183812 **
@@ -102,6 +103,7 @@
 # [aptenodytes] pin_until_stable=1
 =dev-libs/rapidjson-1.1.0_p20250205 **
 =net-misc/aria2-1.37.0 **
+=net-dialup/lrzsz-0.12.20-r10 **
 
 # prefix with clang, try DARWIN_USE_GCC=0?
 =sys-devel/binutils-2.44 **

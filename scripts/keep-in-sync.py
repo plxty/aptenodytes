@@ -99,11 +99,15 @@ def find_best_cpv(env: WorkingEnvironment, package: EbuildPackage) -> Tuple[str,
 
     # respect package config, some may needs to be unstable:
     if type(package) is OverlayPackage or type(package) is ProfilePackage:
+        pin_version_prefix = package.config.get(
+            "aptenodytes", "pin_version_prefix", fallback=None
+        )
         accept_keywords = set(
             package.config.get("aptenodytes", "accept_keywords", fallback="").split()
         )
         accept_keywords.update(env.accept_keywords)
     else:
+        pin_version_prefix: Optional[str] = None
         accept_keywords = env.accept_keywords
 
     # filtering the cpvs, we pick only what we want, no live packages, etc.
@@ -111,6 +115,13 @@ def find_best_cpv(env: WorkingEnvironment, package: EbuildPackage) -> Tuple[str,
     for cpv in candidate_cpvs:
         if cpv_is_meta_or_live(cpv):
             continue
+
+        # we only need whose prefix matching, aka. version range:
+        if pin_version_prefix is not None:
+            _, _, ver, _ = catpkgsplit(cpv)
+            if not ver.startswith(pin_version_prefix):
+                continue
+
         try:
             keywords = set(env.portdbapi.aux_get(cpv, ["KEYWORDS"])[0].split())
         except PortageKeyError:
