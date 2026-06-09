@@ -6,7 +6,7 @@ case "${EAPI}" in
   *) die "${ECLASS}: EAPI ${EAPI:-0} not supported" ;;
 esac
 
-suse() {
+guse() {
   # use in global-scope...
   for flag in $USE; do
     if [[ "${1}" == "${flag}" ]]; then
@@ -23,7 +23,7 @@ pkg_overlay() {
   if [[ "${1:-}" == "--repo" ]]; then
     repo="${2}"
     shift 2
-  elif suse prefix-guest; then
+  elif guse prefix-guest; then
     repo="gentoo_prefix"
   fi
 
@@ -47,7 +47,7 @@ class_overlay() {
   if [[ "${1:-}" == "--repo" ]]; then
     repo="${2}"
     shift 2
-  elif suse prefix-guest; then
+  elif guse prefix-guest; then
     repo="gentoo_prefix"
   fi
 

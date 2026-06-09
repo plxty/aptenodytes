@@ -7,7 +7,7 @@ eval "$(pkg_overlay)"
 KEYWORDS="${KEYWORDS} ~arm64-macos"
 PATCHES+=("${FILESDIR}/${PN}-temp-ascii.patch")
 
-if suse prefix; then
+if guse prefix; then
   eval __"$(declare -f cmake_src_configure)"
   cmake_src_configure() {
     # for darwin. it searches SDK's marisa, instead of gentoo, so correct it:
