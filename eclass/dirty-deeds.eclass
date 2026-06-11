@@ -1,4 +1,4 @@
-if [[ -z ${_DIRTY_DEEDS_ECLASS} ]]; then
+if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 _DIRTY_DEEDS_ECLASS=1
 
 case "${EAPI}" in
