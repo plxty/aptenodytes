@@ -59,7 +59,7 @@
 # [aptenodytes] pin_until_stable=1
 =app-misc/tmux-3.6a **
 =sys-apps/smartmontools-7.5-r1 **
-=dev-util/pkgdev-0.2.14 **
+=dev-util/pkgdev-0.2.15 **
 =sys-apps/pkgcore-0.12.32 **
 =dev-util/pkgcheck-0.10.39 **
 =sys-apps/moreutils-0.70 **
@@ -138,7 +138,7 @@
 # [aptenodytes] accept_keywords=~amd64,~arm64
 =app-shells/zoxide-0.9.9 **
 # [aptenodytes] accept_keywords=~amd64,~arm64
-=dev-util/codex-0.138.0 **
+=dev-util/codex-0.139.0 **
 =dev-util/flamelens-0.4.0 **
 =dev-util/inferno-0.12.6 **
 # [aptenodytes] accept_keywords=~amd64,~arm64

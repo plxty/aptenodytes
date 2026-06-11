@@ -1,9 +1,9 @@
 # profile adds a ~one, we need a stable one:
 ACCEPT_KEYWORDS="arm64-macos"
 
+# the CC might get changed after llvm-core/clang merged.
+# @see profile.bashrc
+# CC=?
+
 # prefix already has one built-in, in:
 # etc/portage/make.conf/0100_bootstrap_prefix_make.conf
-
-# stick to python 3.13 for a while, upstream prefix hasn't ready for 3.14:
-PYTHON_SINGLE_TARGET="python3_13 -python3_14"
-PYTHON_TARGETS="python3_13 -python3_14"

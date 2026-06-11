@@ -9,7 +9,7 @@ LICENSE="MIT"
 S="${WORKDIR}/${PN}-${TMUX_MCP_AGENT_TAG}"
 
 DISTUTILS_USE_PEP517=setuptools
-PYTHON_COMPAT=( python3_13 python3_14 )
+PYTHON_COMPAT=( python3_{13..14} )
 inherit distutils-r1
 
 RDEPEND="dev-python/mcp[${PYTHON_USEDEP}]"

@@ -4,7 +4,7 @@ KEYWORDS="amd64 ~arm64-macos"
 SLOT="0"
 
 DISTUTILS_USE_PEP517=setuptools
-PYTHON_COMPAT=( python3_13 python3_14 )
+PYTHON_COMPAT=( python3_{13..14} )
 inherit distutils-r1 pypi
 
 # https://github.com/xonsh/xonsh/blob/main/pyproject.toml

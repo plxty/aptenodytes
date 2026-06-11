@@ -1,17 +1,15 @@
 EAPI="8"
 
 inherit dirty-deeds
-eval "$(pkg_overlay --repo gentoo-zh)"
+eval "$(pkg_overlay --repo guru)"
 
 # [aptenodytes] accept_keywords=~amd64,~arm64
 KEYWORDS="${KEYWORDS} ~arm64-macos"
-
-# For 147.4.0, only ptrcomp_sandbox version is provided, seems work...
 SRC_URI+="
   arm64-macos? (
-    https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/librusty_v8_ptrcomp_sandbox_release_aarch64-apple-darwin.a.gz
+    https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/librusty_v8_release_aarch64-apple-darwin.a.gz
       -> rusty_v8_${RUSTY_V8_TAG}_librusty_v8_release_aarch64-apple-darwin.a.gz
-    https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_ptrcomp_sandbox_release_aarch64-apple-darwin.rs
+    https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_aarch64-apple-darwin.rs
       -> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_aarch64-apple-darwin.rs
   )
 "
@@ -21,12 +19,12 @@ if [[ "${ARCH}" == "arm64-macos" ]]; then
   DEPEND="${DEPEND/sys-apps\/dbus/}"
   RDEPEND="${DEPEND}"
 
-  # compile with clang only, apple blocks extension required:
-  # @see https://wiki.gentoo.org/wiki/LLVM/Clang
-  BDEPEND="${BDEPEND} llvm-core/clang"
-  CC="${CHOST}-clang"
-  CPP="${CHOST}-clang-cpp"
-  CXX="${CHOST}-clang++"
+  pkg_pretend() {
+    if [[ "${CC}" != *"clang" || "${CXX}" != *"clang++" ]]; then
+      die "crates will fails to compile without clang on darwin"
+    fi
+  }
+
   # must linking with cxx, otherwise libraries like -lc++abi will get lost:
   RUSTFLAGS="${RUSTFLAGS} -C linker=${CXX}"
 

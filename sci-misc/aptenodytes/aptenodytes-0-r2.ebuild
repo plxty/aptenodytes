@@ -9,8 +9,11 @@ SLOT="0"
 
 # package build
 BDEPEND="!prefix? ( sys-fs/genfstab )"
+
+# we need a clang for darwin platforms, in bootstrap stage:
 RDEPEND="
   sys-apps/portage-p
+  arm64-macos? ( llvm-core/clang )
   !prefix? ( sys-kernel/installkernel-p )
 "
 S="${T}"

@@ -2,12 +2,6 @@
 
 in pseudo-declarative style :)
 
-# darwin
-
-heavily fixing many darwin prefix issues, you can use this repository to have it.
-
-note don't emerge `sci-misc/aptenodytes` and `*/*-p` packages.
-
 # profiling
 
 * `GENTOO_BINHOST`, binary package for platforms
@@ -24,12 +18,12 @@ there might be some hidden dependency-chain, so, good luck.
 
 ```bash
 # stages follow gentoo handbook first
-arch-chroot "${EPREFIX}" eselect profile set "aptenodytes:iglu/${IGLU_ID}"
-arch-chroot "${EPREFIX}" emerge -1 sci-misc/aptenodytes
+eselect profile set "aptenodytes:iglu/${IGLU_ID}"
+emerge -1 sci-misc/aptenodytes
 # apply patching the portage if you're using prefix:
-arch-chroot "${EPREFIX}" emerge -1 sys-apps/portage
-arch-chroot "${EPREFIX}" emerge -uNDv @world
-arch-chroot "${EPREFIX}" passwd "${IGLU_LIVES}"
+emerge -1 sys-apps/portage
+emerge -uNDv @world
+passwd "${IGLU_LIVES}"
 ```
 
 (still incomplete, broken now)

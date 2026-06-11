@@ -205,6 +205,8 @@ def parse_pkg_overlay(text: str, default: str) -> Optional[str]:
     match = OVERLAY_REGEX.search(text)
     if match is None:
         return None
+
+    # mostly useless now, as we query all the cpv_list regardless which repo:
     args = match[0].split()
     for i, arg in enumerate(args):
         if arg == "--repo":
