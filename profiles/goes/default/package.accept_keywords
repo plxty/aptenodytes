@@ -4,7 +4,6 @@
 =dev-util/ty-0.0.7 **
 =sys-apps/ripgrep-15.1.0 **
 =sys-apps/fd-10.4.2 **
-=app-shells/zoxide-0.9.9 **
 =dev-util/ruff-0.14.9 **
 
 # pythonic, not good nor bad
@@ -18,6 +17,34 @@
 =dev-python/snakeoil-0.11.0 **
 =dev-python/chardet-6.0.0_p1 **
 =dev-python/tree-sitter-0.25.2-r1 **
+=dev-python/anyio-4.13.0 **
+=dev-python/httpx-0.28.1-r1 **
+=dev-python/jsonschema-4.26.0 **
+=dev-python/jsonschema-specifications-2025.9.1 **
+=dev-python/pydantic-2.13.4 **
+=dev-python/pydantic-settings-2.14.1 **
+=dev-python/pyjwt-2.12.1 **
+=dev-python/cryptography-48.0.0 **
+=dev-python/python-multipart-0.0.27 **
+=dev-python/starlette-1.0.0 **
+=dev-python/typing-inspection-0.4.2 **
+=dev-python/uvicorn-0.46.0 **
+=dev-python/asgiref-3.11.1 **
+=dev-python/h11-0.16.0 **
+=dev-python/itsdangerous-2.2.0 **
+=dev-python/python-dotenv-1.2.2 **
+=dev-python/annotated-types-0.7.0 **
+=dev-python/tzdata-10001 **
+=dev-python/referencing-0.37.0 **
+=dev-python/rpds-py-0.30.0 **
+=dev-python/pdm-backend-2.4.8 **
+=dev-python/tomli-w-1.2.0 **
+=dev-python/httpcore-1.0.9-r1 **
+=dev-python/h2-4.3.0 **
+=dev-python/sniffio-1.3.1 **
+=dev-python/hyperframe-6.1.0 **
+=dev-python/hpack-4.1.0 **
+=dev-python/truststore-0.10.4 **
 
 # nodejs, typescript, blablabla
 =net-libs/nodejs-24.14.0 **
@@ -27,8 +54,6 @@
 =dev-lang/go-1.26.2 **
 # [aptenodytes] pin_until_stable=1
 =app-shells/fzf-0.72.0 **
-# [aptenodytes] accept_keywords=~amd64,~arm64
-=app-misc/glow-2.1.2-r1 **
 
 # misc, misc, misc
 # [aptenodytes] pin_until_stable=1
@@ -108,3 +133,19 @@
 =sys-devel/binutils-2.44 **
 # [aptenodytes] pin_until_stable=1
 =llvm-core/llvmgold-22 **
+
+# everybody wants unstable:
+# [aptenodytes] accept_keywords=~amd64,~arm64
+=app-shells/zoxide-0.9.9 **
+# [aptenodytes] accept_keywords=~amd64,~arm64
+=dev-util/codex-0.138.0 **
+=dev-util/flamelens-0.4.0 **
+=dev-util/inferno-0.12.6 **
+# [aptenodytes] accept_keywords=~amd64,~arm64
+=app-misc/glow-2.1.2-r1 **
+# [aptenodytes] accept_keywords=~amd64,~arm64
+=dev-python/mcp-1.26.0 **
+# [aptenodytes] accept_keywords=~amd64,~arm64
+=dev-python/httpx-sse-0.4.3 **
+# [aptenodytes] accept_keywords=~amd64,~arm64
+=dev-python/sse-starlette-3.4.4 **

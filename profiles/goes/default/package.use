@@ -1,1 +1,8 @@
+dev-lang/rust-bin rust-src rust-analyzer
 sys-apps/portage gentoo-dev
+
+# https://wiki.gentoo.org/wiki/Unified_kernel_image
+# https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Kernel
+sys-apps/systemd boot ukify
+sys-apps/systemd-utils boot ukify kernel-install
+sys-kernel/installkernel systemd systemd-boot ukify uki

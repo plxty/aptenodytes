@@ -1,4 +1,0 @@
--dev-lang/rust-bin
--app-eselect/eselect-rust
--sys-apps/ripgrep
--sys-apps/fd

@@ -3,6 +3,7 @@
 
 # cli world
 *app-misc/tmux
+*app-misc/tmux-mcp-agent
 *net-dialup/lrzsz
 *sys-apps/ripgrep
 *sys-apps/fd

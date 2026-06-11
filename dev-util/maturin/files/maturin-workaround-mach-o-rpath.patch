@@ -1,0 +1,27 @@
+commit 4a09c03f046a6443d7bfe8b33e7caf38d0b58c45
+Author: Zigit Zo <byte@kei.network>
+Date:   Wed Jun 10 22:15:08 2026 +0800
+
+    compile: workaround for mach-o
+
+diff --git a/src/compile.rs b/src/compile.rs
+index 3105f718..e4b7bcfa 100644
+--- a/src/compile.rs
++++ b/src/compile.rs
+@@ -619,6 +619,16 @@ fn configure_macos_pyo3_linker_args(
+         rustflags.push("link-arg=dynamic_lookup");
+     }
+ 
++    // Workaround for Mach-O and Gentoo Prefix, to ensure install_name is valid:
++    // Example for if abi3:
++    //   before: cryptography.hazmat.bindings._rust.abi3.so
++    //   after:  _rust.abi3.so
++    // Example for else:
++    //   before: pydantic_core._pydantic_core[.cpython-313-darwin.bundle]
++    //   after:  _pydantic_core[.cpython-313-darwin.bundle]
++    // What within [] is python's EXT_SUFFIX.
++    let module_name = module_name.rsplit('.').next().unwrap_or(module_name);
++
+     // install_name is specific to the top-level output, so keep it in cargo_rustc.args
+     let use_abi3_suffix =
+         python_interpreter.is_some_and(|i| bridge_model.is_abi3_for_interpreter(i));
