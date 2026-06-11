@@ -170,7 +170,7 @@ def path_to_cpv(path: Path) -> str:
 
 
 def parse_comment_config(text: str) -> Optional[ConfigParser]:
-    if not text.startswith("# [aptenodytes] "):
+    if not text.startswith("# [aptenodytes]"):
         return None
 
     # space as return, comma as space:

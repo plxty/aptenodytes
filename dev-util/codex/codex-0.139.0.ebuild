@@ -3,7 +3,7 @@ EAPI="8"
 inherit dirty-deeds
 eval "$(pkg_overlay --repo guru)"
 
-# [aptenodytes] accept_keywords=~amd64,~arm64
+# [aptenodytes] accept_keywords=~amd64
 SRC_URI+="
   arm64-macos? (
     https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/librusty_v8_release_aarch64-apple-darwin.a.gz
