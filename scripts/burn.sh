@@ -26,13 +26,12 @@ erun() {
     # shellcheck disable=SC2016
     "${EPREFIX}/usr/bin/bash" -l -c 'exec "${@}"' -- env "${@}"
   else
-    echo "unimplemented"
-    # arch-chroot "${EPREFIX}"... ?
-    exit 1
+    arch-chroot "${EPREFIX}" "${@}"
   fi
 }
 
 fire_repositories() {
+  local refresh="${1:-false}"
   local use_git=false
   if erun git -v >/dev/null; then
     use_git=true
@@ -43,21 +42,27 @@ fire_repositories() {
 
   # in prefix, the repo will be set up after bootstrap-prefix.sh, so baremetal only:
   if ! guse prefix; then
+    local refresh_gentoo="${refresh}"
     if ${use_git} && [[ ! -e "${gentoo_repo}/.git/index" ]]; then
       rm -rf "${gentoo_repo}"
-      erun emerge --sync --quiet gentoo
+      refresh_gentoo=true
     elif [[ ! -e "${gentoo_repo}/sys-apps/portage/Manifest" ]]; then
-      erun emerge-webrsync -q
+      refresh_gentoo=true
+    fi
+
+    if ${refresh_gentoo}; then
+      if ${use_git}; then
+        : erun emerge --sync --quiet
+      else
+        erun emerge-webrsync -q
+      fi
     fi
   fi
 
-  # sync other things as well here in git:
-  if ${use_git} && [[ ! -e "${aptenodytes_repo}/.git/index" ]]; then
-    rm -rf "${aptenodytes_repo}"
-    erun emerge --sync --quiet
-  elif [[ ! -e "${aptenodytes_repo}/scripts/burn.sh" ]]; then
+  # always rsync myself:
+  if ${refresh} || [[ ! -e "${aptenodytes_repo}/scripts/burn.sh" ]]; then
     mkdir -p "${aptenodytes_repo}"
-    rsync -ap --exclude .git .. "${aptenodytes_repo}"
+    rsync -a --delete --exclude .git .. "${aptenodytes_repo}"
   fi
 }
 
@@ -68,7 +73,11 @@ if [[ ! -e "${EPREFIX}/etc/portage/repos.conf/aptenodytes.conf" ]]; then
   mkdir -p "${EPREFIX}/etc/portage/repos.conf"
   {
     echo "[aptenodytes]"
-    echo "location = ${EPREFIX}/var/db/repos/aptenodytes"
+    if guse prefix; then
+      echo "location = ${EPREFIX}/var/db/repos/aptenodytes"
+    else
+      echo "location = /var/db/repos/aptenodytes"
+    fi
   } > "${EPREFIX}/etc/portage/repos.conf/aptenodytes.conf"
 fi
 
@@ -82,7 +91,7 @@ if ! test -e "${EPREFIX}/var/db/pkg/sci-misc/aptenodytes-"*"/repository"; then
 fi
 
 # now try to sync the repo with git to ensure we've setup:
-fire_repositories
+fire_repositories true
 
 # TODO: make a better marker:
 if guse prefix && ! grep -q "like we've no prefix" "${EPREFIX}/usr/lib/python"*"/site-packages/portage/dbapi/vartree.py"; then

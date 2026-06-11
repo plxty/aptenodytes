@@ -63,20 +63,24 @@ pkg_preinst() {
     return
   fi
 
-  if grep -q "man pages" /etc/locale.gen; then
-    rm -v /etc/locale.gen
+  if grep -q "LANG=C.UTF-8" "${EPREFIX}/etc/env.d/02locale"; then
+    rm -v "${EPREFIX}/etc/env.d/02locale"
   fi
 
-  if grep -q "LANG=C.UTF-8" /etc/locale.conf; then
-    rm -v /etc/locale.conf
+  if grep -q "LANG=C.UTF-8" "${EPREFIX}/etc/locale.conf"; then
+    rm -v "${EPREFIX}/etc/locale.conf"
   fi
 
-  if [[ -L /etc/localtime && "$(realpath /etc/localtime)" == "/usr/share/zoneinfo/Factory" ]]; then
-    unlink /etc/localtime
+  if grep -q "man pages" "${EPREFIX}/etc/locale.gen"; then
+    rm -v "${EPREFIX}/etc/locale.gen"
   fi
 
   if use prefix; then
     return
+  fi
+
+  if [[ -L /etc/localtime && "$(realpath /etc/localtime)" == "/usr/share/zoneinfo/Factory" ]]; then
+    unlink /etc/localtime
   fi
 
   # /usr/share/baselayout/fstab
@@ -91,4 +95,11 @@ pkg_postinst() {
   fi
 
   locale-gen
+
+  if use prefix; then
+    return
+  fi
+
+  # silence of mount:
+  touch /run/systemd/systemd-units-load
 }

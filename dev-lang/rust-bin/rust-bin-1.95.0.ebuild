@@ -1,6 +1,6 @@
 EAPI="8"
 
-# [aptenodytes] accept_keywords=~amd64,~arm64
+# [aptenodytes] accept_keywords=~amd64
 inherit dirty-deeds
 eval "$(pkg_overlay)"
 

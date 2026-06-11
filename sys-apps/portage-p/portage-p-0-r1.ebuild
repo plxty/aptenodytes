@@ -43,7 +43,12 @@ src_install() {
 
 pkg_preinst() {
   # suppress warnings
-  if [[ -f /etc/portage/make.conf ]]; then
-    rm -v /etc/portage/make.conf
+  if [[ -f "${EPREFIX}/etc/portage/make.conf" ]]; then
+    rm -v "${EPREFIX}/etc/portage/make.conf"
+  fi
+
+  # always override:
+  if [[ -f "${EPREFIX}/etc/portage/repos.conf/aptenodytes.conf" ]]; then
+    rm -v "${EPREFIX}/etc/portage/repos.conf/aptenodytes.conf"
   fi
 }

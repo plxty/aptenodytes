@@ -1,3 +1,0 @@
-# portage
-BINPKG_FORMAT="gpkg"
-FEATURES="getbinpkg binpkg-request-signature"

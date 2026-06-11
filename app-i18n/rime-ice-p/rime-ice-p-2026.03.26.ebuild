@@ -1,6 +1,6 @@
 EAPI="8"
 DESCRIPTION="rime-ice profile"
-KEYWORDS="arm64-macos"
+KEYWORDS="arm64-macos amd64"
 SLOT="0"
 
 AP="${P/-p/}"

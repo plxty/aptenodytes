@@ -1,6 +1,9 @@
 # profile adds a ~one, we need a stable one:
 ACCEPT_KEYWORDS="arm64-macos"
 
+# codename in https://asahilinux.org/docs/hw/soc/soc-codenames/
+# CFLAGS=?
+
 # the CC might get changed after llvm-core/clang merged.
 # @see profile.bashrc
 # CC=?

@@ -249,12 +249,13 @@ def collect_profile_packages(
         lines = reader.readlines()
 
     # parsing the list into ebuild packages:
-    config: Optional[ConfigParser] = None
+    config: ConfigParser = ConfigParser()
     for line in lines:
-        if config is None:
-            config = parse_comment_config(line)
-            if config is not None:
-                continue
+        # config can be reused until next block, to allow bulk:
+        config_next = parse_comment_config(line)
+        if config_next is not None:
+            config = config_next
+            continue
 
         cpv = line.removeprefix("=")
         if cpv == line:
@@ -264,14 +265,8 @@ def collect_profile_packages(
         # it may not exists in the repo, so we need searching:
         repo_name = cpv_find_repo(env, cpv, False)
         ebuild_package = collect_ebuild_package(env, repo_name, cpv)
-
-        if config is None:
-            config = ConfigParser()
         profile_package = ProfilePackage(*astuple(ebuild_package), config)
         packages.append(profile_package)
-
-        # start over for next line:
-        config = None
 
     return packages
 

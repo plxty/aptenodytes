@@ -1,0 +1,7 @@
+# binpkg
+BINPKG_FORMAT="gpkg"
+FEATURES="getbinpkg binpkg-request-signature"
+
+# boot
+USE="$USE dist-kernel -initramfs"
+ACCEPT_LICENSE="@BINARY-REDISTRIBUTABLE"
