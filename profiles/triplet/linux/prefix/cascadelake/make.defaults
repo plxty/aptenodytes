@@ -1,0 +1,6 @@
+# XEON 8260, TODO: merge them all?
+CFLAGS="${CFLAGS} -march=cascadelake"
+CXXFLAGS="${CXXFLAGS} -march=cascadelake"
+FCFLAGS="${FCFLAGS} -march=cascadelake"
+FFLAGS="${FFLAGS} -march=cascadelake"
+RUSTFLAGS="${RUSTFLAGS} -C target-cpu=cascadelake"
