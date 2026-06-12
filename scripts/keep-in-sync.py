@@ -10,6 +10,10 @@ from time import sleep
 from typing import Dict, List, Optional, Set, Tuple
 from urllib.parse import quote
 from urllib.request import Request, urlopen
+from urllib.error import URLError
+
+# before portage, we setup the overlay to here:
+os.environ["PORTDIR_OVERLAY"] = str(Path(__file__).parent / "..")
 
 import portage
 from portage.exception import PortageKeyError, UnsupportedAPIException
@@ -71,8 +75,12 @@ def find_repology_cpv(category: str, name: str) -> Optional[str]:
     # land a rocket:
     url = f"https://repology.org/api/v1/project/{normalized}"
     req = Request(url, headers={"User-Agent": "github.com/plxty/aptenodytes"})
-    with urlopen(req) as r:
-        packages = json.load(r)
+    try:
+        with urlopen(req) as r:
+            packages = json.load(r)
+    except URLError as e:
+        print(f"!!! Error fetching with {url}: {e}")
+        return None
 
     # the repology is very strict for qps, only 1 request per second is allowed...
     sleep(1)
@@ -215,7 +223,6 @@ def parse_pkg_overlay(text: str, default: str) -> Optional[str]:
 
 
 def collect_overlay_package(env: WorkingEnvironment, cpv: str) -> OverlayPackage:
-    # TODO: PORTDIR_OVERLAY
     ebuild_package = collect_ebuild_package(env, env.repo_name, cpv)
     ebuild = ebuild_package.source
     assert ebuild is not None
