@@ -16,12 +16,20 @@ S="${WORKDIR}"
 
 inherit dirty-deeds
 
+# FIXME: many lua scripts failed, many newer lua version is needed?
 IUSE="iglu_lives_byte"
 RDEPENDS="
   app-i18n/librime
   app-i18n/librime-lua
   iglu_lives_byte? ( acct-user/byte )
 "
+
+src_prepare() {
+  default
+
+  # don't touch installation and user:
+  rm -v {installation,user}.yaml
+}
 
 src_install() {
   # other platforms?

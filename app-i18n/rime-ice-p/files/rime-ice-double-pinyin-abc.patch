@@ -1,4 +1,4 @@
-commit 39467796fbf3866a88e279d35d26b9406a32f2b3
+commit 241e1b683c06cbeafd0360115637986c191890db
 Author: Zigit Zo <byte@kei.network>
 Date:   Tue May 12 11:47:09 2026 +0800
 
@@ -97,7 +97,7 @@ index 6bf7c1c..7bcef14 100644
      # 翻页 [ ]  ⚠️ 开启时请修改上面以词定字的快捷键
      # - { when: has_menu, accept: bracketleft, send: Page_Up }
 diff --git a/double_pinyin_abc.schema.yaml b/double_pinyin_abc.schema.yaml
-index ffaccb9..f8f6f6e 100644
+index 28f6dc6..9afc8c7 100644
 --- a/double_pinyin_abc.schema.yaml
 +++ b/double_pinyin_abc.schema.yaml
 @@ -32,9 +32,13 @@ schema:
@@ -122,7 +122,7 @@ index ffaccb9..f8f6f6e 100644
      - recognizer
      - key_binder
      - speller
-@@ -65,32 +70,24 @@ engine:
+@@ -65,32 +70,23 @@ engine:
      - ascii_segmentor
      - matcher
      - abc_segmentor
@@ -135,7 +135,7 @@ index ffaccb9..f8f6f6e 100644
 -    - lua_translator@*date_translator    # 时间、日期、星期
 +    - lua_translator@*date_translator    # 时间、日期、星期，用 / 触发，具体可以参考 lua
      - lua_translator@*lunar              # 农历
-     - lua_translator@*uuid               # UUID
+-    - lua_translator@*uuid               # UUID
      - table_translator@custom_phrase     # 自定义短语 custom_phrase_double.txt
      - table_translator@melt_eng          # 英文输入
 -    - table_translator@cn_en             # 中英混合词汇
@@ -156,32 +156,67 @@ index ffaccb9..f8f6f6e 100644
      - uniquifier                                     # 去重
  
  
-@@ -268,7 +265,7 @@ punctuator:
+@@ -108,14 +104,10 @@ date_translator:
+ # Lua 配置：农历
+ # 农历触发关键字
+ # template 字段：{干支年} {农历月} {农历日} {生肖} {俗称农历月} {简记农历日}
+-lunar: lunar
++lunar: nn
+ lunar_template: "{干支年}{生肖}年{俗称农历月}{农历日}"
+ 
+ 
+-# Lua 配置: 生成 UUID 的触发关键字
+-uuid: uuid
+-
+-
+ # Lua 配置: 降低部分英语单词在候选项的位置。
+ # 详细介绍 https://dvel.me/posts/make-rime-en-better/#短单词置顶的问题
+ # 正常情况： 输入 rug 得到 「1.rug 2.如果 …… 」
+@@ -271,40 +263,23 @@ punctuator:
    half_shape:
      __include: default:/punctuator/half_shape  # 从 default.yaml 导入配置
    symbols:
 -    __include: symbols_caps_v:/symbols         # 从 symbols_caps_v.yaml 导入配置
-+    __include: symbols_u:/symbols              # sed -E "s/'v/'u/g" symbols_v.yaml > symbols_u.yaml
+-
+-
+-# 部件拆字反查
+-radical_lookup:
+-  tag: radical_lookup
+-  dictionary: radical_pinyin
+-  enable_user_dict: false
+-  prefix: "uU"  # 反查前缀（反查时前缀会消失影响打英文所以设定为两个字母，或可改成一个非字母符号），与 recognizer/patterns/radical_lookup 匹配
+-  tips: "  〔拆字〕"
+-  comment_format:
+-    - erase/^.*$//
+-# 部件拆字滤镜
+-radical_reverse_lookup:
+-  tags: [ radical_lookup ]
+-  # dictionary 为拼音标注来源，目前是显示本方案词库的注音。
+-  # 可去部件拆字方案下载更全的、带声调的、已编译好的词典： https://github.com/mirtlecn/rime-radical-pinyin#反查带声调注音
+-  dictionary: rime_ice
+-  # comment_format:     # 自定义 comment，例如在左右加上括号
+-  #  - xform/^/(/
+-  #  - xform/$/)/
++    __include: symbols_u:/symbols              # sed -E -e "s/'v/'u/g" -e 's/"v/"u/g' symbols_v.yaml > symbols_u.yaml
  
  
- # 部件拆字反查
-@@ -295,13 +292,15 @@ radical_reverse_lookup:
+ # 处理符合特定规则的输入码，如网址、反查
  
  recognizer:
    import_preset: default                # 从 default.yaml 继承通用的
--  patterns:                             # 再增加方案专有的：
++  # 因为大写被 temp_ascii 接管，所以以叠词形式展示；取消拆字反查，不怎么使用
+   patterns:                             # 再增加方案专有的：
 -    punct: "^V([0-9]|10|[A-Za-z]+)$"    # 响应 symbols_caps_v.yaml 的 symbols
 -    radical_lookup: "^uU[a-z]+$"        # 响应部件拆字的反查，触发前缀与 radical_lookup/prefix 匹配
 -    unicode: "^U[a-f0-9]+"              # 脚本将自动获取第 2 个字符 U 作为触发前缀，响应 lua_translator@*unicode，输出 Unicode 字符
 -    number: "^R[0-9]+[.]?[0-9]*"        # 脚本将自动获取第 2 个字符 R 作为触发前缀，响应 lua_translator@*number_translator，数字金额大写
 -    calculator: "^cC.+"                 # 响应 lua_translator@*calc_translator，计算器。前缀设定项 calculator/prefix
--    gregorian_to_lunar: "^N[0-9]{1,8}"  # 脚本将自动获取第 2 个字符 N 作为触发前缀，响应 lua_translator@*lunar，公历转农历，输入 N20240115 得到「二〇二三年腊月初五」
-+  # 因为大写被 temp_ascii 接管，所以以叠词形式展示；取消拆字反查，不怎么使用
-+  patterns:
+-    gregorian_to_lunar: "^N[0-9]{1,8}"  # 响应 lua_translator@*lunar，公历转农历
 +    punct: "^u([0-9]|10|[A-Za-z]+)$"    # 响应 symbols_u.yaml 的 symbols
-+    number: "^rr[0-9]+[.]?[0-9]*"       # 脚本将自动获取第 2~3 个字符 R 作为触发前缀，响应 lua_translator@*number_translator，数字金额大写
++    unicode: "^uu[a-f0-9]+"             # 脚本将自动获取第 3 个字符 U 作为触发前缀，响应 lua_translator@*unicode，输出 Unicode 字符
++    number: "^rr[0-9]+[.]?[0-9]*"       # 脚本将自动获取第 3 个字符 R 作为触发前缀，响应 lua_translator@*number_translator，数字金额大写
 +    calculator: "^cc.+"                 # 响应 lua_translator@*calc_translator，计算器。前缀设定项 calculator/prefix
-+    gregorian_to_lunar: "^nn[0-9]{1,8}" # 脚本将自动获取第 2~3 个字符 N 作为触发前缀，响应 lua_translator@*lunar，公历转农历，输入 nn20240115 得到「二〇二三年腊月初五」
++    gregorian_to_lunar: "^nn[0-9]{1,8}" # 响应 lua_translator@*lunar，公历转农历
 +calculator:
 +  prefix:
 +    "cc"
@@ -223,36 +258,6 @@ index 0000000..7601ba9
 +  # by default highlighting color is not used.
 +  color_scheme: ~
 +  # color_scheme: aqua
-diff --git a/lua/lunar.lua b/lua/lunar.lua
-index 533d2b2..91867de 100755
---- a/lua/lunar.lua
-+++ b/lua/lunar.lua
-@@ -554,12 +554,12 @@ end
- 
- -- 农历
- -- 从 lunar: nl 获取农历触发关键字（双拼默认为 lunar）
---- 从 recognizer/patterns/gregorian_to_lunar 获取第 2 个字符作为公历转农历的触发前缀，默认为 N
-+-- 从 recognizer/patterns/gregorian_to_lunar 获取第 2~3 个字符作为公历转农历的触发前缀，默认为 N
- local function translator(input, seg, env)
-     env.lunar_key_word = env.lunar_key_word or
-         (env.engine.schema.config:get_string(env.name_space:gsub('^*', '')) or 'nl')
-     env.gregorian_to_lunar = env.gregorian_to_lunar or
--        (env.engine.schema.config:get_string('recognizer/patterns/gregorian_to_lunar'):sub(2, 2) or 'N')
-+        (env.engine.schema.config:get_string('recognizer/patterns/gregorian_to_lunar'):sub(2, 3) or 'N')
-     if input == env.lunar_key_word then
-         local date1, date2 = Date2LunarDate(os.date("%Y%m%d"))
-         local lunar_ymd = (Candidate("", seg.start, seg._end, date2, ""))
-@@ -568,8 +568,8 @@ local function translator(input, seg, env)
-         local lunar_date = Candidate("", seg.start, seg._end, date1, "")
-         lunar_date.quality = 999
-         yield(lunar_date)
--    elseif env.gregorian_to_lunar ~= '' and input:sub(1, 1) == env.gregorian_to_lunar and input:sub(2):find("^%d%d%d%d%d%d%d%d$")  then
--        local date1, date2 = Date2LunarDate(input:sub(2))
-+    elseif env.gregorian_to_lunar ~= '' and input:sub(1, 2) == env.gregorian_to_lunar and input:sub(3):find("^%d%d%d%d%d%d%d%d$")  then
-+        local date1, date2 = Date2LunarDate(input:sub(3))
-         local lunar_ymd = (Candidate("", seg.start, seg._end, date2, ""))
-         lunar_ymd.quality = 999
-         yield(lunar_ymd)
 diff --git a/lua/number_translator.lua b/lua/number_translator.lua
 index 1f75ec7..0e99a42 100644
 --- a/lua/number_translator.lua
@@ -272,12 +277,27 @@ index 1f75ec7..0e99a42 100644
          str = string.gsub(input, "^(%a+)", "")
          numberPart = number_translatorFunc(str)
          if str and #str > 0 and #numberPart > 0 then
+diff --git a/lua/unicode.lua b/lua/unicode.lua
+index 8506182..d70a72f 100644
+--- a/lua/unicode.lua
++++ b/lua/unicode.lua
+@@ -11,8 +11,8 @@ local function unicode(input, seg, env)
+     -- 获取 recognizer/patterns/unicode 的第 2 个字符作为触发前缀
+     -- config:get_string(path) 可能取得 nil 造成error
+     if not env.unicode_keyword then
+-        local pattern = env.engine.schema.config:get_string(path) or "UU"
+-        env.unicode_keyword = pattern:sub(2,2)
++        local pattern = env.engine.schema.config:get_string(path) or "uu"
++        env.unicode_keyword = pattern:sub(2,3)
+     end
+ 
+     local ucodestr = input:match(env.unicode_keyword .. "(%x+)")
 diff --git a/symbols_u.yaml b/symbols_u.yaml
 new file mode 100644
-index 0000000..d3f44fe
+index 0000000..28ccc11
 --- /dev/null
 +++ b/symbols_u.yaml
-@@ -0,0 +1,326 @@
+@@ -0,0 +1,329 @@
 +# Rime's symbols
 +# encoding: utf-8
 +#
@@ -290,6 +310,9 @@ index 0000000..d3f44fe
 +# version: 2026-01-26
 +
 +symbols:
++# Index
++  'uhelp': ["ua-Z(字母变体)","u0-9(数字变体)","ufh(符号)","udn(电脑)","ujz(夹注)","ufjz(非夹注)","uhj(行间)","udn(电脑键盘)","uxq(象棋)","umj(麻将)","usz(色子)","upk(扑克)","ubq(表情)","utq(天气)","uyy(音乐)","ulx(两性)","ubg(八卦)","ubgm(八卦名)","ulssg(六十四卦)","ulssgm(六十四卦名)","utxj(太玄经)","utt(天体)","uxz(星座)","uxzm(星座名)","uxzg(十二宫)","uxh(星号)","ufk(方块)","ujh(几何)","ujt(箭头)","usx(数学)","uszq(圆数字)","uszh(弧数字)","uszd(点数字)","uzmq(圈字母)","uzmh(弧字母)","ufs(分数)","uszm(苏州码)","ulm(罗马数字)","ulmd(罗马数字)","usb(上标)","uxb(下标)","uxl(希腊)","uxld(希腊)","uey(俄语)","uyf(月份)","urq(日期)","uyr(曜日)","usj(时间)","utg(天干)","udz(地支)","ugz(干支)","ujq(节气)","udw(单位)","uhb(货币)","ujg(汉字结构)","upp(偏旁)","ukx(部首)","ubh(笔画)","ubd(标点)","ubdz(标点)","upy(拼音)","upyd(拼音)","uzy(注音)","usd(声调)","uhzq(汉字圈)","uhzh(汉字弧)","uiro(いろは順)","ujm(假名)","uhw(韩文)"]
++  'ulist': ["ua-Z(字母变体)","u0-9(数字变体)","ufh(符号)","udn(电脑)","ujz(夹注)","ufjz(非夹注)","uhj(行间)","udn(电脑键盘)","uxq(象棋)","umj(麻将)","usz(色子)","upk(扑克)","ubq(表情)","utq(天气)","uyy(音乐)","ulx(两性)","ubg(八卦)","ubgm(八卦名)","ulssg(六十四卦)","ulssgm(六十四卦名)","utxj(太玄经)","utt(天体)","uxz(星座)","uxzm(星座名)","uxzg(十二宫)","uxh(星号)","ufk(方块)","ujh(几何)","ujt(箭头)","usx(数学)","uszq(圆数字)","uszh(弧数字)","uszd(点数字)","uzmq(圈字母)","uzmh(弧字母)","ufs(分数)","uszm(苏州码)","ulm(罗马数字)","ulmd(罗马数字)","usb(上标)","uxb(下标)","uxl(希腊)","uxld(希腊)","uey(俄语)","uyf(月份)","urq(日期)","uyr(曜日)","usj(时间)","utg(天干)","udz(地支)","ugz(干支)","ujq(节气)","udw(单位)","uhb(货币)","ujg(汉字结构)","upp(偏旁)","ukx(部首)","ubh(笔画)","ubd(标点)","ubdz(标点)","upy(拼音)","upyd(拼音)","uzy(注音)","usd(声调)","uhzq(汉字圈)","uhzh(汉字弧)","uiro(いろは順)","ujm(假名)","uhw(韩文)"]
 +#符号、电脑
 +  'ufh': [ ©, ®, ℗, ℠, ™, ℡, ℻, ☇, ☈, ☉, ☊, ☋, ☌, ☍, ☎, ☏, ☐, ☑, ☒, ☓, ☕, ☖, ☗, ⛉, ⛊, ☘, ☙, ☚, ☛, ☜, ☝, ☞, ☟, ☠, ☡, ☢, ☣, ☤, ☥, ☦, ☧, ☨, ☩, ☪, ☫, ☬, ☭, ☮, ☯, ☸, ♨, ♰, ♱, ♲, ♳, ♴, ♵, ♶, ♷, ♸, ♹, ♺, ♻, ♼, ♽, ♾, ♿, ⚆, ⚇, ⚈, ⚉, ⚐, ⚑, ⚒, ⚓, ⚔, ⚕, ⚖, ⚗, ⚘, ⚙, ⚚, ⚛, ⚜, ⚝, ⚞, ⚟, ⚠, ⚡, ⚰, ⚱, ⚲, ⚳, ⚴, ⚵, ⚶, ⚷, ⚸, ⚹, ⚺, ⚻, ⚼, ⚽, ⚾, ⚿, ⛀, ⛁, ⛂, ⛃, ⛋, ⛌, ⛍, ⛎, ⛏, ⛐, ⛑, ⛒, ⛓, ⛔, ⛕, ⛖, ⛗, ⛘, ⛙, ⛚, ⛛, ⛜, ⛝, ⛞, ⛟, ⛠, ⛡, ⛢, ⛣, ⛨, ⛩, ⛪, ⛫, ⛬, ⛭, ⛮, ⛯, ⛰, ⛱, ⛲, ⛳, ⛴, ⛵, ⛶, ⛷, ⛸, ⛹, ⛺, ⛻, ⛼, ⛽, ⛾, ⛿ ]
 +  'udn': [ ❖, ⌘, ⌃, ⌥, ⎇, ⇧, ⇪, ␣, ⇥, ⇤, ↩, ⌅, ⌤, ⌫, ⌦, ⌧, ⎋, ⌨, ◁, ⌀, ⌖, ⌗, ⏏, ↖, ↘, ⇞, ⇟, ⌚, ⏰, ⏱, ⏲, ⏳, ⌛, ⌜, ⌝⌞⌟, ⍑, ⏩, ⏪, ⏫, ⏬, ⏭, ⏮, ⏯ ]

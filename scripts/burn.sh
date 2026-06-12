@@ -32,6 +32,12 @@ erun() {
 
 fire_repositories() {
   local refresh="${1:-false}"
+  if "${refresh}"; then
+    echo ">>> Refreshing repositories..."
+  else
+    echo ">>> Initializing repositories..."
+  fi
+
   local use_git=false
   if erun git -v >/dev/null; then
     use_git=true
@@ -52,11 +58,14 @@ fire_repositories() {
 
     if ${refresh_gentoo}; then
       if ${use_git}; then
-        : erun emerge --sync --quiet
+        erun emerge --sync --quiet
       else
         erun emerge-webrsync -q
       fi
     fi
+  elif "${refresh}" && "${use_git}"; then
+    # sync prefix directly:
+    erun emerge --sync --quiet
   fi
 
   # always rsync myself:
@@ -70,6 +79,7 @@ fire_repositories() {
 fire_repositories
 
 if [[ ! -e "${EPREFIX}/etc/portage/repos.conf/aptenodytes.conf" ]]; then
+  echo ">>> Making temporary repos.conf..."
   mkdir -p "${EPREFIX}/etc/portage/repos.conf"
   {
     echo "[aptenodytes]"
@@ -82,11 +92,13 @@ if [[ ! -e "${EPREFIX}/etc/portage/repos.conf/aptenodytes.conf" ]]; then
 fi
 
 if [[ "$(readlink "${EPREFIX}/etc/portage/make.profile")" != *"aptenodytes/profiles/iglu/${IGLU_ID}" ]]; then
+  echo ">>> Selecting profile for ${IGLU_ID}..."
   erun eselect profile set "aptenodytes:iglu/${IGLU_ID}"
 fi
 
 # [[ -e ]] doesn't support glob, so test here:
 if ! test -e "${EPREFIX}/var/db/pkg/sci-misc/aptenodytes-"*"/repository"; then
+  echo ">>> Merging sci-misc/aptenodytes..."
   erun emerge -1 sci-misc/aptenodytes
 fi
 
@@ -95,11 +107,13 @@ fire_repositories true
 
 # TODO: make a better marker:
 if guse prefix && ! grep -q "like we've no prefix" "${EPREFIX}/usr/lib/python"*"/site-packages/portage/dbapi/vartree.py"; then
+  echo ">>> Re-merging pacthed sys-apps/portage..."
   erun emerge -1 sys-apps/portage
 fi
 
 # update-the-world
-erun emerge -UND @world
+echo ">>> Burning..."
+erun emerge -uND @world
 
 # setting password if needed:
 if ! guse prefix; then
@@ -109,6 +123,7 @@ if ! guse prefix; then
     fi
     username="${flag#iglu_lives_}"
     if [[ "$(erun passwd -S "${username}" | awk '{print $2}')" == "NP" ]]; then
+      echo ">>> Resetting password for user ${username}..."
       passwd "${username}"
     fi
   done
