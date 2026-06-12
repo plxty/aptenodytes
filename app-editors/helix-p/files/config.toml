@@ -1,4 +1,5 @@
-theme = "papercolor-dark"
+# preferred: ttox, flatwhite
+theme = "rasmus"
 
 [editor]
 auto-format = false
@@ -51,7 +52,7 @@ a = ":toggle soft-wrap.enable"
 c = ":toggle search.case-sensitive"
 f = ":toggle auto-format"
 h = [":toggle file-picker.hidden", ":toggle file-picker.git-ignore"]
-m = [":format", ":write --format"]
+m = [":format", ":write --no-format"]
 p = ":toggle auto-pairs"
 r = ":toggle search.regex"
 s = ":toggle search.smart-case"

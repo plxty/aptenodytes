@@ -9,7 +9,7 @@
 *sys-apps/fd
 *app-shells/fzf
 *app-shells/zoxide
-*dev-python/xonsh
+*dev-python/xonsh-p
 *app-editors/helix-p
 *dev-util/codex
 *sys-apps/moreutils

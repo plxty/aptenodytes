@@ -63,14 +63,8 @@ userdoins() {
   # name group home
   local users=()
   if use prefix && use "iglu_lives_${PORTAGE_USERNAME}"; then
-    # FIXME: more robust way...
-    if [[ "${ARCH}" == *"-macos" ]]; then
-      local homedest="/Users/${PORTAGE_USERNAME}"
-    else
-      local homedest="/home/${PORTAGE_USERNAME}"
-    fi
     # Make a relative path to passing by the checks, dirty enough:
-    homedest="/$(realpath -s --relative-to="${EPREFIX}" "${homedest}")"
+    local homedest="/$(realpath -s --relative-to="${EPREFIX}" ~"${PORTAGE_USERNAME}")"
     users+=("${PORTAGE_USERNAME}"$'\n'"${PORTAGE_GRPNAME}"$'\n'"${homedest}")
   else
     for flag in $USE; do

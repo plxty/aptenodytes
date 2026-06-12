@@ -1,4 +1,5 @@
 # test me in hyper-v
 amd64 iglu/testify stable
 amd64 iglu/evil stable
+amd64-linux iglu/twenty stable
 arm64-macos iglu/subsys stable

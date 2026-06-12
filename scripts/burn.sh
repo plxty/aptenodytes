@@ -15,6 +15,9 @@ USE="${USE:-} "
 if grep -q prefix "../profiles/iglu/${IGLU_ID}/parent"; then
   USE+="prefix "
 fi
+case "$(awk '$2 == "'"iglu/${IGLU_ID}"'" {print $1}' ../profiles/profiles.desc)" in
+  "arm64-macos") USE+="prefix-guest " ;;
+esac
 
 # for many users:
 while read -r user; do
@@ -24,7 +27,7 @@ done < <(awk -F/ '$(NF-1) == "superego" {print $NF}' "../profiles/iglu/${IGLU_ID
 erun() {
   if guse prefix; then
     # shellcheck disable=SC2016
-    "${EPREFIX}/usr/bin/bash" -l -c 'exec "${@}"' -- env "${@}"
+    "${EPREFIX}/usr/bin/bash" -c "source '${EPREFIX}/etc/profile';"'exec "${@}"' -- env "${@}"
   else
     arch-chroot "${EPREFIX}" "${@}"
   fi
@@ -44,31 +47,29 @@ fire_repositories() {
   fi
 
   local gentoo_repo="${EPREFIX}/var/db/repos/gentoo"
-  local aptenodytes_repo="${EPREFIX}/var/db/repos/aptenodytes"
+  if guse prefix-guest; then
+    gentoo_repo="${EPREFIX}/var/db/repos/gentoo_prefix"
+  fi
 
-  # in prefix, the repo will be set up after bootstrap-prefix.sh, so baremetal only:
-  if ! guse prefix; then
-    local refresh_gentoo="${refresh}"
-    if ${use_git} && [[ ! -e "${gentoo_repo}/.git/index" ]]; then
-      rm -rf "${gentoo_repo}"
-      refresh_gentoo=true
-    elif [[ ! -e "${gentoo_repo}/sys-apps/portage/Manifest" ]]; then
-      refresh_gentoo=true
-    fi
+  # note for gentoo_prefix repo (darwin use it), it's rsync only, don't rm
+  local refresh_gentoo="${refresh}"
+  if ${use_git} && [[ ! -e "${gentoo_repo}/.git/index" ]] && ! guse prefix-guest; then
+    rm -rf "${gentoo_repo}"
+    refresh_gentoo=true
+  elif [[ ! -e "${gentoo_repo}/sys-apps/portage/Manifest" ]]; then
+    refresh_gentoo=true
+  fi
 
-    if ${refresh_gentoo}; then
-      if ${use_git}; then
-        erun emerge --sync --quiet
-      else
-        erun emerge-webrsync -q
-      fi
+  if ${refresh_gentoo}; then
+    if ${use_git}; then
+      erun emerge --sync --quiet
+    else
+      erun emerge-webrsync -q
     fi
-  elif "${refresh}" && "${use_git}"; then
-    # sync prefix directly:
-    erun emerge --sync --quiet
   fi
 
   # always rsync myself:
+  local aptenodytes_repo="${EPREFIX}/var/db/repos/aptenodytes"
   if ${refresh} || [[ ! -e "${aptenodytes_repo}/scripts/burn.sh" ]]; then
     mkdir -p "${aptenodytes_repo}"
     rsync -a --delete --exclude .git .. "${aptenodytes_repo}"
