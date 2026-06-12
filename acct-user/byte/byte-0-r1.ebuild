@@ -12,7 +12,7 @@ else
   ACCT_USER_SHELL="/usr/bin/bash"
   ACCT_USER_HOME="/home/byte"
   ACCT_USER_GROUPS=("byte" "wheel" "portage" "kvm")
+  ACCT_USER_ENFORCE_ID="true"
+  ACCT_USER_HOME_PERMS="0750"
 fi
-ACCT_USER_ENFORCE_ID="true"
-ACCT_USER_HOME_PERMS="0750"
 acct-user_add_deps

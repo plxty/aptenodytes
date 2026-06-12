@@ -8,5 +8,5 @@ if guse prefix; then
   ACCT_GROUP_ID="${PORTAGE_INST_GID}"
 else
   ACCT_GROUP_ID="1000"
+  ACCT_GROUP_ENFORCE_ID="true"
 fi
-ACCT_GROUP_ENFORCE_ID="true"
