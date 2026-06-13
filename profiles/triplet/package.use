@@ -6,3 +6,11 @@ sys-apps/portage gentoo-dev
 sys-apps/systemd boot ukify
 sys-apps/systemd-utils boot ukify kernel-install
 sys-kernel/installkernel systemd systemd-boot ukify uki
+
+# https://wiki.gentoo.org/wiki/Modprobed-db
+sys-kernel/gentoo-kernel modprobed-db
+
+# parts of rebuilds when different kernel:
+# @see https://packages.gentoo.org/useflags/dist-kernel
+sys-fs/zfs dist-kernel
+sys-fs/zfs-kmod dist-kernel

@@ -1,6 +1,5 @@
 # linux
-*sys-kernel/linux-firmware
-*sys-kernel/installkernel
+*sys-kernel/installkernel-p
 *sys-kernel/gentoo-kernel
 
 # administrator

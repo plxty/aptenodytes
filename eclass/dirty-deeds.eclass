@@ -1,5 +1,4 @@
 if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
-_DIRTY_DEEDS_ECLASS=1
 
 case "${EAPI}" in
   "7"|"8"|"9") ;;
@@ -83,4 +82,6 @@ userdoins() {
     doins "${@}"
   done
 }
+
+_DIRTY_DEEDS_ECLASS=1
 fi

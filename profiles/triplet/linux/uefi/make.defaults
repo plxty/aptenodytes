@@ -2,6 +2,6 @@
 BINPKG_FORMAT="gpkg"
 FEATURES="getbinpkg binpkg-request-signature"
 
-# boot
-USE="$USE dist-kernel -initramfs"
+# boot, note the USE here will override the per-packages'
+USE="${USE} -initramfs"
 ACCEPT_LICENSE="@BINARY-REDISTRIBUTABLE"

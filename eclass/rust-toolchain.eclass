@@ -1,5 +1,4 @@
 if [[ -z ${_RUST_TOOLCHAIN_ECLASS} ]]; then
-_RUST_TOOLCHAIN_ECLASS=1
 
 # overlay for adding darwin:
 inherit dirty-deeds
@@ -22,4 +21,6 @@ rust_all_arch_uris() {
   __rust_all_arch_uris "${@}"
   echo "arm64-macos? ( $(rust_arch_uri aarch64-apple-darwin "${1}" "${2}") )"
 }
+
+_RUST_TOOLCHAIN_ECLASS=1
 fi
