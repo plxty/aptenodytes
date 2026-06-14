@@ -54,6 +54,14 @@ class_overlay() {
   echo -n "${text}"
 }
 
+escript() {
+  local script_dir="${PORTAGE_CONFIGROOT}/var/db/repos/aptenodytes/scripts"
+  local exe="${1}"
+  shift 1
+
+  "${script_dir}/${exe}" "${@}" || die
+}
+
 userinsinto() {
   export __E_USERINSDESTTREE="${1}"
 }
@@ -77,10 +85,34 @@ userdoins() {
 
   for user in "${users[@]}"; do
     IFS=$'\n' read -d'' -r username groupname homedest <<< "$user"
-    insinto "${homedest}/${__E_USERINSDESTTREE}"
+    local target="${homedest}/${__E_USERINSDESTTREE}"
+
+    # dodir first to try to fix the intermediat directories permissions...
+    diropts --owner "${username}" --group "${groupname}"
+    dodir "$(dirname "${target}")"
     insopts --owner "${username}" --group "${groupname}"
+    insinto "${target}"
     doins "${@}"
+
+    diropts
+    insopts
   done
+}
+
+# copy of systemd_enable_service, add ability with template:
+systemd_enable_service_template() {
+  debug-print-function ${FUNCNAME} "$@"
+
+  [[ ${#} -eq 3 ]] || die "Synopsis: systemd_enable_service_template target service template"
+
+  local target=${1}
+  local service=${2}
+  local template=${3}
+  local ud=$(_systemd_unprefix systemd_get_systemunitdir)
+  local destname=${service##*/}
+
+  dodir "${ud}"/"${target}".wants && \
+  dosym ../"${template}" "${ud}"/"${target}".wants/"${destname}"
 }
 
 _DIRTY_DEEDS_ECLASS=1

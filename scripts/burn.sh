@@ -2,8 +2,34 @@
 
 set -ue
 
-IGLU_ID="${1}"
-EPREFIX="${2}"
+die() {
+  echo "!!! ${*}"
+  exit 1
+}
+
+# [--opts...] [iglu_id] [eprefix]
+IGLU_ID="$(hostname)"
+EPREFIX="/"
+SKIP_REFRESH=false
+while [[ "${1:-}" != "" ]]; do
+  case "${1}" in
+    "--skip-refresh") SKIP_REFRESH=true ;;
+    "--")
+      shift 1
+      break ;;
+    *)
+      if [[ "${EPREFIX}" != "" ]]; then
+        IGLU_ID="${EPREFIX}"
+      fi
+      EPREFIX="${1}" ;;
+  esac
+  shift 1
+done
+
+EPREFIX="$(realpath "${EPREFIX}")"
+if [[ "${IGLU_ID}" == "" || "${EPREFIX}" == "" ]]; then
+  die "Invalid arguments"
+fi
 
 # bring in guse or other stuffs:
 cd "$(dirname "${BASH_SOURCE[0]}")"
@@ -22,12 +48,14 @@ esac
 # for many users:
 while read -r user; do
   USE+="iglu_lives_${user} "
-done < <(awk -F/ '$(NF-1) == "superego" {print $NF}' "../profiles/iglu/${IGLU_ID}/parent")
+done < <(awk '-F[:/]' '$(NF-1) == "superego" {print $NF}' "../profiles/iglu/${IGLU_ID}/parent")
 
 erun() {
   if guse prefix; then
     # shellcheck disable=SC2016
     "${EPREFIX}/usr/bin/bash" -c "source '${EPREFIX}/etc/profile';"'exec "${@}"' -- env "${@}"
+  elif [[ "${EPREFIX}" == "/" ]]; then
+    "${@}"
   else
     arch-chroot "${EPREFIX}" "${@}"
   fi
@@ -60,7 +88,7 @@ fire_repositories() {
     refresh_gentoo=true
   fi
 
-  if ${refresh_gentoo}; then
+  if ${refresh_gentoo} && ! ${SKIP_REFRESH}; then
     if ${use_git}; then
       erun emerge --sync --quiet
     else
@@ -112,9 +140,14 @@ if guse prefix && ! grep -q "like we've no prefix" "${EPREFIX}/usr/lib/python"*"
   erun emerge -1 sys-apps/portage
 fi
 
-# update-the-world
-echo ">>> Burning..."
-erun emerge -uND @world
+# update-the-world if !shell-instead
+if [[ "${*}" != "" ]]; then
+  echo ">>> Spawning ${*}..."
+  erun "${@}"
+else
+  echo ">>> Burning..."
+  erun emerge -uND @world
+fi
 
 # setting password if needed:
 if ! guse prefix; then
@@ -123,9 +156,9 @@ if ! guse prefix; then
       continue
     fi
     username="${flag#iglu_lives_}"
-    if [[ "$(erun passwd -S "${username}" | awk '{print $2}')" == "NP" ]]; then
+    if [[ "$(erun passwd -S "${username}" | awk '{print $2}')" != "P" ]]; then
       echo ">>> Resetting password for user ${username}..."
-      passwd "${username}"
+      erun passwd "${username}"
     fi
   done
 fi

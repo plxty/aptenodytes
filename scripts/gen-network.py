@@ -1,0 +1,613 @@
+#!/usr/bin/env python3
+
+import json
+import os
+import sys
+from collections.abc import Callable
+from io import StringIO
+from ipaddress import IPv4Network
+from typing import Any, Dict, List, Optional, Self, Tuple, ItemsView
+
+
+class MultiDict:
+    _elem: Dict[Any, List[Any]]
+
+    def __init__(self: Self) -> None:
+        self._elem = dict()
+
+    def get(self: Self, key: Any, which: Optional[int] = None) -> List[Any] | Any:
+        value = self._elem[key]
+        if which is not None:
+            return value[which]
+        return value
+
+    def get1(self: Self, key: Any) -> Any:
+        return self.get(key, 0)
+
+    def set(
+        self: Self,
+        key: Any,
+        value: List[Any] | Any,
+        which: Optional[int] = None,
+        allow_multi: bool = True,
+    ) -> Self:
+        if type(value) is not list:
+            value = [value]
+        if key not in self._elem:
+            self._elem[key] = value
+        elif allow_multi:
+            self._elem[key] += value
+        else:
+            assert which is not None
+            assert len(value) == 1
+            self._elem[key][which].update(value[0])
+        return self
+
+    def set1(self: Self, key: Any, value: Any) -> Self:
+        return self.set(key, value, 0, False)
+
+    def items(self: Self) -> ItemsView[Any, List[Any]]:
+        return self._elem.items()
+
+    def items1(self: Self) -> List[Tuple[Any, Any]]:
+        # TODO: make ItemsView[.., ..]
+        result: List[Tuple[Any, Any]] = list()
+        for key, values in self.items():
+            for value in values:
+                result.append((key, value))
+        return result
+
+    def __contains__(self: Self, key: Any) -> bool:
+        return key in self._elem
+
+    def __delitem__(self: Self, key: Any) -> None:
+        del self._elem[key]
+
+
+class MultiDictEncoder(json.JSONEncoder):
+    def default(self: Self, o: Any) -> Any:
+        if type(o) is MultiDict:
+            return o._elem
+        return super().default(o)
+
+
+# (Network -> Attribute) -> (Collect -> Config) -> Generate
+type Attribute = MultiDict[str, Any]  # key -> [value]
+type Network = Dict[str, Attribute]  # iface -> Attribute
+type Config = MultiDict[str, Dict[str, Any] | Any]  # section -> [key -> value]
+type Collect = Dict[str, Config]  # filename -> Config
+type Generate = Dict[str, str]  # filename -> content
+
+
+def collect_networkd(network: Network, iface: str) -> Collect:
+    result: Collect = dict()
+    attrs = network[iface]
+
+    if "mac" in attrs:
+        result[f"{iface}.link"] = (
+            MultiDict()
+            .set1("Match", {"MACAddress": attrs.get1("mac")})
+            .set1(
+                "Link",
+                {
+                    "MACAddressPolicy": "persistent",
+                    "Name": iface,
+                },
+            )
+        )
+
+    network_config: Config = (
+        MultiDict()
+        .set1("Match", {"Name": iface})
+        .set1("Link", {"RequiredForOnline": "carrier"})
+        .set1("Network", {"LinkLocalAddressing": "no"})
+    )
+
+    dhcp = "yes" if "dhcp" in attrs else "no"
+    network_config.set1("Network", {"DHCP": dhcp})
+
+    if "dhcp6pd" in attrs:
+        prefix = attrs.get1("dhcp6pd")
+        if prefix == "":
+            (
+                network_config.set1(
+                    "Network",
+                    {
+                        "DHCPPrefixDelegation": "yes",
+                        "LinkLocalAddressing": "ipv6",
+                        "IPv6AcceptRA": "no",
+                        "IPv6SendRA": "yes",
+                    },
+                )
+                .set1("DHCPPrefixDelegation", {"Token": "::1"})
+                .set1(
+                    "IPv6SendRA",
+                    {
+                        "Managed": "yes",
+                        "OtherInformation": "yes",
+                    },
+                )
+            )
+        else:
+            (
+                network_config.set1(
+                    "Network",
+                    {
+                        "DHCP": "ipv6",
+                        "LinkLocalAddressing": "ipv6",
+                    },
+                ).set1(
+                    "DHCPv6",
+                    {
+                        "PrefixDelegationHint": prefix,
+                        "UseDNS": "no",
+                        "UseHostname": "no",
+                        "WithoutRA": "solicit",
+                    },
+                )
+            )
+
+    if "inet" in attrs:
+        network_config.set1("Network", {"Address": attrs.get1("inet")})
+
+    if "bridge" in attrs:
+        master = attrs.get1("bridge")
+        if master == "":
+            result[f"{iface}.netdev"] = MultiDict().set1(
+                "NetDev",
+                {
+                    "Kind": "bridge",
+                    "Name": iface,
+                },
+            )
+        else:
+            (
+                network_config.set1(
+                    "Link",
+                    {"RequiredForOnline": "enslaved"},
+                ).set1(
+                    "Network",
+                    {"Bridge": master},
+                )
+            )
+
+    if "route" in attrs:
+        for route in attrs.get("route"):
+            typ, dest, *table = route.split(",")
+            route_config = {
+                "Type": typ,
+                "Destination": dest,
+            }
+            if len(table) != 0:
+                route_config["Table"] = table[0]
+            network_config.set("Route", route_config)
+
+    if "fwmark" in attrs:
+        mark, table = attrs.get1("fwmark").split(",")
+        network_config.set1(
+            "RoutingPolicyRule",
+            {
+                "FirewallMark": mark,
+                "Priority": "100",
+                "Table": table,
+            },
+        )
+
+    # TODO: optimize...
+    for _, ppp_value in network.items():
+        if "pppoe" not in ppp_value:
+            continue
+        if ppp_value.get1("pppoe") == iface:
+            network_config.set1(
+                "Network",
+                {
+                    "DefaultRouteOnDevice": "yes",
+                    "KeepConfiguration": "static",
+                },
+            )
+            # TODO: make a explicit online attribute?
+            del network_config["Link"]
+        break
+
+    if "unmanaged" not in attrs:
+        result[f"{iface}.network"] = network_config
+    return result
+
+
+def collect_dnsmasq(network: Network) -> Collect:
+    result: Collect = dict()
+
+    # FIXME: Make per-iface?
+    for iface, attrs in network.items():
+        if "dnsmasq" in attrs and "inet" in attrs:
+            break
+    else:
+        return result
+
+    # TODO: ipv6 support?
+    ctor, *dns = attrs.get1("dnsmasq").split(",")
+    addr, prefix = attrs.get1("inet").split("/")
+    hostname = os.environ["IGLU_ID"]
+    domain = hostname.split(".", maxsplit=1)[-1]
+
+    # ranges:
+    rang = IPv4Network(f"{addr}/{prefix}", False)
+    hosts = [str(ip) for ip in rang.hosts()]
+    start = hosts[hosts.index(addr) + 1]
+    end = hosts[-1]
+
+    dnsmasq_config = (
+        MultiDict()
+        .set1("address", f"/{hostname}/{addr}")
+        .set1("bind-dynamic", "")
+        .set1("cache-size", "10000")
+        .set1("dhcp-authoritative", "")
+        .set1("domain", domain)
+        .set1("enable-ra", "")
+        .set1("local", f"/{domain}/")
+        .set1("strict-order", "")
+        .set(
+            "dhcp-option",
+            [
+                f"interface:{iface},1,{rang.netmask}",
+                f"interface:{iface},3,{addr}",
+                f"interface:{iface},6,{addr}",
+            ],
+        )
+        .set(
+            "dhcp-range",
+            [
+                f"interface:{iface},{start},{end},72h",
+                f"interface:{iface},::,constructor:{ctor},slaac,ra-stateless,ra-names,72h",
+            ],
+        )
+        .set(
+            "interface",
+            [
+                f"{iface}",
+                "lo",
+            ],
+        )
+    )
+
+    for _, ppp_value in network.items():
+        if "pppoe" not in ppp_value:
+            continue
+        dnsmasq_config.set1("resolv-file", "/etc/ppp/resolv.conf")
+        break
+
+    if len(dns) != 0:
+        dnsmasq_config.set("server", dns[0])
+    dnsmasq_config.set(
+        "server",
+        [
+            "223.5.5.5",
+            "119.29.29.29",
+        ],
+    )
+
+    result["dnsmasq.conf"] = dnsmasq_config
+    return result
+
+
+def collect_pppoe(network: Network, iface: str) -> Collect:
+    result: Collect = dict()
+    attrs = network[iface]
+
+    if "pppoe" not in attrs:
+        return result
+
+    ppp_iface = attrs.get1("pppoe")
+    result[ppp_iface] = (
+        MultiDict()
+        .set1("plugin", "pppoe.so")
+        .set1("ifname", ppp_iface)
+        .set1(f"nic-{iface}", "")
+        .set1("file", f"/etc/ppp/keys/{ppp_iface}")
+        .set1("persist", "")
+        .set1("maxfail", "0")
+        .set1("holdoff", "10")
+        .set1("+ipv6", "ipv6cp-use-ipaddr")
+        .set1("defaultroute", "")
+        .set1("usepeerdns", "")
+        .set1("noipdefault", "")
+        .set1("connect", f"/usr/bin/ip link set up dev {iface}")
+    )
+
+    return result
+
+
+def collect_sysctl(network: Network) -> Collect:
+    result: Collect = dict()
+
+    for _, attrs in network.items():
+        if "bridge" in attrs and "inet" in attrs:
+            break
+    else:
+        return result
+
+    result["00-router.conf"] = (
+        MultiDict()
+        .set1("net.ipv4.conf.all.forwarding", "1")
+        .set1("net.ipv6.conf.all.forwarding", "1")
+    )
+
+    return result
+
+
+def collect_nftables(network: Network) -> Collect:
+    result: Collect = dict()
+
+    # accept dhcpv4 client/server, @see nixos-fw :)
+    firewall_rpfilter_pre = """
+        type filter hook prerouting priority mangle + 10; policy drop;
+        meta nfproto ipv4 udp sport . udp dport { 67 . 68, 68 . 67 } accept
+        fib saddr . mark . iif oif exists accept
+    """
+    firewall_rpfilter: List[str] = list()
+
+    # blocking outer wilds:
+    firewall_input_pre = """
+        type filter hook input priority filter; policy drop;
+        iifname { "lo" } accept
+    """
+    firewall_input: List[str] = list()
+    firewall_input_post = """
+        ct state vmap {
+            invalid : drop,
+            established : accept,
+            related : accept,
+            new : jump input-allow,
+            untracked : jump input-allow,
+        }
+        tcp flags syn / fin,syn,rst,ack log level info prefix "[nftables] refused: "
+    """
+
+    # allow ping by default:
+    firewall_input_allow: List[str] = list()
+    firewall_input_allow_post = """
+        icmp type echo-request accept
+        icmpv6 type != { nd-redirect, 139 } accept
+        ip6 daddr fe80::/64 udp dport 546 accept
+    """
+
+    # masquerade...
+    nat_pre = "type nat hook prerouting priority dstnat;"
+    nat_post_pre = "type nat hook postrouting priority srcnat;"
+    nat_post: List[str] = list()
+    nat_out = "type nat hook output priority mangle"
+
+    # (table_type table_name) -> [chain_name -> rules]:
+    rules: Config = MultiDict().set(
+        "inet mss-clamping",
+        {
+            "forward": """
+                type filter hook forward priority filter; policy accept;
+                tcp flags syn tcp option maxseg size set rt mtu
+            """
+        },
+    )
+
+    for iface, attrs in network.items():
+        if "trusted" in attrs:
+            firewall_input.append(f'iifname {{ "{iface}" }} accept')
+
+        if "masquerade" in attrs:
+            iifname = attrs.get1("masquerade")
+            nat_post.append(f'iifname {{ "{iifname}" }} oifname "{iface}" masquerade')
+
+        if "fwmark" in attrs:
+            fwmark = attrs.get1("fwmark").split(",", maxsplit=1)[0]
+            rule = f"meta mark {fwmark} accept"
+            firewall_rpfilter.append(rule)
+            firewall_input_allow.append(rule)
+
+    # assemble them up:
+    def concat(content: List[str | List[str]]) -> str:
+        result = StringIO()
+        for lines in content:
+            if type(lines) is list:
+                result.write("\n".join(lines))
+            elif type(lines) is str:  # trick ruff
+                result.write(lines)
+            result.write("\n")
+        return result.getvalue()
+
+    rules.set(
+        "inet firewall",
+        [
+            {"rpfilter": concat([firewall_rpfilter_pre, firewall_rpfilter])},
+            {
+                "input": concat(
+                    [firewall_input_pre, firewall_input, firewall_input_post]
+                )
+            },
+            {"input-allow": concat([firewall_input_allow, firewall_input_allow_post])},
+        ],
+    )
+
+    if len(nat_post) != 0:
+        nat_rules = [
+            {"pre": nat_pre},
+            {"post": concat([nat_post_pre, nat_post])},
+            {"out": nat_out},
+        ]
+        rules.set("ip nat", nat_rules)
+        rules.set("ip6 nat", nat_rules)
+
+    result["rules-save"] = rules
+    return result
+
+
+def generate_networkd(collect: Collect) -> Generate:
+    result: Generate = dict()
+
+    # please do avoid 80+, as it ships with default networkd:
+    netdev_i = 0
+    link_i = 30
+    network_i = 50
+
+    for filename, config in collect.items():
+        typ = filename.rsplit(".", maxsplit=1)[-1]
+        if typ == "netdev":
+            i = netdev_i
+            netdev_i += 1
+        elif typ == "link":
+            i = link_i
+            link_i += 1
+        elif typ == "network":
+            i = network_i
+            network_i += 1
+        else:
+            continue
+
+        builder = StringIO()
+        for section, key_value in config.items1():
+            builder.write(f"[{section}]\n")
+            for key, value in key_value.items():
+                builder.write(f"{key}={value}\n")
+            builder.write("\n")
+
+        # no last \n\n:
+        result[f"{i:02}-{filename}"] = builder.getvalue()[:-1]
+
+    return result
+
+
+def generate_dnsmasq(collect: Collect) -> Generate:
+    result: Generate = dict()
+
+    filename = "dnsmasq.conf"
+    if filename not in collect:
+        return result
+
+    config = collect[filename]
+    builder = StringIO()
+    for key, value in config.items1():
+        builder.write(key)
+        if value != "":
+            builder.write(f"={value}")
+        builder.write("\n")
+
+    result[filename] = builder.getvalue()
+    return result
+
+
+def generate_pppoe(collect: Collect) -> Generate:
+    result: Generate = dict()
+
+    for filename, config in collect.items():
+        if not filename.startswith("ppp-") or "." in filename:
+            continue
+
+        builder = StringIO()
+        for key, value in config.items1():
+            builder.write(key)
+            if value != "":
+                builder.write(f" {value}")
+            builder.write("\n")
+        result[filename] = builder.getvalue()
+
+    return result
+
+
+def generate_sysctl(collect: Collect) -> Generate:
+    result: Generate = dict()
+
+    filename = "00-router.conf"
+    if filename not in collect:
+        return result
+
+    config = collect[filename]
+    builder = StringIO()
+    for key, value in config.items1():
+        builder.write(f"{key} = {value}\n")
+
+    result[filename] = builder.getvalue()
+    return result
+
+
+def generate_nftables(collect: Collect) -> Generate:
+    result: Generate = dict()
+
+    filename = "rules-save"
+    if filename not in collect:
+        return result
+
+    # `/usr/libexec/nftables/nftables.sh load` will do the flush for us:
+    config = collect[filename]
+    builder = StringIO()
+    for table, chain_rules in config.items():
+        builder.write(f"table {table} {{\n")
+        for chain_rule in chain_rules:
+            for chain, rules in chain_rule.items():
+                builder.write(f"    chain {chain} {{\n")
+                builder.write(rules)
+                builder.write("\n    }\n")
+        builder.write("\n}\n")
+
+    result[filename] = builder.getvalue()
+    return result
+
+
+# dead simple declarative config for network
+def main() -> None:
+    network: Network = dict()
+    for line in os.environ["IGLU_NETWORK"].split(";"):
+        attrs: Attribute = MultiDict()
+        iface, *raw = line.strip().split()
+        for attr in raw:
+            key, *raw_value = attr.split("=")
+            assert len(raw_value) <= 1
+            if len(raw_value) == 0:
+                value = ""
+            else:
+                value = raw_value[0]
+            attrs.set(key, value)
+        network[iface] = attrs
+
+    typ, output = sys.argv[1:]
+    collect_fns: List[Callable[[Network], Collect]] = list()
+    collect_per_iface_fns: List[Callable[[Network, str], Collect]] = list()
+    generate_fns: List[Callable[[Collect], Generate]] = list()
+    if typ == "networkd" or typ == "*":
+        collect_per_iface_fns.append(collect_networkd)
+        generate_fns.append(generate_networkd)
+    if typ == "dnsmasq" or typ == "*":
+        collect_fns.append(collect_dnsmasq)
+        generate_fns.append(generate_dnsmasq)
+    if typ == "pppoe" or typ == "*":
+        collect_per_iface_fns.append(collect_pppoe)
+        generate_fns.append(generate_pppoe)
+    if typ == "sysctl" or typ == "*":
+        collect_fns.append(collect_sysctl)
+        generate_fns.append(generate_sysctl)
+    if typ == "nftables" or typ == "*":
+        collect_fns.append(collect_nftables)
+        generate_fns.append(generate_nftables)
+
+    collect: Collect = dict()
+    for cfn in collect_fns:
+        collect.update(cfn(network))
+    for iface in network.keys():
+        for cpifn in collect_per_iface_fns:
+            collect.update(cpifn(network, iface))
+
+    generate: Generate = dict()
+    for gfn in generate_fns:
+        generate.update(gfn(collect))
+
+    # output to stdout or else:
+    for filename, content in generate.items():
+        if output == "stdout":
+            print(f">>> Exposing {filename}...")
+            print(content)
+            continue
+
+        os.makedirs(output, exist_ok=True)
+        with open(f"{output}/{filename}", "w") as writer:
+            writer.write(content)
+
+
+if __name__ == "__main__":
+    main()

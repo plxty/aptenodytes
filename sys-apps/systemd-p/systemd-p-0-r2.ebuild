@@ -3,13 +3,17 @@ DESCRIPTION="systemd profile"
 KEYWORDS="amd64"
 SLOT="0"
 
+BDEPEND="dev-lang/python"
 RDEPEND="sys-apps/systemd"
 S="${T}"
 
+# for escript:
+inherit dirty-deeds
+
 pkg_pretend() {
-  if [[ "${IGLU_DOMAIN}" == "" ]]; then
-    echo "profile should contain IGLU_DOMAIN for DNS searching"
-    die "set to mshome.net if you're not sure, as what systemd does"
+  if [[ "${IGLU_ID}" != *"."* ]]; then
+    echo "profile should contain domain in IGLU_ID for DNS searching"
+    die "set IGLU_ID=${IGLU_ID}.mshome.net if you're not sure, systemd does it"
   fi
 }
 
@@ -22,20 +26,17 @@ src_install() {
 
   # split it
   insinto /usr/lib/systemd/network
-  local prio=0
-  for network in $IGLU_NETWORK; do
-    export IFACE="${network%:*}"
-    read -ra configs <<< "${network#*:}"
-    for cfg in "${configs[@]}"; do
-      local target="${T}/$(printf %02d $prio)-${IFACE}.network"
-      envsubst '${IFACE}' < "${FILESDIR}/${cfg}.network" > "${target}"
-      doins "${target}"
-      ((++prio))
-    done
-  done
+  escript gen-network.py networkd networkd
+  doins networkd/*
+
+  # make sysctl managed by systemd for now, FIXME: procps-p?
+  insinto /etc/sysctl.d
+  escript gen-network.py sysctl sysctl
+  doins sysctl/*
 
   insinto /etc
-  envsubst '${IGLU_DOMAIN}' < "${FILESDIR}/resolv.conf" > "${T}/resolv.conf"
+  IGLU_DOMAIN="$(cat "${IGLU_ID}" | awk -F. -v OFS=. '{$1=""; print substr($0,2)}')" \
+    envsubst '${IGLU_DOMAIN}' < "${FILESDIR}/resolv.conf" > "${T}/resolv.conf"
   doins "${T}/resolv.conf"
 }
 

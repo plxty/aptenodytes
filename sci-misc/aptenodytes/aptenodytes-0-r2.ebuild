@@ -51,7 +51,7 @@ src_install() {
   fi
 
   # non-prefix here:
-  echo "${IGLU_ID}" > "${T}/hostname"
+  echo "${IGLU_ID}" | awk -F. '{print $1}' > "${T}/hostname"
   doins "${T}/hostname"
 
   genfstab -t PARTUUID / > "${T}/fstab"

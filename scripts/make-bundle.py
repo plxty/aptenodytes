@@ -61,7 +61,7 @@ def github_upload(tag: str, name: str, path: Path, token: str) -> bool:
     return True
 
 
-def main():
+def main() -> None:
     # steal content from file if it is:
     token = os.environ.get("GITHUB_TOKEN")
     if token is None:

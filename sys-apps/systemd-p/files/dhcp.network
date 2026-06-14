@@ -1,5 +1,0 @@
-[Match]
-Name=${IFACE}
-
-[Network]
-DHCP=yes

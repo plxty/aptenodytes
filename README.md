@@ -8,7 +8,6 @@ in pseudo-declarative style :)
 * `IGLU_ID`, the hostname
 * `IGLU_LIVES, iglu_lives_`, the username(s)
 * `IGLU_NETWORK`, the network topo
-* `IGLU_DOMAIN`, dns search domain
 
 if you change any of them, please check ebuilds that use, and re-emerge to take effects.
 

@@ -1,3 +1,2 @@
-IGLU_ID="testify"
-IGLU_NETWORK="eth0:dhcp"
-IGLU_DOMAIN="xas.is"
+IGLU_ID="testify.xas.is"
+IGLU_NETWORK="eth0 dhcp"
