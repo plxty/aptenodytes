@@ -65,12 +65,6 @@ erun() {
 
 fire_repositories() {
   local refresh="${1:-false}"
-  if "${refresh}"; then
-    echo ">>> Refreshing repositories..."
-  else
-    echo ">>> Initializing repositories..."
-  fi
-
   local use_git=false
   if erun git -v >/dev/null; then
     use_git=true
@@ -92,8 +86,10 @@ fire_repositories() {
 
   if ${refresh_gentoo} && ! ${SKIP_REFRESH}; then
     if ${use_git}; then
+      echo ">>> Refreshing repositories..."
       erun emerge --sync --quiet
     else
+      echo ">>> Initializing repositories..."
       erun emerge-webrsync -q
     fi
   fi

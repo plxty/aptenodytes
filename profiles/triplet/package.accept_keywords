@@ -8,7 +8,7 @@
 =dev-python/mcp-1.26.0 **
 =dev-python/httpx-sse-0.4.3 **
 =dev-python/sse-starlette-3.4.4 **
-=app-office/lark-cli-1.0.52-r1 **
+=app-office/lark-cli-1.0.53 **
 =dev-util/ty-0.0.7 **
 =dev-util/bash-language-server-5.6.0 **
 # [aptenodytes]

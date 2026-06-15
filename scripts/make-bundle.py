@@ -80,7 +80,7 @@ class Vendor:
 @dataclass
 class GoVendor(Vendor):
     xform: Optional[str] = None
-    pre_hooks: List[List[str]] = field(default_factory=list)
+    pre_compress_hooks: List[List[str]] = field(default_factory=list)
 
     def _flight(self: Self, cwd: Path) -> List[Path]:
         # treat some special workdir:
@@ -88,9 +88,9 @@ class GoVendor(Vendor):
         if self.xform is None:
             self.xform = f"{self.name}-{self.version}"
 
-        for pre_hook in self.pre_hooks:
-            call(pre_hook, cwd)
         call(["go", "mod", "vendor"], cwd)
+        for hook in self.pre_compress_hooks:
+            call(hook, cwd)
         call(
             [
                 "tar",
@@ -143,9 +143,8 @@ def main() -> None:
                 pkgname,
                 version,
                 xform=f"cli-{version}",
-                pre_hooks=[
+                pre_compress_hooks=[
                     ["python3", "scripts/fetch_meta.py"],
-                    ["mkdir", "-p", "vendor"],
                     ["cp", "internal/registry/meta_data.json", "vendor"],
                 ],
             )
