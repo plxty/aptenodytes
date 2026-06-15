@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -xeu
+
+state="${1}"
+ifname="${2}"
+nic="$(awk -F- '$1 == "nic" {print $2}' "/etc/ppp/peers/${ifname}")"
+ip link set "${state}" dev "${nic}"

@@ -182,23 +182,27 @@ def collect_networkd(network: Network, iface: str) -> Collect:
                 )
             )
 
-    if "route" in attrs:
-        for route in attrs.get("route"):
-            typ, dest, *table = route.split(",")
-            route_config = {
-                "Type": typ,
-                "Destination": dest,
-            }
-            if len(table) != 0:
-                route_config["Table"] = table[0]
-            network_config.set("Route", route_config)
-
-    if "fwmark" in attrs:
-        mark, table = attrs.get1("fwmark").split(",")
+    # proxy, special, hmmm
+    if "fakeip" in attrs:
+        dest, _, fwmark, table = attrs.get1("fakeip").split(",")
+        network_config.set(
+            "Route",
+            [
+                {
+                    "Type": "local",
+                    "Destination": dest,
+                },
+                {
+                    "Type": "local",
+                    "Destination": "0.0.0.0/0",
+                    "Table": table,
+                },
+            ],
+        )
         network_config.set1(
             "RoutingPolicyRule",
             {
-                "FirewallMark": mark,
+                "FirewallMark": fwmark,
                 "Priority": "100",
                 "Table": table,
             },
@@ -247,6 +251,7 @@ def collect_dnsmasq(network: Network) -> Collect:
     start = hosts[hosts.index(addr) + 1]
     end = hosts[-1]
 
+    # TODO: auto restart dnsmasq when pppd and mihomo start/stop?
     dnsmasq_config = (
         MultiDict()
         .set1("address", f"/{hostname}/{addr}")
@@ -322,7 +327,6 @@ def collect_pppoe(network: Network, iface: str) -> Collect:
         .set1("defaultroute", "")
         .set1("usepeerdns", "")
         .set1("noipdefault", "")
-        .set1("connect", f"/usr/bin/ip link set up dev {iface}")
     )
 
     return result
@@ -388,11 +392,10 @@ def collect_nftables(network: Network) -> Collect:
     nat_post: List[str] = list()
     nat_out = "type nat hook output priority mangle;"
 
-    # (table_type table_name) -> [chain_name -> rules]:
     rules: Config = MultiDict().set(
-        "inet mss-clamping",
+        "table inet mss-clamping",
         {
-            "forward": dedent("""
+            "chain forward": dedent("""
                 type filter hook forward priority filter; policy accept;
                 tcp flags syn tcp option maxseg size set rt mtu
             """)
@@ -407,11 +410,28 @@ def collect_nftables(network: Network) -> Collect:
             iifname = attrs.get1("masquerade")
             nat_post.append(f'iifname {{ "{iifname}" }} oifname "{iface}" masquerade')
 
-        if "fwmark" in attrs:
-            fwmark = attrs.get1("fwmark").split(",", maxsplit=1)[0]
-            rule = f"meta mark {fwmark} accept"
-            firewall_rpfilter.append(rule)
-            firewall_input_allow.append(rule)
+        if "fakeip" in attrs:
+            dest, tproxy, fwmark, _ = attrs.get1("fakeip").split(",")
+            rules.set(
+                "table inet fakeip",
+                {
+                    "set proxy": dedent(f"""
+                        typeof ip daddr
+                        flags interval
+                        auto-merge
+                        elements = {{ {dest} }}
+                    """),
+                    # to debug, append end: meta nftrace set 0
+                    "chain prerouting": dedent(f"""
+                        type filter hook prerouting priority mangle;
+                        ip daddr @proxy meta l4proto {{ tcp, udp }} mark set {fwmark} \\
+                            tproxy ip to {tproxy} counter
+                    """),
+                },
+            )
+            accept_rule = f"meta mark {fwmark} accept"
+            firewall_rpfilter.append(accept_rule)
+            firewall_input_allow.append(accept_rule)
 
     # assemble them up:
     def concat(content: List[str | List[str]]) -> str:
@@ -425,26 +445,30 @@ def collect_nftables(network: Network) -> Collect:
         return result.getvalue()
 
     rules.set(
-        "inet firewall",
+        "table inet firewall",
         [
-            {"rpfilter": concat([firewall_rpfilter_pre, firewall_rpfilter])},
+            {"chain rpfilter": concat([firewall_rpfilter_pre, firewall_rpfilter])},
             {
-                "input": concat(
+                "chain input": concat(
                     [firewall_input_pre, firewall_input, firewall_input_post]
                 )
             },
-            {"input-allow": concat([firewall_input_allow, firewall_input_allow_post])},
+            {
+                "chain input-allow": concat(
+                    [firewall_input_allow, firewall_input_allow_post]
+                )
+            },
         ],
     )
 
     if len(nat_post) != 0:
         nat_rules = [
-            {"pre": concat([nat_pre])},
-            {"post": concat([nat_post_pre, nat_post])},
-            {"out": concat([nat_out])},
+            {"chain pre": concat([nat_pre])},
+            {"chain post": concat([nat_post_pre, nat_post])},
+            {"chain out": concat([nat_out])},
         ]
-        rules.set("ip nat", nat_rules)
-        rules.set("ip6 nat", nat_rules)
+        rules.set("table ip nat", nat_rules)
+        rules.set("table ip6 nat", nat_rules)
 
     result["00-route.rules"] = rules
     return result
@@ -549,10 +573,10 @@ def generate_nftables(collect: Collect) -> Generate:
     config = collect[filename]
     builder = StringIO()
     for table, chain_rules in config.items():
-        builder.write(f"table {table} {{\n")
+        builder.write(f"{table} {{\n")
         for chain_rule in chain_rules:
             for chain, rules in chain_rule.items():
-                builder.write(indent(f"chain {chain} {{\n", 1))
+                builder.write(indent(f"{chain} {{\n", 1))
                 builder.write(indent(rules, 2))
                 builder.write(indent("}\n", 1))
             builder.write("\n")

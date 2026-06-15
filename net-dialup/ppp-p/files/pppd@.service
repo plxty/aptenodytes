@@ -1,5 +1,6 @@
 # https://gist.githubusercontent.com/rany2/330c8fe202b318cacdcb54830c20f98c/raw/404a2a7292afd402eb93ef055fe2f6893426fa6d/pppd@.service
-# Replaced %I -> %i to make xxx-yyy work:
+# 1. Replaced %I -> %i to make xxx-yyy work
+# 2. Add ip-link to bring up the interface for connection
 
 [Unit]
 Description=PPP connection for %i
@@ -14,6 +15,7 @@ After=network-pre.target
 # https://github.com/ppp-project/ppp/commit/d34159f417620eb7c481bf53f29fe04c86ccd223
 # otherwsise you can use 'forking' and replace 'up_sdnotify' with 'updetach'
 Type=notify
+ExecStartPre=/etc/ppp/ip-link up %i
 ExecStart=/usr/sbin/pppd up_sdnotify nolog call %i
 ExecStop=/bin/kill $MAINPID
 ExecReload=/bin/kill -HUP $MAINPID

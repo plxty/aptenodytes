@@ -11,6 +11,7 @@
 =app-office/lark-cli-1.0.53 **
 =dev-util/ty-0.0.7 **
 =dev-util/bash-language-server-5.6.0 **
+=net-proxy/mihomo-1.19.27 **
 # [aptenodytes]
 
 # cutting edges, but don't mix:

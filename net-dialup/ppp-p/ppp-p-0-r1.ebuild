@@ -14,6 +14,9 @@ src_install() {
   escript gen-network.py pppoe pppoe
   doins pppoe/*
 
+  exeinto /etc/ppp
+  doexe "${FILESDIR}/ip-link"
+
   insinto "$(systemd_get_systemunitdir)"
   doins "${FILESDIR}/pppd@.service"
 
