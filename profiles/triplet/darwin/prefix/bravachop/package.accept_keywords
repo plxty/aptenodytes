@@ -84,6 +84,7 @@
 # lua, scripting typing
 # [aptenodytes] pin_version_prefix=5.1.
 =dev-lang/lua-5.1.5-r200 **
+# [aptenodytes]
 =app-eselect/eselect-lua-4-r1 **
 =app-i18n/librime-lua-20250707183812 **
 
