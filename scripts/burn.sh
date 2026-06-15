@@ -11,14 +11,16 @@ die() {
 IGLU_ID="$(hostname)"
 EPREFIX="/"
 SKIP_REFRESH=false
+ASK=false
 while [[ "${1:-}" != "" ]]; do
   case "${1}" in
     "--skip-refresh") SKIP_REFRESH=true ;;
+    "--ask") ASK=true ;;
     "--")
       shift 1
       break ;;
     *)
-      if [[ "${EPREFIX}" != "" ]]; then
+      if [[ "${EPREFIX}" != "/" ]]; then
         IGLU_ID="${EPREFIX}"
       fi
       EPREFIX="${1}" ;;
@@ -146,7 +148,11 @@ if [[ "${*}" != "" ]]; then
   erun "${@}"
 else
   echo ">>> Burning..."
-  erun emerge -uND @world
+  if "${ASK}"; then
+    erun emerge -uNDva @world
+  else
+    erun emerge -uND @world
+  fi
 fi
 
 # setting password if needed:

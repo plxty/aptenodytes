@@ -67,21 +67,32 @@ userinsinto() {
 }
 
 userdoins() {
-  # name group home
   local users=()
-  if use prefix && use "iglu_lives_${PORTAGE_USERNAME}"; then
-    # Make a relative path to passing by the checks, dirty enough:
-    local homedest="/$(realpath -s --relative-to="${EPREFIX}" ~"${PORTAGE_USERNAME}")"
-    users+=("${PORTAGE_USERNAME}"$'\n'"${PORTAGE_GRPNAME}"$'\n'"${homedest}")
-  else
-    for flag in $USE; do
-      if [[ "${flag}" != "iglu_lives_"* ]]; then
-        continue
-      fi
-      local username="${flag#iglu_lives_}"
-      users+=("${username}"$'\n'"${username}"$'\n'"$(getent passwd "${username}" | cut -d: -f6)")
-    done
-  fi
+  for flag in $USE; do
+    if [[ "${flag}" != "iglu_lives_"* ]]; then
+      continue
+    fi
+
+    local username="${flag#iglu_lives_}"
+    local groupname="${username}" homedest=
+    if use prefix; then
+      username="${PORTAGE_USERNAME}"
+      groupname="${PORTAGE_GRPNAME}"
+    fi
+
+    if [[ "${ARCH}" == *"-macos" ]]; then
+      homedest="$(finger "${username}" | awk '/^Directory/ {print $2}')"
+    else
+      homedest="$(getent passwd "${username}" | cut -d: -f6)"
+    fi
+
+    if use prefix; then
+      # Make a relative path to passing by the checks, dirty enough:
+      homedest="/$(realpath -s --relative-to="${EPREFIX}" "${homedest}")"
+    fi
+
+    users+=("${username}"$'\n'"${groupname}"$'\n'"${homedest}")
+  done
 
   for user in "${users[@]}"; do
     IFS=$'\n' read -d'' -r username groupname homedest <<< "$user"

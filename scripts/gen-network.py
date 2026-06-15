@@ -3,6 +3,7 @@
 import json
 import os
 import sys
+from textwrap import dedent as _dedent, indent as _indent
 from collections.abc import Callable
 from io import StringIO
 from ipaddress import IPv4Network
@@ -69,6 +70,16 @@ class MultiDictEncoder(json.JSONEncoder):
         if type(o) is MultiDict:
             return o._elem
         return super().default(o)
+
+
+def dedent(text: str) -> str:
+    # dedent + remove first/tail empty lines:
+    return _dedent(text.strip("\n"))
+
+
+def indent(text: str, level: int) -> str:
+    # indent based on level, 4 space:
+    return _indent(text, "    " * level)
 
 
 # (Network -> Attribute) -> (Collect -> Config) -> Generate
@@ -339,20 +350,20 @@ def collect_nftables(network: Network) -> Collect:
     result: Collect = dict()
 
     # accept dhcpv4 client/server, @see nixos-fw :)
-    firewall_rpfilter_pre = """
+    firewall_rpfilter_pre = dedent("""
         type filter hook prerouting priority mangle + 10; policy drop;
         meta nfproto ipv4 udp sport . udp dport { 67 . 68, 68 . 67 } accept
         fib saddr . mark . iif oif exists accept
-    """
+    """)
     firewall_rpfilter: List[str] = list()
 
     # blocking outer wilds:
-    firewall_input_pre = """
+    firewall_input_pre = dedent("""
         type filter hook input priority filter; policy drop;
         iifname { "lo" } accept
-    """
+    """)
     firewall_input: List[str] = list()
-    firewall_input_post = """
+    firewall_input_post = dedent("""
         ct state vmap {
             invalid : drop,
             established : accept,
@@ -361,15 +372,15 @@ def collect_nftables(network: Network) -> Collect:
             untracked : jump input-allow,
         }
         tcp flags syn / fin,syn,rst,ack log level info prefix "[nftables] refused: "
-    """
+    """)
 
     # allow ping by default:
     firewall_input_allow: List[str] = list()
-    firewall_input_allow_post = """
+    firewall_input_allow_post = dedent("""
         icmp type echo-request accept
         icmpv6 type != { nd-redirect, 139 } accept
         ip6 daddr fe80::/64 udp dport 546 accept
-    """
+    """)
 
     # masquerade...
     nat_pre = "type nat hook prerouting priority dstnat;"
@@ -381,10 +392,10 @@ def collect_nftables(network: Network) -> Collect:
     rules: Config = MultiDict().set(
         "inet mss-clamping",
         {
-            "forward": """
+            "forward": dedent("""
                 type filter hook forward priority filter; policy accept;
                 tcp flags syn tcp option maxseg size set rt mtu
-            """
+            """)
         },
     )
 
@@ -428,14 +439,14 @@ def collect_nftables(network: Network) -> Collect:
 
     if len(nat_post) != 0:
         nat_rules = [
-            {"pre": nat_pre},
+            {"pre": concat([nat_pre])},
             {"post": concat([nat_post_pre, nat_post])},
-            {"out": nat_out},
+            {"out": concat([nat_out])},
         ]
         rules.set("ip nat", nat_rules)
         rules.set("ip6 nat", nat_rules)
 
-    result["rules-save"] = rules
+    result["00-route.rules"] = rules
     return result
 
 
@@ -530,7 +541,7 @@ def generate_sysctl(collect: Collect) -> Generate:
 def generate_nftables(collect: Collect) -> Generate:
     result: Generate = dict()
 
-    filename = "rules-save"
+    filename = "00-route.rules"
     if filename not in collect:
         return result
 
@@ -541,12 +552,13 @@ def generate_nftables(collect: Collect) -> Generate:
         builder.write(f"table {table} {{\n")
         for chain_rule in chain_rules:
             for chain, rules in chain_rule.items():
-                builder.write(f"    chain {chain} {{\n")
-                builder.write(rules)
-                builder.write("\n    }\n")
-        builder.write("\n}\n")
+                builder.write(indent(f"chain {chain} {{\n", 1))
+                builder.write(indent(rules, 2))
+                builder.write(indent("}\n", 1))
+            builder.write("\n")
+        builder.write("}\n\n")
 
-    result[filename] = builder.getvalue()
+    result[filename] = builder.getvalue()[:-1]
     return result
 
 

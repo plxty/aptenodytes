@@ -7,7 +7,7 @@
 
 # pythonic, not good nor bad
 =dev-python/ujson-5.12.1 **
-=dev-python/click-8.3.2 **
+=dev-python/click-8.3.3 **
 =dev-python/jinja2-3.1.6 **
 =dev-python/license-expression-30.4.4 **
 =dev-python/boolean-py-5.0 **
@@ -24,10 +24,10 @@
 =dev-python/pydantic-settings-2.14.1 **
 =dev-python/pyjwt-2.12.1 **
 =dev-python/cryptography-48.0.0 **
-=dev-python/python-multipart-0.0.27 **
+=dev-python/python-multipart-0.0.28 **
 =dev-python/starlette-1.0.0 **
 =dev-python/typing-inspection-0.4.2 **
-=dev-python/uvicorn-0.46.0 **
+=dev-python/uvicorn-0.47.0 **
 =dev-python/asgiref-3.11.1 **
 =dev-python/h11-0.16.0 **
 =dev-python/itsdangerous-2.2.0 **

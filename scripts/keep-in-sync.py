@@ -46,6 +46,7 @@ class ProfilePackage(EbuildPackage):
 
 
 class WorkingEnvironment:
+    # these variables are static across multiple instances (aka shared):
     repo_name: str = "aptenodytes"
     default_repo_name: str = Path(portage.settings["PORTDIR"]).name
     repos_path: Path = Path(portage.settings["PORTDIR"]).parent
@@ -59,6 +60,12 @@ def progress(text: str) -> None:
         text = text[:columns]
     padding = columns - len(text)
     print(text, " " * padding, sep="", end="\r")
+
+
+def find_repo_path(env: WorkingEnvironment, repo_name: str) -> Path:
+    if repo_name == env.repo_name:
+        return Path(__file__).parent.parent
+    return env.repos_path / repo_name
 
 
 def cpv_to_path(cpv: str) -> Path:
@@ -194,7 +201,7 @@ def collect_ebuild_package(
     env: WorkingEnvironment, repo_name: str, cpv: str
 ) -> EbuildPackage:
     # fetching things from ebuild:
-    ebuild = str(env.repos_path / repo_name / cpv_to_path(cpv))
+    ebuild = str(find_repo_path(env, repo_name) / cpv_to_path(cpv))
     try:
         settings = portage.config(clone=portage.settings)
         settings.setcpv(cpv, mydb=env.portdbapi)
@@ -285,7 +292,7 @@ def main() -> None:
     profile_packages: List[ProfilePackage] = list()
 
     # obtain every normal packages, filter only really overlays:
-    repo_path = env.repos_path / env.repo_name
+    repo_path = find_repo_path(env, env.repo_name)
     for ebuild_path in repo_path.glob("**/*.ebuild", recurse_symlinks=True):
         progress(f"ebuild: {ebuild_path}")
         cpv = path_to_cpv(ebuild_path)
@@ -314,7 +321,11 @@ def main() -> None:
         )
         if pin_until_stable and pkgcmp(pkgsplit(package.cpv), pkgsplit(cpv)) > 0:
             continue
-        print(f"{package.cpv} ({package.repo_name}) -> {cpv} ({repo_name})")
+        if type(package) is OverlayPackage:
+            typ = "overlay"
+        else:
+            typ = "profile"
+        print(f">>> {typ}: {package.cpv} ({package.repo_name}) -> {cpv} ({repo_name})")
 
 
 if __name__ == "__main__":
