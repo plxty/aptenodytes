@@ -64,15 +64,8 @@ def progress(text: str) -> None:
 
 def find_repo_path(env: WorkingEnvironment, repo_name: str) -> Path:
     if repo_name == env.repo_name:
-        return Path(__file__).parent.parent
+        return Path(__file__).parent.parent.resolve()
     return env.repos_path / repo_name
-
-
-def cpv_to_path(cpv: str) -> Path:
-    # TODO: any other helpers?
-    category, name, *_ = catpkgsplit(cpv)
-    p: Path = Path(category) / name / (cpv.split("/", maxsplit=1)[1] + ".ebuild")
-    return p.resolve()
 
 
 def find_repology_cpv(category: str, name: str) -> Optional[str]:
@@ -200,8 +193,10 @@ def parse_comment_config(text: str) -> Optional[ConfigParser]:
 def collect_ebuild_package(
     env: WorkingEnvironment, repo_name: str, cpv: str
 ) -> EbuildPackage:
-    # fetching things from ebuild:
-    ebuild = str(find_repo_path(env, repo_name) / cpv_to_path(cpv))
+    # fetching things from ebuild, TODO: any other helpers?
+    category, name, *_ = catpkgsplit(cpv)
+    pf = cpv.split("/", maxsplit=1)[-1]
+    ebuild = str(find_repo_path(env, repo_name) / category / name / f"{pf}.ebuild")
     try:
         settings = portage.config(clone=portage.settings)
         settings.setcpv(cpv, mydb=env.portdbapi)

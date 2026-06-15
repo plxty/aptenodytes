@@ -5,7 +5,7 @@ in pseudo-declarative style :)
 # profiling
 
 * `GENTOO_BINHOST`, binary package for platforms
-* `IGLU_ID`, the hostname
+* `IGLU_ID`, the hostname, including domain
 * `IGLU_LIVES, iglu_lives_`, the username(s)
 * `IGLU_NETWORK`, the network topo
 

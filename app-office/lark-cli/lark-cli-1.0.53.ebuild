@@ -5,20 +5,18 @@ SLOT="0"
 
 inherit go-module
 
-# using revison for a new meta_data released...
+# note: meta_data.json contains in vendor file to prevent from frequently csum:
 SRC_URI="
-  https://open.feishu.cn/api/tools/open/api_definition?protocol=meta&client_version=v${PV} -> meta_data.${PF}.json
   https://github.com/larksuite/cli/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz
   https://github.com/plxty/aptenodytes/releases/download/dist/${P}-vendor.tar.xz
 "
 
 # note the vendor directory should also match the cli-xxx:
 S="${WORKDIR}/cli-${PV}"
-BDEPEND="app-misc/jq"
 
 src_prepare() {
   default
-  jq ".data" < "${DISTDIR}/meta_data.${PF}.json" > internal/registry/meta_data.json
+  mv vendor/meta_data.json internal/registry
   sed -i "s/echo dev/echo v${PN}/g" Makefile
 }
 

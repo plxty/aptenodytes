@@ -5,8 +5,8 @@ SLOT="0"
 
 inherit dirty-deeds systemd
 
-BDEPENDS="dev-lang/python"
-RDENEPDS="net-firewall/nftables"
+BDEPEND="dev-lang/python"
+RDEPEND="net-firewall/nftables"
 S="${T}"
 
 src_install() {

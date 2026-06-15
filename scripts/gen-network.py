@@ -386,7 +386,7 @@ def collect_nftables(network: Network) -> Collect:
     nat_pre = "type nat hook prerouting priority dstnat;"
     nat_post_pre = "type nat hook postrouting priority srcnat;"
     nat_post: List[str] = list()
-    nat_out = "type nat hook output priority mangle"
+    nat_out = "type nat hook output priority mangle;"
 
     # (table_type table_name) -> [chain_name -> rules]:
     rules: Config = MultiDict().set(

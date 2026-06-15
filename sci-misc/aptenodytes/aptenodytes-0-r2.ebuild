@@ -11,6 +11,7 @@ SLOT="0"
 BDEPEND="!prefix? ( sys-fs/genfstab )"
 
 # we need a clang for darwin platforms, in bootstrap stage:
+# and ensures package patches, kernel configs, etc. etc. are ready
 RDEPEND="
   sys-apps/portage-p
   arm64-macos? ( llvm-core/clang )

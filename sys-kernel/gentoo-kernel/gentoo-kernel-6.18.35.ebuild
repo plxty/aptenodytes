@@ -27,7 +27,7 @@ emake() {
   done
 
   command emake "${@}" || die
-  if [[ "${lsmod}" != "" && -e "${lsmod}" ]] && use modprobed-db; then
+  if [[ "${lsmod}" != "" ]] && use modprobed-db; then
     if [[ ! -e "${lsmod}" ]]; then
       ewarn "USE=modprobed-db but ${lsmod} isn't inplace, will build full modules"
     else

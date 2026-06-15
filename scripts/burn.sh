@@ -127,6 +127,12 @@ if [[ "$(readlink "${EPREFIX}/etc/portage/make.profile")" != *"aptenodytes/profi
   erun eselect profile set "aptenodytes:iglu/${IGLU_ID}"
 fi
 
+if guse prefix && ! guse prefix-guest && [[ ! -L "${EPREFIX}/usr/sbin" ]]; then
+  echo ">>> Fixing merge-usr layout for prefix..."
+  erun emerge -1 sys-apps/merge-usr
+  erun merge-usr --prefix "${EPREFIX}"
+fi
+
 # [[ -e ]] doesn't support glob, so test here:
 if ! test -e "${EPREFIX}/var/db/pkg/sci-misc/aptenodytes-"*"/repository"; then
   echo ">>> Merging sci-misc/aptenodytes..."

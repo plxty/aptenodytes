@@ -32,10 +32,12 @@ src_install() {
   # make sysctl managed by systemd for now, FIXME: procps-p?
   insinto /etc/sysctl.d
   escript gen-network.py sysctl sysctl
-  doins sysctl/*
+  if test -e sysctl/*; then
+    doins sysctl/*
+  fi
 
   insinto /etc
-  IGLU_DOMAIN="$(cat "${IGLU_ID}" | awk -F. -v OFS=. '{$1=""; print substr($0,2)}')" \
+  IGLU_DOMAIN="$(echo "${IGLU_ID}" | awk -F. -v OFS=. '{$1=""; print substr($0,2)}')" \
     envsubst '${IGLU_DOMAIN}' < "${FILESDIR}/resolv.conf" > "${T}/resolv.conf"
   doins "${T}/resolv.conf"
 }
