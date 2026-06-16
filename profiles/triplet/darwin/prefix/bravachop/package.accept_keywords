@@ -50,6 +50,7 @@
 
 # golang, less-is-more, or?
 =dev-lang/go-1.26.2 **
+=app-crypt/age-1.3.1-r1 **
 
 # misc, misc, misc
 =sys-apps/smartmontools-7.5-r1 **

@@ -94,11 +94,11 @@ fire_repositories() {
     fi
   fi
 
-  # always rsync myself:
+  # always rsync myself, note the exclude rules (@see man 1 rsync)
   local aptenodytes_repo="${EPREFIX}/var/db/repos/aptenodytes"
   if ${refresh} || [[ ! -e "${aptenodytes_repo}/scripts/burn.sh" ]]; then
     mkdir -p "${aptenodytes_repo}"
-    rsync -a --delete --exclude .git .. "${aptenodytes_repo}"
+    rsync -aC --exclude ".*" --delete .. "${aptenodytes_repo}"
   fi
 }
 

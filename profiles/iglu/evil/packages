@@ -2,7 +2,7 @@
 *net-dialup/ppp-p
 *net-dns/dnsmasq-p
 *net-firewall/nftables-p
-*net-proxy/mihomo
+*net-proxy/mihomo-p
 
 # oldnix
 *sys-fs/zfs
