@@ -1,14 +1,15 @@
-# Now macOS doesn't play very well with gcc due to private builtin and block...
-# and the make.conf can't have a dynamic way to select what CC provides.
-# To minimize the impact, just some uncompiled package listed here, aka package.env.
-# @see portage myxfiles, the profile can't select per-package env...
+# @see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78352
+# @see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=119435
+# kind of package.env, @see portage myxfiles, profile can't have it...
 case "${CATEGORY}/${PN}" in
-  "dev-util/codex"|"dev-lang/python")
-    # @see https://wiki.gentoo.org/wiki/LLVM/Clang
-    export CC="${CHOST}-clang"
-    export CPP="${CHOST}-clang-cpp"
-    export CXX="${CHOST}-clang++"
-    export AR="llvm-ar"
-    export NM="llvm-nm"
-    export RANLIB="llvm-ranlib" ;;
+	"dev-lang/python"|\
+	"dev-util/codex"|\
+	"dev-libs/leancrypto")
+		# @see https://wiki.gentoo.org/wiki/LLVM/Clang
+		export CC="${CHOST}-clang"
+		export CPP="${CHOST}-clang-cpp"
+		export CXX="${CHOST}-clang++"
+		export AR="llvm-ar"
+		export NM="llvm-nm"
+		export RANLIB="llvm-ranlib" ;;
 esac

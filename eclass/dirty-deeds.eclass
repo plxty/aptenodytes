@@ -75,20 +75,17 @@ userdoins() {
 
     local username="${flag#iglu_lives_}"
     local groupname="${username}" homedest=
+
+    # for prefix, ensures "${EPREFIX}/home" exists:
     if use prefix; then
       username="${PORTAGE_USERNAME}"
       groupname="${PORTAGE_GRPNAME}"
-    fi
-
-    if [[ "${ARCH}" == *"-macos" ]]; then
-      homedest="$(finger "${username}" | awk '/^Directory/ {print $2}')"
+      homedest="/home"
+      if [[ ! -e "${EPREFIX}${homedest}" ]]; then
+        die "please symlink the ${EPREFIX}${homedest} directory to your home"
+      fi
     else
       homedest="$(getent passwd "${username}" | cut -d: -f6)"
-    fi
-
-    if use prefix; then
-      # Make a relative path to passing by the checks, dirty enough:
-      homedest="/$(realpath -s --relative-to="${EPREFIX}" "${homedest}")"
     fi
 
     users+=("${username}"$'\n'"${groupname}"$'\n'"${homedest}")

@@ -10,7 +10,7 @@ RDEPEND="
 S="${T}"
 
 src_install() {
-  # mostly portage things
+  # @see https://github.com/gentoo/portage/tree/prefix
   keepdir /etc/portage/make.conf
 
   if [[ "${GENTOO_BINHOST:-}" != "" ]]; then
@@ -33,12 +33,6 @@ src_install() {
   # organize?
   insinto /etc/portage/patches/app-editors/helix
   doins "${FILESDIR}/0000-helix.patch"
-
-  if use prefix; then
-    # https://github.com/gentoo/portage/tree/prefix
-    insinto /etc/portage/patches/sys-apps/portage
-    doins "${FILESDIR}/0000-portage-prefix.patch"
-  fi
 }
 
 pkg_preinst() {

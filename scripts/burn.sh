@@ -129,6 +129,24 @@ if guse prefix && ! guse prefix-guest && [[ ! -L "${EPREFIX}/usr/sbin" ]]; then
   erun merge-usr --prefix "${EPREFIX}"
 fi
 
+if guse prefix && [[ ! -e "${EPREFIX}/home" ]]; then
+  for flag in $USE; do
+    if [[ "${flag}" != "iglu_lives_"* ]]; then
+      continue
+    fi
+    username="${flag#iglu_lives_}"
+    if hash finger 2>/dev/null; then
+      homedest="$(finger "${username}" | awk '/^Directory/ {print $2}')"
+    elif hash getent 2>/dev/null; then
+      homedest="$(getent passwd "${username}" | cut -d: -f6)"
+    else
+      die "unable to get home for prefix user ${username}"
+    fi
+  done
+  echo ">>> Symlinking home to ${username}..."
+  ln -s "${homedest}" "${EPREFIX}/home"
+fi
+
 # [[ -e ]] doesn't support glob, so test here:
 if ! test -e "${EPREFIX}/var/db/pkg/sci-misc/aptenodytes-"*"/repository"; then
   echo ">>> Merging sci-misc/aptenodytes..."
