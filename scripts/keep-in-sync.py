@@ -51,7 +51,7 @@ class WorkingEnvironment:
     default_repo_name: str = Path(portage.settings["PORTDIR"]).name
     repos_path: Path = Path(portage.settings["PORTDIR"]).parent
     portdbapi: portdbapi = portage.db[portage.settings["EROOT"]]["porttree"].dbapi
-    accept_keywords: Set[str] = {"amd64", "arm64", "arm64-macos", "~arm64-macos"}
+    accept_keywords: Set[str] = {"amd64", "arm64", "arm64-macos"}
 
 
 def progress(text: str) -> None:

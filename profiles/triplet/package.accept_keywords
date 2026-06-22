@@ -15,4 +15,6 @@
 # [aptenodytes]
 
 # cutting edges, but don't mix:
+# [aptenodytes] pin_until_stable=1
 =dev-lang/rust-bin-1.95.0 **
+# [aptenodytes]
