@@ -15,15 +15,15 @@ SRC_URI="
 S="${WORKDIR}/cli-${PV}"
 
 src_prepare() {
-  default
-  mv vendor/meta_data.json internal/registry
-  sed -i "s/echo dev/echo v${PN}/g" Makefile
+	default
+	mv vendor/meta_data.json internal/registry
+	sed -i "s/echo dev/echo v${PN}/g" Makefile
 }
 
 src_compile() {
-  emake build
+	emake build
 }
 
 src_install() {
-  dobin "${PN}"
+	dobin "${PN}"
 }

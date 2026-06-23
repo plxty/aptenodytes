@@ -17,6 +17,7 @@
 *net-misc/aria2
 *app-office/lark-cli
 *app-crypt/age
+*dev-util/sh
 
 # ebuild dev
 *app-portage/pycargoebuild

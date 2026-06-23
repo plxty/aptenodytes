@@ -4,7 +4,7 @@ KEYWORDS="amd64 ~arm64-macos"
 SLOT="0"
 
 DISTUTILS_USE_PEP517=setuptools
-PYTHON_COMPAT=( python3_{13..14} )
+PYTHON_COMPAT=(python3_{13..14})
 inherit distutils-r1 pypi
 
 # https://github.com/xonsh/xonsh/blob/main/pyproject.toml
@@ -16,8 +16,9 @@ RDEPEND="
   dev-python/click[${PYTHON_USEDEP}]
 "
 case "${CHOST}" in
-  *"-linux"*)
-    RDEPEND+="dev-python/distro[${PYTHON_USEDEP}]" ;;
-  # gnureadline is already a part of python in darwin
+	*"-linux"*)
+		RDEPEND+="dev-python/distro[${PYTHON_USEDEP}]"
+		;;
+		# gnureadline is already a part of python in darwin
 esac
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"

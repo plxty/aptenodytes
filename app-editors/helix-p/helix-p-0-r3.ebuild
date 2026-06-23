@@ -15,18 +15,19 @@ RDEPEND="
   dev-util/shellcheck-bin
 "
 case "${CHOST}" in
-  *"-linux"*)
-    RDEPEND+="llvm-core/clang" ;;
-  # darwin has a builtin clangd, we now use it instead...
+	*"-linux"*)
+		RDEPEND+="llvm-core/clang"
+		;;
+		# darwin has a builtin clangd, we now use it instead...
 esac
 S="${T}"
 
 src_install() {
-  userinsinto .config/helix
-  userdoins "${FILESDIR}/"{config.toml,languages.toml}
+	userinsinto .config/helix
+	userdoins "${FILESDIR}/"{config.toml,languages.toml}
 }
 
 pkg_postinst() {
-  # ${EPREFIX}/etc/env.d/99editor
-  eselect editor set hx
+	# ${EPREFIX}/etc/env.d/99editor
+	eselect editor set hx
 }

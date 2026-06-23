@@ -11,7 +11,7 @@ RDEPEND="
 S="${T}"
 
 src_install() {
-  # FIXME: not finished yet...
-  dosym /usr/share/geosite/loyalsoldier.dat /etc/mihomo/geosite.dat
-  dosym /usr/share/geoip/loyalsoldier.dat /etc/mihomo/geoip.dat
+	# FIXME: not finished yet...
+	dosym /usr/share/geosite/loyalsoldier.dat /etc/mihomo/geosite.dat
+	dosym /usr/share/geoip/loyalsoldier.dat /etc/mihomo/geoip.dat
 }

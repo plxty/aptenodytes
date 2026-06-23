@@ -5,9 +5,9 @@ eval "$(pkg_overlay)"
 
 # [aptenodytes] pin_until_stable=1
 if [[ "${ARCH}" == "arm64-macos" ]]; then
-  # upstream has no any keywords available, wait for stable...
-  # KEYWORDS="${KEYWORDS} ~arm64-macos"
+	# upstream has no any keywords available, wait for stable...
+	# KEYWORDS="${KEYWORDS} ~arm64-macos"
 
-  # https://github.com/libevent/libevent/issues/920#issuecomment-546596875
-  PATCHES+=("${FILESDIR}/${P}-osx-rpath.patch")
+	# https://github.com/libevent/libevent/issues/920#issuecomment-546596875
+	PATCHES+=("${FILESDIR}/${P}-osx-rpath.patch")
 fi

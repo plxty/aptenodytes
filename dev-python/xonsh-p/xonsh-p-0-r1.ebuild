@@ -13,7 +13,7 @@ RDEPEND="
 S="${T}"
 
 src_install() {
-  # TODO: rc.d? @see XONSHRC_DIR
-  userinsinto .config/xonsh
-  userdoins "${FILESDIR}/rc.xsh"
+	# TODO: rc.d? @see XONSHRC_DIR
+	userinsinto .config/xonsh
+	userdoins "${FILESDIR}/rc.xsh"
 }

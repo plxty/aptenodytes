@@ -20,17 +20,17 @@ RDEPEND="
 S="${WORKDIR}"
 
 src_prepare() {
-  default
+	default
 
-  # don't touch installation and user:
-  rm -v {installation,user}.yaml
+	# don't touch installation and user:
+	rm -v {installation,user}.yaml
 }
 
 src_install() {
-  # other platforms?
-  userinsinto "Library/Rime"
+	# other platforms?
+	userinsinto "Library/Rime"
 
-  # rime_deployer?
-  userdoins -r cn_dicts en_dicts lua opencc
-  userdoins ./*.yaml ./*.txt
+	# rime_deployer?
+	userdoins -r cn_dicts en_dicts lua opencc
+	userdoins ./*.yaml ./*.txt
 }

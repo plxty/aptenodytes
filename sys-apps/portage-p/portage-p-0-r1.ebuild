@@ -10,39 +10,39 @@ RDEPEND="
 S="${T}"
 
 src_install() {
-  # @see https://github.com/gentoo/portage/tree/prefix
-  keepdir /etc/portage/make.conf
+	# @see https://github.com/gentoo/portage/tree/prefix
+	keepdir /etc/portage/make.conf
 
-  if [[ "${GENTOO_BINHOST:-}" != "" ]]; then
-    insinto /etc/portage/binrepos.conf
-    envsubst '${EPREFIX},${GENTOO_BINHOST}' < "${FILESDIR}/gentoobinhost.conf" > "${T}/gentoobinhost.conf"
-    doins "${T}/gentoobinhost.conf"
-  fi
+	if [[ "${GENTOO_BINHOST:-}" != "" ]]; then
+		insinto /etc/portage/binrepos.conf
+		envsubst '${EPREFIX},${GENTOO_BINHOST}' <"${FILESDIR}/gentoobinhost.conf" >"${T}/gentoobinhost.conf"
+		doins "${T}/gentoobinhost.conf"
+	fi
 
-  # /usr/share/portage/config/repos.conf?
-  insinto /etc/portage/repos.conf
-  local repos_gentoo="gentoo"
-  if use prefix-guest; then
-    # https://github.com/gentoo/prefix/tree/master/scripts/rsync-generation
-    repos_gentoo="gentoo_prefix"
-  fi
-  envsubst '${EPREFIX}' < "${FILESDIR}/${repos_gentoo}.conf" > "${T}/${repos_gentoo}.conf"
-  envsubst '${EPREFIX}' < "${FILESDIR}/aptenodytes.conf" > "${T}/aptenodytes.conf"
-  doins "${T}/${repos_gentoo}.conf" "${T}/aptenodytes.conf"
+	# /usr/share/portage/config/repos.conf?
+	insinto /etc/portage/repos.conf
+	local repos_gentoo="gentoo"
+	if use prefix-guest; then
+		# https://github.com/gentoo/prefix/tree/master/scripts/rsync-generation
+		repos_gentoo="gentoo_prefix"
+	fi
+	envsubst '${EPREFIX}' <"${FILESDIR}/${repos_gentoo}.conf" >"${T}/${repos_gentoo}.conf"
+	envsubst '${EPREFIX}' <"${FILESDIR}/aptenodytes.conf" >"${T}/aptenodytes.conf"
+	doins "${T}/${repos_gentoo}.conf" "${T}/aptenodytes.conf"
 
-  # organize?
-  insinto /etc/portage/patches/app-editors/helix
-  doins "${FILESDIR}/0000-helix.patch"
+	# organize?
+	insinto /etc/portage/patches/app-editors/helix
+	doins "${FILESDIR}/0000-helix.patch"
 }
 
 pkg_preinst() {
-  # suppress warnings
-  if [[ -f "${EPREFIX}/etc/portage/make.conf" ]]; then
-    rm -v "${EPREFIX}/etc/portage/make.conf"
-  fi
+	# suppress warnings
+	if [[ -f "${EPREFIX}/etc/portage/make.conf" ]]; then
+		rm -v "${EPREFIX}/etc/portage/make.conf"
+	fi
 
-  # always override:
-  if [[ -f "${EPREFIX}/etc/portage/repos.conf/aptenodytes.conf" ]]; then
-    rm -v "${EPREFIX}/etc/portage/repos.conf/aptenodytes.conf"
-  fi
+	# always override:
+	if [[ -f "${EPREFIX}/etc/portage/repos.conf/aptenodytes.conf" ]]; then
+		rm -v "${EPREFIX}/etc/portage/repos.conf/aptenodytes.conf"
+	fi
 }

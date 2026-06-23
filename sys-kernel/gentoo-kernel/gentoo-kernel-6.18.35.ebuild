@@ -15,25 +15,25 @@ BDEPEND+="
 
 # is a binary: portage/bin/ebuild-helpers/emake
 emake() {
-  local emake_arg
-  local option_args=()
-  local lsmod=
-  for emake_arg in "${@}"; do
-    if [[ "${emake_arg}" == "olddefconfig" ]]; then
-      lsmod="/etc/kernel/modprobed.db"
-    else
-      option_args+=("${emake_arg}")
-    fi
-  done
+	local emake_arg
+	local option_args=()
+	local lsmod=
+	for emake_arg in "${@}"; do
+		if [[ "${emake_arg}" == "olddefconfig" ]]; then
+			lsmod="/etc/kernel/modprobed.db"
+		else
+			option_args+=("${emake_arg}")
+		fi
+	done
 
-  command emake "${@}" || die
-  if [[ "${lsmod}" != "" ]] && use modprobed-db; then
-    if [[ ! -e "${lsmod}" ]]; then
-      ewarn "USE=modprobed-db but ${lsmod} isn't inplace, will build full modules"
-    else
-      command emake "${option_args[@]}" "LSMOD=${lsmod}" localmodconfig || die
-    fi
-  fi
+	command emake "${@}" || die
+	if [[ "${lsmod}" != "" ]] && use modprobed-db; then
+		if [[ ! -e "${lsmod}" ]]; then
+			ewarn "USE=modprobed-db but ${lsmod} isn't inplace, will build full modules"
+		else
+			command emake "${option_args[@]}" "LSMOD=${lsmod}" localmodconfig || die
+		fi
+	fi
 }
 
 # we're making a uki image here, so depends on firmware unconditionally.

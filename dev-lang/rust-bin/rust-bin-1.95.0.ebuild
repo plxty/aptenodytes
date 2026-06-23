@@ -8,12 +8,12 @@ eval "$(pkg_overlay)"
 KEYWORDS="${KEYWORDS} ~arm64-macos"
 
 if [[ "${ARCH}" == "arm64-macos" ]]; then
-  # don't patchelf on darwin:
-  patchelf() {
-    :
-  }
+	# don't patchelf on darwin:
+	patchelf() {
+		:
+	}
 
-  # remove some un-buildable depends:
-  RDEPEND="${RDEPEND/sys-apps\/lsb-release/}"
-  BDEPEND="${BDEPEND/prefix? ( dev-util\/patchelf )/}"
+	# remove some un-buildable depends:
+	RDEPEND="${RDEPEND/sys-apps\/lsb-release/}"
+	BDEPEND="${BDEPEND/prefix? ( dev-util\/patchelf )/}"
 fi

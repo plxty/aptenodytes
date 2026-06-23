@@ -9,17 +9,17 @@ LICENSE="MIT"
 S="${WORKDIR}/${PN}-${TMUX_MCP_AGENT_TAG}"
 
 DISTUTILS_USE_PEP517=setuptools
-PYTHON_COMPAT=( python3_{13..14} )
+PYTHON_COMPAT=(python3_{13..14})
 inherit distutils-r1
 
 RDEPEND="dev-python/mcp[${PYTHON_USEDEP}]"
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 
 src_prepare() {
-  default
+	default
 
-  # make tmux agent a package:
-  cat > pyproject.toml <<EOF || die
+	# make tmux agent a package:
+	cat >pyproject.toml <<EOF || die
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
@@ -33,12 +33,12 @@ requires-python = ">=3.13"
 py-modules = ["tmux_agent"]
 EOF
 
-  # make mcp server a executable:
-  mv mcp_server.py tmux-mcp
+	# make mcp server a executable:
+	mv mcp_server.py tmux-mcp
 }
 
 python_install() {
-  distutils-r1_python_install
-  exeinto "/usr/bin"
-  doexe "tmux-mcp"
+	distutils-r1_python_install
+	exeinto "/usr/bin"
+	doexe "tmux-mcp"
 }

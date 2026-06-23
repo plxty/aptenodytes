@@ -14,5 +14,5 @@ KEYWORDS="${KEYWORDS} ~arm64-macos"
 
 # patch if we're mac:
 if [[ "${ARCH}" == *"-macos" ]]; then
-  PATCHES+=("${FILESDIR}/${PN}-workaround-mach-o-rpath.patch")
+	PATCHES+=("${FILESDIR}/${PN}-workaround-mach-o-rpath.patch")
 fi
