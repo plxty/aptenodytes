@@ -156,12 +156,6 @@ fi
 # now try to sync the repo with git to ensure we've setup:
 fire_repositories true
 
-# TODO: make a better marker:
-if guse prefix && ! grep -q "like we've no prefix" "${EPREFIX}/usr/lib/python"*"/site-packages/portage/dbapi/vartree.py"; then
-  echo ">>> Re-merging pacthed sys-apps/portage..."
-  erun emerge -1 sys-apps/portage
-fi
-
 # update-the-world if !shell-instead
 if [[ "${*}" != "" ]]; then
   echo ">>> Spawning ${*}..."
