@@ -56,7 +56,7 @@ m = [":format", ":write --format"]  # TODO: why :format then?
 p = ":toggle auto-pairs"
 r = ":toggle search.regex"
 s = ":toggle search.smart-case"
-t = ":toggle smart-tab.enable"
+t = [":toggle smart-tab.enable", ":indent-style t"]
 w = ":toggle search.whole-word"
 
 [keys.normal.","]

@@ -1,10 +1,13 @@
 IGLU_ID="evil.xas.is"
+
+# note to match mihomo config.yaml, don't want to manage mihomo here, as it's not
+# a "network", more like a "service", the network should focus only on infra (?)
 IGLU_NETWORK="
-  lo fakeip=198.18.0.0/15,127.0.0.1:7892,0xfeedc1a5,100;
-  br-lan bridge inet=10.172.42.1/24 dhcp6pd dnsmasq=ppp-wan,127.0.0.1#1053 trusted;
-  eth0 mac=58:47:ca:76:f8:26 bridge=br-lan;
-  eth1 mac=58:47:ca:76:f8:27 bridge=br-lan;
-  eth2 mac=58:47:ca:76:f8:28 bridge=br-lan;
-  eth3 mac=58:47:ca:76:f8:29 unmanaged pppoe=ppp-wan;
-  ppp-wan dhcp6pd=::/64 masquerade=br-lan
+	lo tproxy=198.18.0.0/15,127.0.0.1:7892,0xfeedc1a5,100;
+	br-lan bridge inet=10.172.42.1/24 dhcp6pd dnsmasq=ppp-wan,127.0.0.1#1053 trusted;
+	eth0 mac=58:47:ca:76:f8:26 bridge=br-lan;
+	eth1 mac=58:47:ca:76:f8:27 bridge=br-lan;
+	eth2 mac=58:47:ca:76:f8:28 bridge=br-lan;
+	eth3 mac=58:47:ca:76:f8:29 unmanaged pppoe=ppp-wan;
+	ppp-wan dhcp6pd=::/64 masquerade=br-lan
 "

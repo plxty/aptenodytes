@@ -183,8 +183,8 @@ def collect_networkd(network: Network, iface: str) -> Collect:
             )
 
     # proxy, special, hmmm
-    if "fakeip" in attrs:
-        dest, _, fwmark, table = attrs.get1("fakeip").split(",")
+    if "tproxy" in attrs:
+        dest, _, fwmark, table = attrs.get1("tproxy").split(",")
         network_config.set(
             "Route",
             [
@@ -410,10 +410,10 @@ def collect_nftables(network: Network) -> Collect:
             iifname = attrs.get1("masquerade")
             nat_post.append(f'iifname {{ "{iifname}" }} oifname "{iface}" masquerade')
 
-        if "fakeip" in attrs:
-            dest, tproxy, fwmark, _ = attrs.get1("fakeip").split(",")
+        if "tproxy" in attrs:
+            dest, tproxy, fwmark, _ = attrs.get1("tproxy").split(",")
             rules.set(
-                "table inet fakeip",
+                "table inet tproxy",
                 {
                     "set proxy": dedent(f"""
                         typeof ip daddr

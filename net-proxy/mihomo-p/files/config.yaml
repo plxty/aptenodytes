@@ -1,0 +1,89 @@
+# https://github.com/HenryChiao/MIHOMO_YAMLS/blob/main/THEYAMLS/General_Config/Repcz/config_lite.yaml
+# 2026-6-21 13:00, modified, check newer `fake-ip-filter` and `rules`
+# note: this is yq format, can't be used directly with mihomo...
+
+external-controller: :9090
+tproxy-port: 7892
+mixed-port: 7893
+tcp-concurrent: true
+allow-lan: true
+ipv6: true
+log-level: warning
+unified-delay: true
+mode: rule
+
+geodata-mode: true
+geox-url:
+  geoip: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat"
+  geosite: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+  mmdb: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb"
+  asn: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb"
+
+profile: { store-selected: true, store-fake-ip: true }
+sniffer: { enable: true, sniff: { HTTP: { ports: [80], override-destination: true }, TLS: { ports: [443, 8443] }, QUIC: { ports: [443, 8443] } } }
+
+dns:
+  enable: true
+  ipv6: true
+  enhanced-mode: fake-ip
+  listen: :1053
+  fake-ip-range: 198.18.0.0/15
+  fake-ip-filter-mode: rule
+  fake-ip-filter:
+    # lan, or local:
+    - DOMAIN-WILDCARD,+.lan,real-ip
+    - DOMAIN-WILDCARD,*,real-ip
+    - DOMAIN-WILDCARD,+.local,real-ip
+    - DOMAIN-WILDCARD,+.cmpassport.com,real-ip
+    - DOMAIN-WILDCARD,id6.me,real-ip
+    - DOMAIN-WILDCARD,open.e.189.cn,real-ip
+    - DOMAIN-WILDCARD,mdn.open.wo.cn,real-ip
+    - DOMAIN-WILDCARD,opencloud.wostore.cn,real-ip
+    - DOMAIN-WILDCARD,auth.wosms.cn,real-ip
+    - DOMAIN-WILDCARD,+.10099.com.cn,real-ip
+    - DOMAIN-WILDCARD,+.msftconnecttest.com,real-ip
+    - DOMAIN-WILDCARD,+.msftncsi.com,real-ip
+    - DOMAIN-WILDCARD,lancache.steamcontent.com,real-ip
+    # in priority order (rules):
+    - DOMAIN-SUFFIX,kei.network,real-ip
+    - DOMAIN-SUFFIX,xas.is,real-ip
+    - DOMAIN-SUFFIX,alibaba-inc.com,real-ip
+    - DOMAIN-SUFFIX,yunos-inc.com,real-ip
+    - DOMAIN-SUFFIX,pool.ntp.org,real-ip
+    # qnap
+    - DOMAIN-SUFFIX,myqnapcloud.cn,real-ip
+    - DOMAIN-SUFFIX,myqnapcloud.io,real-ip
+    # steam, https://femoon.top/article/f5540f1e-fa0b-4883-9104-21ffee1e2f1b
+    - DOMAIN,steamcdn-a.akamaihd.net,real-ip
+    - DOMAIN-SUFFIX,cm.steampowered.com,real-ip
+    - DOMAIN-SUFFIX,steamserver.net,real-ip
+    # google, https://github.com/vernesong/OpenClash/discussions/3131#discussioncomment-14898388
+    # - DOMAIN-SUFFIX,xn--ngstr-lra8j.com,real-ip
+    # - DOMAIN-SUFFIX,googleapis.cn,fake-ip
+    # last guards:
+    - GEOSITE,geolocation-cn,real-ip
+    - MATCH,fake-ip
+  nameserver: [223.5.5.5, 202.96.134.133, 202.96.128.166, 119.29.29.29]
+
+rules:
+  # by-site, order matters:
+  - GEOSITE,openai,PROXY
+  - GEOSITE,category-games,DIRECT
+  - GEOSITE,github,PROXY
+  - GEOSITE,telegram,PROXY
+  - GEOSITE,twitter,PROXY
+  - GEOSITE,microsoft,DIRECT
+  - GEOSITE,youtube,PROXY
+  - GEOSITE,google,PROXY
+  - GEOSITE,apple,DIRECT
+  - GEOSITE,paypal,DIRECT
+  - GEOSITE,geolocation-!cn,PROXY
+  - GEOSITE,private,DIRECT
+  # by-ip:
+  - GEOIP,telegram,PROXY
+  - GEOIP,twitter,PROXY
+  - GEOIP,google,PROXY
+  - GEOIP,private,DIRECT
+  - GEOIP,cn,DIRECT
+  # defaults:
+  - MATCH,PROXY

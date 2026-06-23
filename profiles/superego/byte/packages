@@ -18,6 +18,8 @@
 *app-office/lark-cli
 *app-crypt/age
 *dev-util/sh
+*app-misc/jq
+*app-misc/yq
 
 # ebuild dev
 *app-portage/pycargoebuild
