@@ -1,6 +1,5 @@
 # https://github.com/HenryChiao/MIHOMO_YAMLS/blob/main/THEYAMLS/General_Config/Repcz/config_lite.yaml
 # 2026-6-21 13:00, modified, check newer `fake-ip-filter` and `rules`
-# note: this is yq format, can't be used directly with mihomo...
 
 external-controller: :9090
 tproxy-port: 7892
@@ -31,19 +30,16 @@ dns:
   fake-ip-filter-mode: rule
   fake-ip-filter:
     # lan, or local:
-    - DOMAIN-WILDCARD,+.lan,real-ip
-    - DOMAIN-WILDCARD,*,real-ip
-    - DOMAIN-WILDCARD,+.local,real-ip
-    - DOMAIN-WILDCARD,+.cmpassport.com,real-ip
-    - DOMAIN-WILDCARD,id6.me,real-ip
-    - DOMAIN-WILDCARD,open.e.189.cn,real-ip
-    - DOMAIN-WILDCARD,mdn.open.wo.cn,real-ip
-    - DOMAIN-WILDCARD,opencloud.wostore.cn,real-ip
-    - DOMAIN-WILDCARD,auth.wosms.cn,real-ip
-    - DOMAIN-WILDCARD,+.10099.com.cn,real-ip
-    - DOMAIN-WILDCARD,+.msftconnecttest.com,real-ip
-    - DOMAIN-WILDCARD,+.msftncsi.com,real-ip
-    - DOMAIN-WILDCARD,lancache.steamcontent.com,real-ip
+    - DOMAIN-SUFFIX,cmpassport.com,real-ip
+    - DOMAIN,id6.me,real-ip
+    - DOMAIN,open.e.189.cn,real-ip
+    - DOMAIN,mdn.open.wo.cn,real-ip
+    - DOMAIN,opencloud.wostore.cn,real-ip
+    - DOMAIN,auth.wosms.cn,real-ip
+    - DOMAIN-SUFFIX,10099.com.cn,real-ip
+    - DOMAIN-SUFFIX,msftconnecttest.com,real-ip
+    - DOMAIN-SUFFIX,msftncsi.com,real-ip
+    - DOMAIN,lancache.steamcontent.com,real-ip
     # in priority order (rules):
     - DOMAIN-SUFFIX,kei.network,real-ip
     - DOMAIN-SUFFIX,xas.is,real-ip
@@ -87,3 +83,19 @@ rules:
   - GEOIP,cn,DIRECT
   # defaults:
   - MATCH,PROXY
+
+proxy-providers:
+  proxy-default:
+    type: file
+    path: ./proxy-default.yaml
+
+proxy-groups:
+  - name: PROXY
+    type: select
+    proxies:
+      - proxy-default
+
+  - name: proxy-default
+    type: select
+    use:
+      - proxy-default

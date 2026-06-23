@@ -6,13 +6,21 @@ SLOT="0"
 inherit dirty-deeds systemd
 
 BDEPEND="dev-lang/python"
-RDEPEND="net-dns/dnsmasq"
+RDEPEND="
+	sys-apps/systemd-p[-resolved]
+	net-dns/dnsmasq
+"
 S="${T}"
 
 src_install() {
 	insinto /etc
 	escript gen-network.py dnsmasq .
 	doins dnsmasq.conf
+
+	# defaults resolv:
+	insinto /etc
+	IGLU_DOMAIN="$(edomain)" envsubst <"${FILESDIR}/resolv.conf" >"${T}/resolv.conf"
+	doins "${T}/resolv.conf"
 
 	systemd_enable_service multi-user.target dnsmasq.service
 
@@ -23,6 +31,10 @@ src_install() {
 }
 
 pkg_preinst() {
+	if grep -q Generated /etc/resolv.conf; then
+		rm -v /etc/resolv.conf
+	fi
+
 	if grep -q "Configuration file for dnsmasq" /etc/dnsmasq.conf; then
 		rm -v /etc/dnsmasq.conf
 	fi

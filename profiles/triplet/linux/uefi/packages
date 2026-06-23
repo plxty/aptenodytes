@@ -2,6 +2,9 @@
 *sys-kernel/installkernel-p
 *sys-kernel/gentoo-kernel
 
+# hardware
+*sys-apps/lm-sensors
+
 # administrator
 *sys-apps/systemd-p
 *app-admin/sudo-p

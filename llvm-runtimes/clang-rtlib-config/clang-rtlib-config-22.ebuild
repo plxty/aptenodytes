@@ -1,12 +1,9 @@
 EAPI="8"
 
-# [aptenodytes] pin_until_stable=1
 inherit dirty-deeds
-eval "$(pkg_overlay)"
+eval "$(pkg_overlay --arch arm64-macos)"
 
-if [[ "${ARCH}" == *"-macos" ]]; then
-	# workaround to use system compiler-rt in darwin, instead of libgcc:
-	# @see clang-common
-	src_install_text="$(declare -f src_install)"
-	eval "${src_install_text//libgcc/platform}"
-fi
+# workaround to use system compiler-rt in darwin, instead of libgcc:
+# @see clang-common
+src_install_text="$(declare -f src_install)"
+eval "${src_install_text//libgcc/platform}"

@@ -16,13 +16,29 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 	}
 
 	pkg_overlay() {
+		local repo=
+		local arch=
+		while [[ "${1:-}" != "" ]]; do
+			case "${1}" in
+			"--repo")
+				repo="${2}"
+				shift 2
+				;;
+			"--arch")
+				arch="${2}"
+				shift 2
+				;;
+			*) die "invalid argument to pkg_overlay, check it" ;;
+			esac
+		done
+
 		# defaults to overlay the main repo:
-		local repo="gentoo"
-		if [[ "${1:-}" == "--repo" ]]; then
-			repo="${2}"
-			shift 2
-		elif guse prefix-guest; then
-			repo="gentoo_prefix"
+		if [[ "${repo}" == "" ]]; then
+			if guse prefix-guest; then
+				repo="gentoo_prefix"
+			else
+				repo="gentoo"
+			fi
 		fi
 
 		# in global scope, the EPREFIX seems not set yet:
@@ -36,7 +52,17 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 
 		# workaround for FILESDIR (readonly):
 		echo "OLDFILESDIR='${layer}/files'"
-		echo -n "${text//FILESDIR/OLDFILESDIR}"
+		echo "${text//FILESDIR/OLDFILESDIR}"
+
+		# adding checks for arch only, here-doc requires cat which not available...
+		if [[ "${arch}" != "" ]]; then
+			echo "KEYWORDS=\"${arch}\""
+			echo "pkg_pretend() {"
+			echo "	if [[ \"\${ARCH}\" != \"${arch}\" ]]; then"
+			echo "		die \"please use ::gentoo the official repository, you don't need this hack\""
+			echo "	fi"
+			echo "}"
+		fi
 	}
 
 	class_overlay() {
@@ -59,6 +85,10 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 		shift 1
 
 		"${script_dir}/${exe}" "${@}" || die
+	}
+
+	edomain() {
+		echo "${IGLU_ID}" | awk -F. -v OFS=. '{$1=""; print substr($0,2)}'
 	}
 
 	userinsinto() {

@@ -10,22 +10,25 @@ die() {
 # [--opts...] [iglu_id] [eprefix]
 IGLU_ID="$(hostname)"
 EPREFIX="/"
-SKIP_REFRESH=false
+REFRESH=false
+CLEAN=false
 ASK=false
 while [[ "${1:-}" != "" ]]; do
 	case "${1}" in
-		"--skip-refresh") SKIP_REFRESH=true ;;
-		"--ask") ASK=true ;;
-		"--")
-			shift 1
-			break
-			;;
-		*)
-			if [[ "${EPREFIX}" != "/" ]]; then
-				IGLU_ID="${EPREFIX}"
-			fi
-			EPREFIX="${1}"
-			;;
+	"--refresh") REFRESH=true ;;
+	"--clean") CLEAN=true ;;
+	"--ask") ASK=true ;;
+	"--")
+		shift 1
+		break
+		;;
+	"-"*) die "unsupported argument ${1}" ;;
+	*)
+		if [[ "${EPREFIX}" != "/" ]]; then
+			IGLU_ID="${EPREFIX}"
+		fi
+		EPREFIX="${1}"
+		;;
 	esac
 	shift 1
 done
@@ -46,7 +49,7 @@ if grep -q prefix "../profiles/iglu/${IGLU_ID}/parent"; then
 	USE+="prefix "
 fi
 case "$(awk '$2 == "'"iglu/${IGLU_ID}"'" {print $1}' ../profiles/profiles.desc)" in
-	"arm64-macos") USE+="prefix-guest " ;;
+"arm64-macos") USE+="prefix-guest " ;;
 esac
 
 # for many users:
@@ -86,7 +89,7 @@ fire_repositories() {
 		refresh_gentoo=true
 	fi
 
-	if ${refresh_gentoo} && ! ${SKIP_REFRESH}; then
+	if ${refresh_gentoo} && ${REFRESH}; then
 		if ${use_git}; then
 			echo ">>> Refreshing repositories..."
 			erun emerge --sync --quiet
@@ -168,6 +171,15 @@ else
 		erun emerge -uNDva @world
 	else
 		erun emerge -uND @world
+	fi
+fi
+
+if "${CLEAN}"; then
+	echo ">>> Housekeeping..."
+	if "${ASK}"; then
+		erun emerge -ca
+	else
+		erun emerge -c
 	fi
 fi
 

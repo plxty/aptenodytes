@@ -3,6 +3,8 @@ DESCRIPTION="systemd profile"
 KEYWORDS="amd64"
 SLOT="0"
 
+# TODO: virtual/resolver?
+IUSE="+resolved"
 BDEPEND="dev-lang/python"
 RDEPEND="sys-apps/systemd"
 S="${T}"
@@ -36,14 +38,19 @@ src_install() {
 		doins sysctl/*
 	fi
 
-	insinto /etc
-	IGLU_DOMAIN="$(echo "${IGLU_ID}" | awk -F. -v OFS=. '{$1=""; print substr($0,2)}')" \
-		envsubst '${IGLU_DOMAIN}' <"${FILESDIR}/resolv.conf" >"${T}/resolv.conf"
-	doins "${T}/resolv.conf"
+	if use resolved; then
+		insinto /etc
+		IGLU_DOMAIN="$(edomain)" envsubst <"${FILESDIR}/resolv.conf" >"${T}/resolv.conf"
+		doins "${T}/resolv.conf"
+	else
+		echo "disable systemd-resolved.service" >"${T}/91-systemd-resolved.preset"
+		insinto /usr/lib/systemd/system-preset
+		doins "${T}/91-systemd-resolved.preset"
+	fi
 }
 
 pkg_preinst() {
-	if grep -q Generated /etc/resolv.conf; then
+	if use resolved && grep -q Generated /etc/resolv.conf; then
 		rm -v /etc/resolv.conf
 	fi
 }
@@ -56,5 +63,9 @@ pkg_postinst() {
 	# we're following /efi hierarchy:
 	if [[ -d /boot ]]; then
 		rmdir /boot
+	fi
+
+	if ! use resolved && systemctl is-enabled systemd-resolved.service 2>/dev/null; then
+		eqawarn '!resolved, you may need to do "systemctl disable --now systemd-resolved.service" manually'
 	fi
 }
