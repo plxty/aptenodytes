@@ -1,6 +1,6 @@
 EAPI="8"
 DESCRIPTION="Larkoffice CLI"
-KEYWORDS=""
+KEYWORDS="~amd64 ~arm64-macos"
 SLOT="0"
 
 inherit go-module
