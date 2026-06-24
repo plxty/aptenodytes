@@ -29,10 +29,6 @@ src_install() {
 	envsubst '${EPREFIX}' <"${FILESDIR}/${repos_gentoo}.conf" >"${T}/${repos_gentoo}.conf"
 	envsubst '${EPREFIX}' <"${FILESDIR}/aptenodytes.conf" >"${T}/aptenodytes.conf"
 	doins "${T}/${repos_gentoo}.conf" "${T}/aptenodytes.conf"
-
-	# organize?
-	insinto /etc/portage/patches/app-editors/helix
-	doins "${FILESDIR}/0000-helix.patch"
 }
 
 pkg_preinst() {

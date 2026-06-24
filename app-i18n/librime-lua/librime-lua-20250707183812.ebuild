@@ -1,7 +1,7 @@
 EAPI="8"
 
 inherit dirty-deeds
-eval "$(pkg_overlay)"
+eval "$(pkg_overlay --arch arm64-macos)"
 
 # fixing x11 includes in darwin, we use librime's hardcoded:
 PATCHES+=("${FILESDIR}/${PN}-x11-keysym.patch")

@@ -3,9 +3,10 @@ EAPI="8"
 inherit dirty-deeds
 eval "$(pkg_overlay)"
 
-if [[ "${ARCH}" == "arm64-macos" ]]; then
-	KEYWORDS="${KEYWORDS} ~arm64-macos"
+KEYWORDS="${KEYWORDS} ~arm64-macos"
+PATCHES+=("${FILESDIR}/${PN}-fork-taste.patch")
 
+if [[ "${ARCH}" == "arm64-macos" ]]; then
 	eval __"$(declare -f src_install)"
 	src_install() {
 		# replacing the install_name of all grammars
