@@ -90,6 +90,42 @@ type Collect = Dict[str, Config]  # filename -> Config
 type Generate = Dict[str, str]  # filename -> content
 
 
+# arg helpers, note default parameters are like "static" variable:
+def make_arg_type(typ: str, fetch: bool, types: Dict[str, Any]) -> Any:
+    # TODO: type hints... complex...
+    if fetch:
+        if typ == "*":
+            return list(types.values())
+        if typ in types:
+            return [types[typ]]
+        return list()
+
+    def inner(func):
+        types[typ] = func
+        return func
+
+    return inner
+
+
+def arg_type_collect(
+    typ: str, fetch: bool = False, types: Dict[str, Any] = dict()
+) -> Any:
+    return make_arg_type(typ, fetch, types)
+
+
+def arg_type_collect_per_iface(
+    typ: str, fetch: bool = False, types: Dict[str, Any] = dict()
+) -> Any:
+    return make_arg_type(typ, fetch, types)
+
+
+def arg_type_generate(
+    typ: str, fetch: bool = False, types: Dict[str, Any] = dict()
+) -> Any:
+    return make_arg_type(typ, fetch, types)
+
+
+@arg_type_collect_per_iface("networkd")
 def collect_networkd(network: Network, iface: str) -> Collect:
     result: Collect = dict()
     attrs = network[iface]
@@ -229,6 +265,7 @@ def collect_networkd(network: Network, iface: str) -> Collect:
     return result
 
 
+@arg_type_collect("dnsmasq")
 def collect_dnsmasq(network: Network) -> Collect:
     result: Collect = dict()
 
@@ -306,6 +343,7 @@ def collect_dnsmasq(network: Network) -> Collect:
     return result
 
 
+@arg_type_collect_per_iface("pppoe")
 def collect_pppoe(network: Network, iface: str) -> Collect:
     result: Collect = dict()
     attrs = network[iface]
@@ -332,6 +370,7 @@ def collect_pppoe(network: Network, iface: str) -> Collect:
     return result
 
 
+@arg_type_collect("sysctl")
 def collect_sysctl(network: Network) -> Collect:
     result: Collect = dict()
 
@@ -350,6 +389,7 @@ def collect_sysctl(network: Network) -> Collect:
     return result
 
 
+@arg_type_collect("nftables")
 def collect_nftables(network: Network) -> Collect:
     result: Collect = dict()
 
@@ -474,6 +514,7 @@ def collect_nftables(network: Network) -> Collect:
     return result
 
 
+@arg_type_generate("networkd")
 def generate_networkd(collect: Collect) -> Generate:
     result: Generate = dict()
 
@@ -509,6 +550,7 @@ def generate_networkd(collect: Collect) -> Generate:
     return result
 
 
+@arg_type_generate("dnsmasq")
 def generate_dnsmasq(collect: Collect) -> Generate:
     result: Generate = dict()
 
@@ -528,6 +570,7 @@ def generate_dnsmasq(collect: Collect) -> Generate:
     return result
 
 
+@arg_type_generate("pppoe")
 def generate_pppoe(collect: Collect) -> Generate:
     result: Generate = dict()
 
@@ -546,6 +589,7 @@ def generate_pppoe(collect: Collect) -> Generate:
     return result
 
 
+@arg_type_generate("sysctl")
 def generate_sysctl(collect: Collect) -> Generate:
     result: Generate = dict()
 
@@ -562,6 +606,7 @@ def generate_sysctl(collect: Collect) -> Generate:
     return result
 
 
+@arg_type_generate("nftables")
 def generate_nftables(collect: Collect) -> Generate:
     result: Generate = dict()
 
@@ -602,26 +647,15 @@ def main() -> None:
             attrs.set(key, value)
         network[iface] = attrs
 
+    # deduce from decorator:
     typ, output = sys.argv[1:]
-    collect_fns: List[Callable[[Network], Collect]] = list()
-    collect_per_iface_fns: List[Callable[[Network, str], Collect]] = list()
-    generate_fns: List[Callable[[Collect], Generate]] = list()
-    if typ == "networkd" or typ == "*":
-        collect_per_iface_fns.append(collect_networkd)
-        generate_fns.append(generate_networkd)
-    if typ == "dnsmasq" or typ == "*":
-        collect_fns.append(collect_dnsmasq)
-        generate_fns.append(generate_dnsmasq)
-    if typ == "pppoe" or typ == "*":
-        collect_per_iface_fns.append(collect_pppoe)
-        generate_fns.append(generate_pppoe)
-    if typ == "sysctl" or typ == "*":
-        collect_fns.append(collect_sysctl)
-        generate_fns.append(generate_sysctl)
-    if typ == "nftables" or typ == "*":
-        collect_fns.append(collect_nftables)
-        generate_fns.append(generate_nftables)
+    collect_fns: List[Callable[[Network], Collect]] = arg_type_collect(typ, True)
+    collect_per_iface_fns: List[Callable[[Network, str], Collect]] = (
+        arg_type_collect_per_iface(typ, True)
+    )
+    generate_fns: List[Callable[[Collect], Generate]] = arg_type_generate(typ, True)
 
+    # stage collect:
     collect: Collect = dict()
     for cfn in collect_fns:
         collect.update(cfn(network))
@@ -629,6 +663,7 @@ def main() -> None:
         for cpifn in collect_per_iface_fns:
             collect.update(cpifn(network, iface))
 
+    # stage generate:
     generate: Generate = dict()
     for gfn in generate_fns:
         generate.update(gfn(collect))
