@@ -91,9 +91,26 @@ type Generate = Dict[str, str]  # filename -> content
 
 
 # arg helpers, note default parameters are like "static" variable:
-def make_arg_type(typ: str, fetch: bool, types: Dict[str, Any]) -> Any:
-    # TODO: type hints... complex...
-    if fetch:
+# TODO: type hints... complex...
+def deduce_arg_type(
+    cat: Optional[str] = None,
+    typ: Optional[str] = None,
+    collect_types: Dict[str, Any] = dict(),
+    collect_per_iface_types: Dict[str, Any] = dict(),
+    generate_types: Dict[str, Any] = dict(),
+) -> Any:
+    def get_types(cat: str) -> Dict[str, Any]:
+        match cat:
+            case "collect":
+                return collect_types
+            case "collect_per_iface":
+                return collect_per_iface_types
+            case "generate":
+                return generate_types
+        raise
+
+    if cat is not None and typ is not None:
+        types = get_types(cat)
         if typ == "*":
             return list(types.values())
         if typ in types:
@@ -101,32 +118,15 @@ def make_arg_type(typ: str, fetch: bool, types: Dict[str, Any]) -> Any:
         return list()
 
     def inner(func):
-        types[typ] = func
+        cat, typ = func.__name__.rsplit("_", maxsplit=1)
+        get_types(cat)[typ] = func
         return func
 
     return inner
 
 
-def arg_type_collect(
-    typ: str, fetch: bool = False, types: Dict[str, Any] = dict()
-) -> Any:
-    return make_arg_type(typ, fetch, types)
-
-
-def arg_type_collect_per_iface(
-    typ: str, fetch: bool = False, types: Dict[str, Any] = dict()
-) -> Any:
-    return make_arg_type(typ, fetch, types)
-
-
-def arg_type_generate(
-    typ: str, fetch: bool = False, types: Dict[str, Any] = dict()
-) -> Any:
-    return make_arg_type(typ, fetch, types)
-
-
-@arg_type_collect_per_iface("networkd")
-def collect_networkd(network: Network, iface: str) -> Collect:
+@deduce_arg_type()
+def collect_per_iface_networkd(network: Network, iface: str) -> Collect:
     result: Collect = dict()
     attrs = network[iface]
 
@@ -265,7 +265,7 @@ def collect_networkd(network: Network, iface: str) -> Collect:
     return result
 
 
-@arg_type_collect("dnsmasq")
+@deduce_arg_type()
 def collect_dnsmasq(network: Network) -> Collect:
     result: Collect = dict()
 
@@ -343,8 +343,8 @@ def collect_dnsmasq(network: Network) -> Collect:
     return result
 
 
-@arg_type_collect_per_iface("pppoe")
-def collect_pppoe(network: Network, iface: str) -> Collect:
+@deduce_arg_type()
+def collect_per_iface_pppoe(network: Network, iface: str) -> Collect:
     result: Collect = dict()
     attrs = network[iface]
 
@@ -370,7 +370,7 @@ def collect_pppoe(network: Network, iface: str) -> Collect:
     return result
 
 
-@arg_type_collect("sysctl")
+@deduce_arg_type()
 def collect_sysctl(network: Network) -> Collect:
     result: Collect = dict()
 
@@ -389,7 +389,7 @@ def collect_sysctl(network: Network) -> Collect:
     return result
 
 
-@arg_type_collect("nftables")
+@deduce_arg_type()
 def collect_nftables(network: Network) -> Collect:
     result: Collect = dict()
 
@@ -514,7 +514,7 @@ def collect_nftables(network: Network) -> Collect:
     return result
 
 
-@arg_type_generate("networkd")
+@deduce_arg_type()
 def generate_networkd(collect: Collect) -> Generate:
     result: Generate = dict()
 
@@ -550,7 +550,7 @@ def generate_networkd(collect: Collect) -> Generate:
     return result
 
 
-@arg_type_generate("dnsmasq")
+@deduce_arg_type()
 def generate_dnsmasq(collect: Collect) -> Generate:
     result: Generate = dict()
 
@@ -570,7 +570,7 @@ def generate_dnsmasq(collect: Collect) -> Generate:
     return result
 
 
-@arg_type_generate("pppoe")
+@deduce_arg_type()
 def generate_pppoe(collect: Collect) -> Generate:
     result: Generate = dict()
 
@@ -589,7 +589,7 @@ def generate_pppoe(collect: Collect) -> Generate:
     return result
 
 
-@arg_type_generate("sysctl")
+@deduce_arg_type()
 def generate_sysctl(collect: Collect) -> Generate:
     result: Generate = dict()
 
@@ -606,7 +606,7 @@ def generate_sysctl(collect: Collect) -> Generate:
     return result
 
 
-@arg_type_generate("nftables")
+@deduce_arg_type()
 def generate_nftables(collect: Collect) -> Generate:
     result: Generate = dict()
 
@@ -649,11 +649,11 @@ def main() -> None:
 
     # deduce from decorator:
     typ, output = sys.argv[1:]
-    collect_fns: List[Callable[[Network], Collect]] = arg_type_collect(typ, True)
-    collect_per_iface_fns: List[Callable[[Network, str], Collect]] = (
-        arg_type_collect_per_iface(typ, True)
+    collect_fns: List[Callable[[Network], Collect]] = deduce_arg_type("collect", typ)
+    collect_per_iface_fns: List[Callable[[Network, str], Collect]] = deduce_arg_type(
+        "collect_per_iface", typ
     )
-    generate_fns: List[Callable[[Collect], Generate]] = arg_type_generate(typ, True)
+    generate_fns: List[Callable[[Collect], Generate]] = deduce_arg_type("generate", typ)
 
     # stage collect:
     collect: Collect = dict()
