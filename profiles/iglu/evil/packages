@@ -7,3 +7,9 @@
 # oldnix
 *sys-fs/zfs
 *sys-fs/zfs-kmod
+
+# storage
+*sys-fs/xfsprogs
+*net-fs/samba
+*app-emulation/virt-manager
+*app-emulation/virtio-win

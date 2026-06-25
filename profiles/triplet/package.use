@@ -16,3 +16,6 @@ sys-kernel/gentoo-kernel modprobed-db
 # @see https://packages.gentoo.org/useflags/dist-kernel
 sys-fs/zfs dist-kernel
 sys-fs/zfs-kmod dist-kernel
+
+# networks
+net-dns/dnsmasq script

@@ -1,2 +1,3 @@
 # prefer for prefix for simplier ownership, nullmail needs chown:
 *mail-mta/ssmtp
+*sys-process/lsof
