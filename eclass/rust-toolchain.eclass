@@ -3,21 +3,17 @@ if [[ -z ${_RUST_TOOLCHAIN_ECLASS} ]]; then
 	inherit dirty-deeds
 	eval "$(class_overlay)"
 
-	# must reserve it for ebuild
-	: "${RUST_TOOLCHAIN_BASEURL:=https://static.rust-lang.org/dist/}"
-
-	eval __"$(declare -f rust_abi)"
+	# only rust-bin calls us, which is guarded by --arch
 	rust_abi() {
 		local CTARGET=${1:-${CHOST}}
 		case ${CTARGET%%*-} in
 		arm64-apple-darwin*) echo aarch64-apple-darwin ;;
-		*) __rust_abi "${@}" ;;
+		*) die "unsupported ${CTARGET}" ;;
 		esac
 	}
 
-	eval __"$(declare -f rust_all_arch_uris)"
+	# this removes many binaries that we don't need to download:
 	rust_all_arch_uris() {
-		__rust_all_arch_uris "${@}"
 		echo "arm64-macos? ( $(rust_arch_uri aarch64-apple-darwin "${1}" "${2}") )"
 	}
 
