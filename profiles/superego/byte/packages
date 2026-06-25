@@ -21,6 +21,10 @@
 *app-misc/jq
 *app-misc/yq
 
+# hacking things
+*app-misc/binwalk
+*dev-libs/capstone
+
 # ebuild dev
 *app-portage/pycargoebuild
 *app-portage/gentoolkit
