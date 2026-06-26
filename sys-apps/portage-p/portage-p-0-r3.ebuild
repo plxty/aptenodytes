@@ -6,6 +6,7 @@ SLOT="0"
 RDEPEND="
   sys-apps/portage
   dev-vcs/git
+  app-portage/gemato
 "
 S="${T}"
 
