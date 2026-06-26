@@ -26,6 +26,7 @@
 # hacking things
 *app-misc/binwalk
 *dev-libs/capstone
+*dev-util/bindgen
 
 # ebuild dev
 *app-portage/pycargoebuild

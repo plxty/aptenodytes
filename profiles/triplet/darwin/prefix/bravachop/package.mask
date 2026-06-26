@@ -11,3 +11,4 @@
 -dev-util/maturin
 -dev-python/referencing
 -dev-python/rpds-py
+-dev-util/bindgen
