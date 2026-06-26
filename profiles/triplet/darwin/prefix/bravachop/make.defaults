@@ -1,6 +1,6 @@
 # profile adds a ~one, we need a stable one
 # ... and also arm64, we can build most of them:
-ACCEPT_KEYWORDS="arm64-macos arm64"
+ACCEPT_KEYWORDS="${ACCEPT_KEYWORDS} arm64-macos arm64"
 
 # codename in https://asahilinux.org/docs/hw/soc/soc-codenames/
 # CFLAGS=?

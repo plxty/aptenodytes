@@ -20,6 +20,8 @@
 *dev-util/sh
 *app-misc/jq
 *app-misc/yq
+*sys-process/lsof
+*app-arch/7zip
 
 # hacking things
 *app-misc/binwalk

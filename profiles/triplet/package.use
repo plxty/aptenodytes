@@ -2,6 +2,7 @@ dev-lang/rust-bin rust-src rust-analyzer
 dev-java/openjdk-bin source
 sys-apps/portage gentoo-dev
 dev-libs/capstone python
+app-arch/7zip rar
 
 # https://wiki.gentoo.org/wiki/Unified_kernel_image
 # https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Kernel

@@ -1,7 +1,7 @@
 # binpkg
 BINPKG_FORMAT="gpkg"
-FEATURES="getbinpkg binpkg-request-signature"
+FEATURES="${FEATURES} getbinpkg binpkg-request-signature"
 
 # boot, note the USE here will override the per-packages'
 USE="${USE} -initramfs"
-ACCEPT_LICENSE="@BINARY-REDISTRIBUTABLE"
+ACCEPT_LICENSE="${ACCEPT_LICENSE} @BINARY-REDISTRIBUTABLE"
