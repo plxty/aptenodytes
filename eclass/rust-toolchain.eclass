@@ -1,20 +1,23 @@
 if [[ -z ${_RUST_TOOLCHAIN_ECLASS} ]]; then
-	# overlay for adding darwin:
+	# @see man 5 portage eclass-overrides
 	inherit dirty-deeds
 	eval "$(class_overlay)"
 
-	# only rust-bin calls us, which is guarded by --arch
+	eval __"$(declare -f rust_abi)"
 	rust_abi() {
 		local CTARGET=${1:-${CHOST}}
 		case ${CTARGET%%*-} in
 		arm64-apple-darwin*) echo aarch64-apple-darwin ;;
-		*) die "unsupported ${CTARGET}" ;;
+		*) __rust_abi "${@}" ;;
 		esac
 	}
 
-	# this removes many binaries that we don't need to download:
+	eval __"$(declare -f rust_all_arch_uris)"
 	rust_all_arch_uris() {
-		echo "arm64-macos? ( $(rust_arch_uri aarch64-apple-darwin "${1}" "${2}") )"
+		__rust_all_arch_uris "${@}"
+		echo "
+			arm64-macos? ( $(rust_arch_uri aarch64-apple-darwin "${1}" "${2}") )
+		"
 	}
 
 	_RUST_TOOLCHAIN_ECLASS=1
