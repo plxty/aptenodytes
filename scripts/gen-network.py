@@ -279,8 +279,8 @@ def collect_dnsmasq(network: Network) -> Collect:
     # TODO: ipv6 support?
     ctor, *dns = attrs.get1("dnsmasq").split(",")
     addr, prefix = attrs.get1("inet").split("/")
-    hostname = os.environ["IGLU_ID"]
-    domain = hostname.split(".", maxsplit=1)[-1]
+    hostdomain = os.environ["IGLU_ID"]
+    hostname, domain = hostdomain.split(".", maxsplit=1)
 
     # ranges:
     rang = IPv4Network(f"{addr}/{prefix}", False)
@@ -291,13 +291,20 @@ def collect_dnsmasq(network: Network) -> Collect:
     # TODO: auto restart dnsmasq when pppd and mihomo start/stop?
     dnsmasq_config = (
         MultiDict()
-        .set1("address", f"/{hostname}/{addr}")
+        .set(
+            "address",
+            [
+                f"/{hostdomain}/{addr}",
+                f"/{hostname}/{addr}",
+            ],
+        )
         .set1("bind-dynamic", "")
         .set1("cache-size", "10000")
         .set1("dhcp-authoritative", "")
-        .set1("domain", domain)
         .set1("enable-ra", "")
+        .set1("domain", domain)
         .set1("local", f"/{domain}/")
+        .set1("expand-hosts", "")
         .set1("strict-order", "")
         .set(
             "dhcp-option",
@@ -453,9 +460,9 @@ def collect_nftables(network: Network) -> Collect:
         if "tproxy" in attrs:
             dest, tproxy, fwmark, _ = attrs.get1("tproxy").split(",")
             rules.set(
-                "table inet tproxy",
+                "table inet proxy",
                 {
-                    "set proxy": dedent(f"""
+                    "set proxy-set": dedent(f"""
                         typeof ip daddr
                         flags interval
                         auto-merge
@@ -464,7 +471,7 @@ def collect_nftables(network: Network) -> Collect:
                     # to debug, append end: meta nftrace set 0
                     "chain prerouting": dedent(f"""
                         type filter hook prerouting priority mangle;
-                        ip daddr @proxy meta l4proto {{ tcp, udp }} mark set {fwmark} \\
+                        ip daddr @proxy-set meta l4proto {{ tcp, udp }} mark set {fwmark} \\
                             tproxy ip to {tproxy} counter
                     """),
                 },

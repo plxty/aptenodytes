@@ -1,2 +1,17 @@
 # /etc/portage/mirrors?
-GENTOO_MIRRORS="https://mirrors.tuna.tsinghua.edu.cn/gentoo"
+GENTOO_MIRRORS="https://mirrors.ustc.edu.cn/gentoo"
+
+# @see https://wiki.gentoo.org/wiki/CONFIG_PROTECT_MASK, managed by -p :)
+CONFIG_PROTECT_MASK="
+	${CONFIG_PROTECT_MASK}
+	/etc/portage/binrepos.conf/gentoo.conf
+	/etc/portage/repos.conf/gentoo.conf
+	/etc/portage/repos.conf/gentoo_prefix.conf
+	/etc/portage/repos.conf/aptenodytes.conf
+	/etc/resolv.conf
+	/etc/dnsmasq.conf
+	/etc/mihomo
+	/etc/ppp/peers
+	/etc/ppp/ip-link
+	/etc/nftables.rules.d
+"

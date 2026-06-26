@@ -12,7 +12,9 @@ RDEPEND="
 "
 S="${T}"
 
-src_install() {
+src_prepare() {
+	default
+
 	yq -y >config.yaml <"${FILESDIR}/config.yaml"
 	# mocking local test to config:
 	{
@@ -28,7 +30,9 @@ src_install() {
 	ln -s /usr/share/geosite/loyalsoldier.dat GeoSite.dat
 	ln -s /usr/share/geoip/loyalsoldier.dat GeoIP.dat
 	mihomo -d . -t || die
+}
 
+src_install() {
 	insinto /etc/mihomo
 	doins config.yaml
 	dosym /usr/share/geosite/loyalsoldier.dat /etc/mihomo/GeoSite.dat
