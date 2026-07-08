@@ -39,7 +39,6 @@ dns:
     - DOMAIN-SUFFIX,10099.com.cn,real-ip
     - DOMAIN-SUFFIX,msftconnecttest.com,real-ip
     - DOMAIN-SUFFIX,msftncsi.com,real-ip
-    - DOMAIN,lancache.steamcontent.com,real-ip
     # in priority order (rules):
     - DOMAIN-SUFFIX,kei.network,real-ip
     - DOMAIN-SUFFIX,xas.is,real-ip
@@ -49,10 +48,11 @@ dns:
     # qnap
     - DOMAIN-SUFFIX,myqnapcloud.cn,real-ip
     - DOMAIN-SUFFIX,myqnapcloud.io,real-ip
-    # steam, https://femoon.top/article/f5540f1e-fa0b-4883-9104-21ffee1e2f1b
+    # steam, https://robinxb.com/posts/2025/clash-verge-with-steam/
     - DOMAIN,steamcdn-a.akamaihd.net,real-ip
     - DOMAIN-SUFFIX,cm.steampowered.com,real-ip
     - DOMAIN-SUFFIX,steamserver.net,real-ip
+    - DOMAIN-SUFFIX,steamcontent.com,real-ip
     # google, https://github.com/vernesong/OpenClash/discussions/3131#discussioncomment-14898388
     # - DOMAIN-SUFFIX,xn--ngstr-lra8j.com,real-ip
     # - DOMAIN-SUFFIX,googleapis.cn,fake-ip
@@ -64,7 +64,7 @@ dns:
 rules:
   # by-site, order matters:
   - GEOSITE,openai,PROXY
-  - GEOSITE,category-games,DIRECT
+  - GEOSITE,category-games,PROXY
   - GEOSITE,github,PROXY
   - GEOSITE,telegram,PROXY
   - GEOSITE,twitter,PROXY
