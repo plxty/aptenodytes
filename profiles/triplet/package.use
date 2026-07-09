@@ -19,4 +19,5 @@ sys-fs/zfs dist-kernel
 sys-fs/zfs-kmod dist-kernel
 
 # networks
+net-firewall/iptables nftables
 net-dns/dnsmasq script
