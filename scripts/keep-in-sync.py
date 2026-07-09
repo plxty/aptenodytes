@@ -143,7 +143,7 @@ def find_repology_cpv(my_cpv: MyCatPkgVerRev) -> Optional[MyCatPkgVerRev]:
     url = f"https://repology.org/api/v1/project/{normalized}"
     req = Request(url, headers={"User-Agent": "github.com/plxty/aptenodytes"})
     try:
-        with urlopen(req) as r:
+        with urlopen(req, timeout=5) as r:
             packages = json.load(r)
     except URLError as e:
         print(f"!!! Error fetching with {url}: {e}")
