@@ -1,15 +1,11 @@
 EAPI="8"
-DESCRIPTION="mihomo profile"
+
+inherit dirty-deeds systemd
+eval "$(pkg_profile)"
+
 KEYWORDS="amd64"
-SLOT="0"
-
-inherit systemd
-
 BDEPEND="app-misc/yq"
-RDEPEND="
-  dev-libs/v2ray-rules-dat-bin
-  net-proxy/mihomo
-"
+RDEPEND+=" dev-libs/v2ray-rules-dat-bin"
 S="${T}"
 
 src_prepare() {

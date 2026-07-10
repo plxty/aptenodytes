@@ -1,9 +1,9 @@
 EAPI="9"
-DESCRIPTION="sudo profile"
-KEYWORDS="amd64"
-SLOT="0"
 
-RDEPEND="app-admin/sudo"
+inherit dirty-deeds
+eval "$(pkg_profile)"
+
+KEYWORDS="amd64"
 S="${T}"
 
 src_install() {

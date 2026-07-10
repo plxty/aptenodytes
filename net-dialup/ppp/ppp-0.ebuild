@@ -1,12 +1,10 @@
 EAPI="8"
-DESCRIPTION="ppp profile"
-KEYWORDS="amd64"
-SLOT="0"
 
 inherit dirty-deeds systemd
+eval "$(pkg_profile)"
 
+KEYWORDS="amd64"
 BDEPEND="dev-lang/python"
-RDEPEND="net-dialup/ppp"
 S="${T}"
 
 src_prepare() {

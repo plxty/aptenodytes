@@ -1,11 +1,9 @@
 EAPI="8"
-DESCRIPTION="openssh profile"
+
+inherit dirty-deeds systemd
+eval "$(pkg_profile)"
+
 KEYWORDS="amd64"
-SLOT="0"
-
-inherit systemd
-
-RDEPEND="net-misc/openssh" # virtual?
 IUSE="server"
 S="${T}"
 

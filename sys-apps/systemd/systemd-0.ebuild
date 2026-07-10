@@ -1,17 +1,14 @@
 EAPI="9"
 
-SLOT="ridgeni"
-DESCRIPTION="${CATEGORY}/${PN}:${SLOT}"
-KEYWORDS="amd64"
-
-# TODO: virtual/resolver?
-IUSE="+resolved"
-BDEPEND="dev-lang/python"
-RDEPEND="sys-apps/systemd:0"
-S="${T}"
-
 # for escript:
 inherit dirty-deeds
+eval "$(pkg_profile)"
+
+# TODO: virtual/resolver?
+KEYWORDS="amd64"
+IUSE="+resolved"
+BDEPEND="dev-lang/python"
+S="${T}"
 
 pkg_pretend() {
 	if [[ "${IGLU_ID}" != *"."* ]]; then

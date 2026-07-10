@@ -1,16 +1,11 @@
 EAPI="8"
 
-SLOT="ridgeni"
-DESCRIPTION="${CATEGORY}/${PN}:${SLOT}"
-KEYWORDS="amd64"
-
 inherit dirty-deeds systemd
+eval "$(pkg_profile)"
 
+KEYWORDS="amd64"
 BDEPEND="dev-lang/python"
-RDEPEND="
-	sys-apps/systemd:ridgeni[-resolved]
-	net-dns/dnsmasq:0
-"
+RDEPEND+=" sys-apps/systemd:ridgeni[-resolved]"
 S="${T}"
 
 src_prepare() {

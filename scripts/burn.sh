@@ -68,11 +68,12 @@ erun() {
 }
 
 # unify with prefix:
-GENTOO_REPO="gentoo"
 if guse prefix-guest; then
-	GENTOO_REPO="gentoo_prefix"
+	REPOS_GENTOO="gentoo_prefix"
+else
+	REPOS_GENTOO="gentoo"
 fi
-if [[ ! -e "${EPREFIX}/var/db/repos/${GENTOO_REPO}/sys-apps/portage/Manifest" ]]; then
+if [[ ! -e "${EPREFIX}/var/db/repos/${REPOS_GENTOO}/sys-apps/portage/Manifest" ]]; then
 	echo ">>> Initializing repositories..."
 	erun emerge-webrsync -q
 fi
@@ -131,7 +132,6 @@ fi
 
 # now try to sync the repo with git to ensure we've setup:
 if ! "${SKIP_REFRESH}"; then
-	echo ">>> Refreshing repositories..."
 	erun "${PWD}/emerge-sync.py" --quiet
 fi
 

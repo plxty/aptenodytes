@@ -1,13 +1,10 @@
 EAPI="8"
 
-SLOT="ridgeni"
-DESCRIPTION="${CATEGORY}/${PN}:${SLOT}"
-KEYWORDS="amd64 arm64-macos"
-
 inherit dirty-deeds
+eval "$(pkg_profile)"
 
-RDEPEND="
-	sys-apps/portage:0
+KEYWORDS="amd64 arm64-macos"
+RDEPEND+="
 	dev-vcs/git
 	app-portage/gemato
 "

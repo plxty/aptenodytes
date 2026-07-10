@@ -1,9 +1,9 @@
 EAPI="9"
-DESCRIPTION="installkernel profile"
-KEYWORDS="amd64"
-SLOT="0"
 
-RDEPEND="sys-kernel/installkernel"
+inherit dirty-deeds
+eval "$(pkg_profile)"
+
+KEYWORDS="amd64"
 S="${T}"
 
 src_install() {

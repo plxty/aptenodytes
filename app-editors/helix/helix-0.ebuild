@@ -1,16 +1,12 @@
 EAPI="8"
 
 # this is a profile with different slot :)
-SLOT="ridgeni"
-DESCRIPTION="${CATEGORY}/${PN}:${SLOT}"
-KEYWORDS="amd64 arm64-macos"
-
 inherit dirty-deeds
+eval "$(pkg_profile)"
 
-# note for original helix we still need a slot :0...
+KEYWORDS="amd64 arm64-macos"
 IUSE="iglu_lives_byte"
-RDEPEND="
-	app-editors/helix:0
+RDEPEND+="
 	iglu_lives_byte? ( acct-user/byte )
 	dev-util/ruff
 	dev-util/ty
@@ -19,7 +15,7 @@ RDEPEND="
 "
 case "${CHOST}" in
 *"-linux"*)
-	RDEPEND+="llvm-core/clang"
+	RDEPEND+=" llvm-core/clang"
 	;;
 	# darwin has a builtin clangd, we now use it instead...
 esac

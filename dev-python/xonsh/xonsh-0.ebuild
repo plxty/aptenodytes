@@ -1,16 +1,11 @@
 EAPI="8"
 
-SLOT="ridgeni"
-DESCRIPTION="${CATEGORY}/${PN}:${SLOT}"
-KEYWORDS="amd64 arm64-macos"
-
 inherit dirty-deeds
+eval "$(pkg_profile)"
 
+KEYWORDS="amd64 arm64-macos"
 IUSE="iglu_lives_byte"
-RDEPEND="
-	dev-python/xonsh:0
-	iglu_lives_byte? ( acct-user/byte )
-"
+RDEPEND+=" iglu_lives_byte? ( acct-user/byte )"
 S="${T}"
 
 src_install() {

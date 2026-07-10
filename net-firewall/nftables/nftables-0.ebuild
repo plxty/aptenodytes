@@ -1,12 +1,10 @@
 EAPI="8"
-DESCRIPTION="nftables profile"
-KEYWORDS="amd64"
-SLOT="0"
 
 inherit dirty-deeds systemd
+eval "$(pkg_profile)"
 
+KEYWORDS="amd64"
 BDEPEND="dev-lang/python"
-RDEPEND="net-firewall/nftables"
 S="${T}"
 
 # TODO: refactor all other -p ebuilds...
