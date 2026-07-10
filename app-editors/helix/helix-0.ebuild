@@ -7,6 +7,7 @@ eval "$(pkg_profile)"
 KEYWORDS="amd64 arm64-macos"
 IUSE="iglu_lives_byte"
 RDEPEND+="
+	!app-editors/helix-p
 	iglu_lives_byte? ( acct-user/byte )
 	dev-util/ruff
 	dev-util/ty

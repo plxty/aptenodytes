@@ -4,6 +4,7 @@ inherit dirty-deeds systemd
 eval "$(pkg_profile)"
 
 KEYWORDS="amd64"
+RDEPEND+=" !net-dialup/ppp-p"
 BDEPEND="dev-lang/python"
 S="${T}"
 

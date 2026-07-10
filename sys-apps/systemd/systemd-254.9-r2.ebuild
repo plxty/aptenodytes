@@ -1,19 +1,39 @@
-EAPI="9"
+EAPI="8"
 
 # for escript:
-inherit dirty-deeds
+inherit dirty-deeds systemd
+
+# the systemd (and other packages) has been blocked by some deps, so a non-zero
+# version here... maybe better way?
 eval "$(pkg_profile)"
 
 # TODO: virtual/resolver?
 KEYWORDS="amd64"
 IUSE="+resolved"
 BDEPEND="dev-lang/python"
+RDEPEND+=" !sys-apps/systemd-p"
 S="${T}"
 
 pkg_pretend() {
 	if [[ "${IGLU_ID}" != *"."* ]]; then
 		echo "profile should contain domain in IGLU_ID for DNS searching"
 		die "set IGLU_ID=${IGLU_ID}.mshome.net if you're not sure, systemd does it"
+	fi
+}
+
+src_prepare() {
+	default
+
+	# split it
+	escript gen-network.py networkd networkd
+
+	# make sysctl managed by systemd for now, FIXME: procps-p?
+	escript gen-network.py sysctl sysctl
+
+	if use resolved; then
+		IGLU_DOMAIN="$(edomain)" envsubst <"${FILESDIR}/resolv.conf" >resolv.conf
+	else
+		echo "disable systemd-resolved.service" >91-systemd-resolved.preset
 	fi
 }
 
@@ -24,26 +44,20 @@ src_install() {
 	insinto /efi/loader
 	doins "${FILESDIR}/loader.conf"
 
-	# split it
 	insinto /usr/lib/systemd/network
-	escript gen-network.py networkd networkd
 	doins networkd/*
 
-	# make sysctl managed by systemd for now, FIXME: procps-p?
 	insinto /etc/sysctl.d
-	escript gen-network.py sysctl sysctl
 	if test -e sysctl/*; then
 		doins sysctl/*
 	fi
 
 	if use resolved; then
 		insinto /etc
-		IGLU_DOMAIN="$(edomain)" envsubst <"${FILESDIR}/resolv.conf" >"${T}/resolv.conf"
-		doins "${T}/resolv.conf"
+		doins resolv.conf
 	else
-		echo "disable systemd-resolved.service" >"${T}/91-systemd-resolved.preset"
-		insinto /usr/lib/systemd/system-preset
-		doins "${T}/91-systemd-resolved.preset"
+		insinto "$(systemd_get_systempresetdir)"
+		doins 91-systemd-resolved.preset
 	fi
 }
 

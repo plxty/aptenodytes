@@ -15,19 +15,44 @@ BDEPEND="!prefix? ( sys-fs/genfstab )"
 RDEPEND="
 	sys-apps/portage:ridgeni
 	arm64-macos? ( llvm-core/clang )
-	!prefix? ( sys-kernel/installkernel-p )
+	!prefix? ( sys-kernel/installkernel:ridgeni )
 "
 S="${T}"
 
-src_install() {
-	# eselect locale? darwin don't support it...
-	insinto /etc/env.d
+src_prepare() {
+	default
+
 	{
 		echo "# sci-misc/aptenodytes"
 		echo "LANG=zh_CN.UTF-8"
 		echo "LANGUAGE=zh_CN:en_US"
-	} >"${T}/02locale"
-	doins "${T}/02locale"
+	} >02locale
+
+	if use prefix-guest; then
+		return
+	fi
+
+	{
+		echo "en_US.UTF-8 UTF-8"
+		echo "en_US ISO-8859-1"
+		echo "zh_CN.GB18030 GB18030"
+		echo "zh_CN.GBK GBK"
+		echo "zh_CN.UTF-8 UTF-8"
+		echo "zh_CN GB2312"
+	} >locale.gen
+
+	if use prefix; then
+		return
+	fi
+
+	echo "${IGLU_ID}" | awk -F. '{print $1}' >hostname
+	genfstab -t PARTUUID / >fstab
+}
+
+src_install() {
+	# eselect locale? darwin don't support it...
+	insinto /etc/env.d
+	doins 02locale
 
 	# we use libiconv for non-glibc, so no need to proceed:
 	if use prefix-guest; then
@@ -36,15 +61,7 @@ src_install() {
 
 	# /usr/share/i18n/SUPPORTED
 	insinto /etc
-	{
-		echo "en_US.UTF-8 UTF-8"
-		echo "en_US ISO-8859-1"
-		echo "zh_CN.GB18030 GB18030"
-		echo "zh_CN.GBK GBK"
-		echo "zh_CN.UTF-8 UTF-8"
-		echo "zh_CN GB2312"
-	} >"${T}/locale.gen"
-	doins "${T}/locale.gen"
+	doins locale.gen
 	dosym ../usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
 	if use prefix; then
@@ -52,29 +69,17 @@ src_install() {
 	fi
 
 	# non-prefix here:
-	echo "${IGLU_ID}" | awk -F. '{print $1}' >"${T}/hostname"
-	doins "${T}/hostname"
-
-	genfstab -t PARTUUID / >"${T}/fstab"
-	doins "${T}/fstab"
+	insinto /etc
+	doins hostname fstab
 }
 
 pkg_preinst() {
-	if use prefix-guest; then
-		return
-	fi
-
-	if use prefix; then
+	if use prefix; then # including prefix-guest
 		return
 	fi
 
 	if [[ -L /etc/localtime && "$(realpath /etc/localtime)" == "/usr/share/zoneinfo/Factory" ]]; then
 		unlink /etc/localtime
-	fi
-
-	# /usr/share/baselayout/fstab
-	if grep -q manpage /etc/fstab; then
-		rm -v /etc/fstab
 	fi
 }
 

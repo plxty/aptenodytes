@@ -1,7 +1,7 @@
 EAPI="8"
 
 inherit dirty-deeds
-eval "$(pkg_profile)"
+eval "$(pkg_profile --single)"
 
 AP="${P/-p/}"
 APN="${PN/-p/}"

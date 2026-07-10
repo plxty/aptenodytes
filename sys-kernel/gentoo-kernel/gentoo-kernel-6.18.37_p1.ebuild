@@ -6,6 +6,8 @@ EAPI="8"
 inherit dirty-deeds
 eval "$(pkg_overlay)"
 
+# [aptenodytes] skip=1
+
 # hijacking olddefconfig to support localmodconfig as well:
 # @see kernel-build_src_configure
 IUSE="${IUSE} modprobed-db"

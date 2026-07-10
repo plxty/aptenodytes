@@ -5,6 +5,7 @@ eval "$(pkg_profile)"
 
 KEYWORDS="amd64"
 BDEPEND="dev-lang/python"
+RDEPEND+=" !net-firewall/nftables-p"
 S="${T}"
 
 # TODO: refactor all other -p ebuilds...

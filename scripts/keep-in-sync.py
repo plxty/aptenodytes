@@ -170,6 +170,14 @@ def find_best_cpv(
     if package.my_cpv.is_meta_or_live():
         return package.repo_name, package.my_cpv
 
+    # also no ridgeni profile:
+    try:
+        slot = env.portdbapi.aux_get(package.my_cpv.cpv, ["SLOT"])[0]
+        if slot == "ridgeni":
+            return package.repo_name, package.my_cpv
+    except PortageKeyError:
+        pass
+
     # respect package config, some may needs to be unstable:
     if type(package) is OverlayPackage or type(package) is ProfilePackage:
         pin_version_prefix = package.config.get(
@@ -365,7 +373,13 @@ def main() -> None:
     for package in overlay_packages + profile_packages:
         progress(f"overlay: {package.my_cpv}")
         repo_name, my_cpv = find_best_cpv(env, package)
+
+        # nothing changes:
         if my_cpv == package.my_cpv:
+            continue
+
+        # skip it to un-check:
+        if package.config.getboolean("aptenodytes", "skip", fallback=False):
             continue
 
         # we might go a little bit too far:
@@ -374,6 +388,7 @@ def main() -> None:
         )
         if pin_until_stable and package.my_cpv.cmp(my_cpv) > 0:
             continue
+
         if type(package) is OverlayPackage:
             typ = "overlay"
         else:

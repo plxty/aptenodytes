@@ -4,7 +4,15 @@ inherit dirty-deeds
 eval "$(pkg_profile)"
 
 KEYWORDS="amd64"
+RDEPEND+=" !sys-kernel/installkernel-p"
 S="${T}"
+
+src_prepare() {
+	default
+
+	echo "root=PARTUUID=$(findmnt / -o PARTUUID -n) rootflags=subvol=@gentoo rw" \
+		>cmdline
+}
 
 src_install() {
 	# real localmod?
@@ -13,7 +21,5 @@ src_install() {
 
 	# /usr/lib/kernel?
 	insinto /etc/kernel
-	echo "root=PARTUUID=$(findmnt / -o PARTUUID -n) rootflags=subvol=@gentoo rw" \
-		>"${T}/cmdline"
-	doins "${T}/cmdline"
+	doins cmdline
 }

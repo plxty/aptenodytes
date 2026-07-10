@@ -5,7 +5,10 @@ eval "$(pkg_profile)"
 
 KEYWORDS="amd64 arm64-macos"
 IUSE="iglu_lives_byte"
-RDEPEND+=" iglu_lives_byte? ( acct-user/byte )"
+RDEPEND+="
+	!dev-python/xonsh-p
+	iglu_lives_byte? ( acct-user/byte )
+"
 S="${T}"
 
 src_install() {

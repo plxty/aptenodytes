@@ -4,6 +4,7 @@ inherit dirty-deeds
 eval "$(pkg_profile)"
 
 KEYWORDS="amd64"
+RDEPEND+=" !app-admin/sudo-p"
 S="${T}"
 
 src_install() {

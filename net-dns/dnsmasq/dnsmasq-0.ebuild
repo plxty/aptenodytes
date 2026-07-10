@@ -5,7 +5,10 @@ eval "$(pkg_profile)"
 
 KEYWORDS="amd64"
 BDEPEND="dev-lang/python"
-RDEPEND+=" sys-apps/systemd:ridgeni[-resolved]"
+RDEPEND+="
+	!net-dns/dnsmasq-p
+	sys-apps/systemd:ridgeni[-resolved]
+"
 S="${T}"
 
 src_prepare() {

@@ -16,9 +16,20 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 	}
 
 	pkg_profile() {
+		local single=false
+		while [[ "${1:-}" != "" ]]; do
+			case "${1}" in
+			"--single")
+				# means the package isn't relies on other...
+				single=true
+				shift 1
+				;;
+			esac
+		done
+
 		echo 'SLOT="ridgeni"'
 		echo DESCRIPTION="${CATEGORY}/${PN}:${SLOT}"
-		if [[ "${PV}" == "0" ]]; then
+		if ! "${single}"; then
 			echo "RDEPEND+=' >${CATEGORY}/${P}'"
 		fi
 	}

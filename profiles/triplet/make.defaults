@@ -8,6 +8,7 @@ CONFIG_PROTECT_MASK="
 	/etc/portage/repos.conf/gentoo.conf
 	/etc/portage/repos.conf/gentoo_prefix.conf
 	/etc/portage/repos.conf/aptenodytes.conf
+	/etc/fstab
 	/etc/resolv.conf
 	/etc/dnsmasq.conf
 	/etc/mihomo

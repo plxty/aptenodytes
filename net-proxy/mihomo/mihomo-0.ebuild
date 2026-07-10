@@ -5,7 +5,10 @@ eval "$(pkg_profile)"
 
 KEYWORDS="amd64"
 BDEPEND="app-misc/yq"
-RDEPEND+=" dev-libs/v2ray-rules-dat-bin"
+RDEPEND+="
+	!net-proxy/mihomo-p
+	dev-libs/v2ray-rules-dat-bin
+"
 S="${T}"
 
 src_prepare() {

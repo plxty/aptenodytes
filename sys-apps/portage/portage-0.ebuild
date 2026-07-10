@@ -5,6 +5,7 @@ eval "$(pkg_profile)"
 
 KEYWORDS="amd64 arm64-macos"
 RDEPEND+="
+	!sys-apps/portage-p
 	dev-vcs/git
 	app-portage/gemato
 "
