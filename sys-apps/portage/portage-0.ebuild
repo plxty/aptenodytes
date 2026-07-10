@@ -1,14 +1,15 @@
 EAPI="8"
-DESCRIPTION="portage profile"
+
+SLOT="ridgeni"
+DESCRIPTION="${CATEGORY}/${PN}:${SLOT}"
 KEYWORDS="amd64 arm64-macos"
-SLOT="0"
 
 inherit dirty-deeds
 
 RDEPEND="
-  sys-apps/portage
-  dev-vcs/git
-  app-portage/gemato
+	sys-apps/portage:0
+	dev-vcs/git
+	app-portage/gemato
 "
 S="${T}"
 
