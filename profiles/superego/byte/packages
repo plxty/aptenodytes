@@ -9,8 +9,8 @@
 *sys-apps/fd
 *app-shells/fzf
 *app-shells/zoxide
-*dev-python/xonsh-p
-*app-editors/helix-p
+*dev-python/xonsh:ridgeni
+*app-editors/helix:ridgeni
 *dev-util/codex
 *sys-apps/moreutils
 *app-misc/glow

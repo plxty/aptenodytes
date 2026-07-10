@@ -1,5 +1,8 @@
-# test me in hyper-v
-amd64 iglu/testify stable
+# router@home
 amd64 iglu/evil stable
+
+# remote@work, many shares
 amd64-linux iglu/twenty stable
+
+# laptop@work
 arm64-macos iglu/subsys stable

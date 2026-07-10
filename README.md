@@ -2,6 +2,8 @@
 
 in pseudo-declarative style :)
 
+please note `sci-misc/aptenodytes` and `SLOT=ridgeni` in ebuild mean profile packages, which is highly personalized.
+
 # profiling
 
 * `GENTOO_BINHOST`, binary package for platforms

@@ -54,14 +54,9 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 		echo "OLDFILESDIR='${layer}/files'"
 		echo "${text//FILESDIR/OLDFILESDIR}"
 
-		# adding checks for arch only, here-doc requires cat which not available...
+		# restrict keywords for specified arch only:
 		if [[ "${arch}" != "" ]]; then
 			echo "KEYWORDS=\"${arch}\""
-			echo "pkg_pretend() {"
-			echo "	if [[ \"\${ARCH}\" != \"${arch}\" ]]; then"
-			echo "		die \"please use ::gentoo the official repository, you don't need this hack\""
-			echo "	fi"
-			echo "}"
 		fi
 	}
 
