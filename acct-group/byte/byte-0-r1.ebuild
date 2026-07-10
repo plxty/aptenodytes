@@ -1,6 +1,6 @@
 EAPI="9"
 DESCRIPTION="byte the group"
-KEYWORDS="amd64"
+KEYWORDS="amd64 arm64-macos"
 SLOT="0"
 
 inherit acct-group dirty-deeds

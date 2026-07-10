@@ -18,7 +18,7 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 	pkg_profile() {
 		echo 'SLOT="ridgeni"'
 		echo DESCRIPTION="${CATEGORY}/${PN}:${SLOT}"
-		if [[ "${PV}" -eq 0 ]]; then
+		if [[ "${PV}" == "0" ]]; then
 			echo "RDEPEND+=' >${CATEGORY}/${P}'"
 		fi
 	}

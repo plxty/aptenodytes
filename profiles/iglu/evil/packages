@@ -1,8 +1,8 @@
 # IGLU_NETWORK
-*net-dialup/ppp-p
-*net-dns/dnsmasq-p
-*net-firewall/nftables-p
-*net-proxy/mihomo-p
+*net-dialup/ppp:ridgeni
+*net-dns/dnsmasq:ridgeni
+*net-firewall/nftables:ridgeni
+*net-proxy/mihomo:ridgeni
 
 # oldnix
 *sys-fs/zfs

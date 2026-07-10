@@ -1,5 +1,5 @@
 # linux
-*sys-kernel/installkernel-p
+*sys-kernel/installkernel:ridgeni
 *sys-kernel/gentoo-kernel
 
 # hardware
@@ -7,5 +7,5 @@
 
 # administrator
 *sys-apps/systemd
-*app-admin/sudo-p
-*net-misc/openssh-p
+*app-admin/sudo:ridgeni
+*net-misc/openssh:ridgeni
