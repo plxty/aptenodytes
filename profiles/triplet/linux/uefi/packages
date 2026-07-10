@@ -6,6 +6,6 @@
 *sys-apps/lm-sensors
 
 # administrator
-*sys-apps/systemd-p
+*sys-apps/systemd
 *app-admin/sudo-p
 *net-misc/openssh-p

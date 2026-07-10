@@ -1,4 +1,4 @@
-sys-apps/systemd-p -resolved
-net-proxy/mihomo-p tproxy
+sys-apps/systemd -resolved
+net-proxy/mihomo tproxy
 app-emulation/libvirt zfs
 app-emulation/virt-manager -gui

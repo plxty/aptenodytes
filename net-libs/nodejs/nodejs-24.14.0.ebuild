@@ -1,9 +1,6 @@
 EAPI="8"
 
 inherit dirty-deeds
-eval "$(pkg_overlay)"
+eval "$(pkg_overlay --arch arm64-macos)"
 
-if [[ "${ARCH}" == "arm64-macos" ]]; then
-	KEYWORDS="${KEYWORDS} ~arm64-macos"
-	PATCHES+=("${FILESDIR}/${P}-darwin.patch")
-fi
+PATCHES+=("${FILESDIR}/${P}-darwin.patch")

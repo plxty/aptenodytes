@@ -13,9 +13,9 @@ BDEPEND="!prefix? ( sys-fs/genfstab )"
 # we need a clang for darwin platforms, in bootstrap stage:
 # and ensures package patches, kernel configs, etc. etc. are ready
 RDEPEND="
-  sys-apps/portage:ridgeni
-  arm64-macos? ( llvm-core/clang )
-  !prefix? ( sys-kernel/installkernel-p )
+	sys-apps/portage:ridgeni
+	arm64-macos? ( llvm-core/clang )
+	!prefix? ( sys-kernel/installkernel-p )
 "
 S="${T}"
 
@@ -62,18 +62,6 @@ src_install() {
 pkg_preinst() {
 	if use prefix-guest; then
 		return
-	fi
-
-	if grep -q "LANG=C.UTF-8" "${EPREFIX}/etc/env.d/02locale"; then
-		rm -v "${EPREFIX}/etc/env.d/02locale"
-	fi
-
-	if grep -q "LANG=C.UTF-8" "${EPREFIX}/etc/locale.conf"; then
-		rm -v "${EPREFIX}/etc/locale.conf"
-	fi
-
-	if grep -q "man pages" "${EPREFIX}/etc/locale.gen"; then
-		rm -v "${EPREFIX}/etc/locale.gen"
 	fi
 
 	if use prefix; then

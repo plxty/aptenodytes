@@ -1,14 +1,15 @@
 EAPI="8"
-DESCRIPTION="dnsmasq profile"
+
+SLOT="ridgeni"
+DESCRIPTION="${CATEGORY}/${PN}:${SLOT}"
 KEYWORDS="amd64"
-SLOT="0"
 
 inherit dirty-deeds systemd
 
 BDEPEND="dev-lang/python"
 RDEPEND="
-	sys-apps/systemd-p[-resolved]
-	net-dns/dnsmasq
+	sys-apps/systemd:ridgeni[-resolved]
+	net-dns/dnsmasq:0
 "
 S="${T}"
 

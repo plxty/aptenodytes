@@ -1,6 +1,5 @@
 dev-lang/rust-bin rust-src rust-analyzer
 dev-java/openjdk-bin source
-sys-apps/portage gentoo-dev
 dev-libs/capstone python
 app-arch/7zip rar
 

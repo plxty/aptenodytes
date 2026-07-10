@@ -10,13 +10,12 @@ die() {
 # [--opts...] [iglu_id] [eprefix]
 IGLU_ID="$(hostname)"
 EPREFIX="/"
-REFRESH=false
-CLEAN=false
+SKIP_REFRESH=false
 ASK=false
 while [[ "${1:-}" != "" ]]; do
 	case "${1}" in
-	"--refresh") REFRESH=true ;;
-	"--clean") CLEAN=true ;;
+	"--help") die "${0} [--skip-refresh] [--ask] IGLU_ID|${IGLU_ID} EPREFIX|${EPREFIX} [-- ...]" ;;
+	"--skip-refresh") SKIP_REFRESH=true ;;
 	"--ask") ASK=true ;;
 	"--")
 		shift 1
@@ -68,47 +67,15 @@ erun() {
 	fi
 }
 
-fire_repositories() {
-	local refresh="${1:-false}"
-	local use_git=false
-	if erun git -v >/dev/null; then
-		use_git=true
-	fi
-
-	local gentoo_repo="${EPREFIX}/var/db/repos/gentoo"
-	if guse prefix-guest; then
-		gentoo_repo="${EPREFIX}/var/db/repos/gentoo_prefix"
-	fi
-
-	# note for gentoo_prefix repo (darwin use it), it's rsync only, don't rm
-	local refresh_gentoo="${refresh}"
-	if ${use_git} && [[ ! -e "${gentoo_repo}/.git/index" ]] && ! guse prefix-guest; then
-		rm -rf "${gentoo_repo}"
-		refresh_gentoo=true
-	elif [[ ! -e "${gentoo_repo}/sys-apps/portage/Manifest" ]]; then
-		refresh_gentoo=true
-	fi
-
-	if ${refresh_gentoo} && ${REFRESH}; then
-		if ${use_git}; then
-			echo ">>> Refreshing repositories..."
-			erun emerge --sync --quiet
-		else
-			echo ">>> Initializing repositories..."
-			erun emerge-webrsync -q
-		fi
-	fi
-
-	# always rsync myself, note the exclude rules (@see man 1 rsync)
-	local aptenodytes_repo="${EPREFIX}/var/db/repos/aptenodytes"
-	if ${refresh} || [[ ! -e "${aptenodytes_repo}/scripts/burn.sh" ]]; then
-		mkdir -p "${aptenodytes_repo}"
-		rsync -aC --exclude ".*" --delete .. "${aptenodytes_repo}"
-	fi
-}
-
-# TODO: many stages are missing now :(
-fire_repositories
+# unify with prefix:
+GENTOO_REPO="gentoo"
+if guse prefix-guest; then
+	GENTOO_REPO="gentoo_prefix"
+fi
+if [[ ! -e "${EPREFIX}/var/db/repos/${GENTOO_REPO}/sys-apps/portage/Manifest" ]]; then
+	echo ">>> Initializing repositories..."
+	erun emerge-webrsync -q
+fi
 
 if [[ ! -e "${EPREFIX}/etc/portage/repos.conf/aptenodytes.conf" ]]; then
 	echo ">>> Making temporary repos.conf..."
@@ -122,6 +89,10 @@ if [[ ! -e "${EPREFIX}/etc/portage/repos.conf/aptenodytes.conf" ]]; then
 		fi
 	} >"${EPREFIX}/etc/portage/repos.conf/aptenodytes.conf"
 fi
+
+# make me the latest shiny cool boy, @see man 1 rsync
+mkdir -p "${EPREFIX}/var/db/repos/aptenodytes"
+rsync -aC --exclude ".*" --delete .. "${EPREFIX}/var/db/repos/aptenodytes"
 
 if [[ "$(readlink "${EPREFIX}/etc/portage/make.profile")" != *"aptenodytes/profiles/iglu/${IGLU_ID}" ]]; then
 	echo ">>> Selecting profile for ${IGLU_ID}..."
@@ -159,7 +130,10 @@ if ! test -e "${EPREFIX}/var/db/pkg/sci-misc/aptenodytes-"*"/repository"; then
 fi
 
 # now try to sync the repo with git to ensure we've setup:
-fire_repositories true
+if ! "${SKIP_REFRESH}"; then
+	echo ">>> Refreshing repositories..."
+	erun "${PWD}/emerge-sync.py" --quiet
+fi
 
 # update-the-world if !shell-instead
 if [[ "${*}" != "" ]]; then
@@ -171,15 +145,6 @@ else
 		erun emerge -uNDva @world
 	else
 		erun emerge -uND @world
-	fi
-fi
-
-if "${CLEAN}"; then
-	echo ">>> Housekeeping..."
-	if "${ASK}"; then
-		erun emerge -ca
-	else
-		erun emerge -c
 	fi
 fi
 

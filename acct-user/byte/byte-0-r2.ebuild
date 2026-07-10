@@ -4,9 +4,11 @@ KEYWORDS="amd64 arm64-macos"
 SLOT="0"
 
 inherit acct-user dirty-deeds
+
+# fake id and groups, doesn't matter when prefix:
 if guse prefix; then
 	ACCT_USER_ID="${PORTAGE_INST_UID}"
-	ACCT_USER_GROUPS=("${PORTAGE_GRPNAME}")
+	ACCT_USER_GROUPS=("byte")
 else
 	ACCT_USER_ID="1000"
 	ACCT_USER_SHELL="/usr/bin/bash"

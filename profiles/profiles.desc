@@ -2,7 +2,7 @@
 amd64 iglu/evil stable
 
 # remote@work, many shares
-amd64-linux iglu/twenty stable
+amd64 iglu/twenty stable
 
 # laptop@work
 arm64-macos iglu/subsys stable

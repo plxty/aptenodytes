@@ -1,12 +1,13 @@
 EAPI="9"
-DESCRIPTION="systemd profile"
+
+SLOT="ridgeni"
+DESCRIPTION="${CATEGORY}/${PN}:${SLOT}"
 KEYWORDS="amd64"
-SLOT="0"
 
 # TODO: virtual/resolver?
 IUSE="+resolved"
 BDEPEND="dev-lang/python"
-RDEPEND="sys-apps/systemd"
+RDEPEND="sys-apps/systemd:0"
 S="${T}"
 
 # for escript:
@@ -46,12 +47,6 @@ src_install() {
 		echo "disable systemd-resolved.service" >"${T}/91-systemd-resolved.preset"
 		insinto /usr/lib/systemd/system-preset
 		doins "${T}/91-systemd-resolved.preset"
-	fi
-}
-
-pkg_preinst() {
-	if use resolved && grep -q Generated /etc/resolv.conf; then
-		rm -v /etc/resolv.conf
 	fi
 }
 
