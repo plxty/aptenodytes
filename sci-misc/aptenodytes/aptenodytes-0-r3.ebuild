@@ -47,6 +47,9 @@ src_prepare() {
 
 	echo "${IGLU_ID}" | awk -F. '{print $1}' >hostname
 	genfstab -t PARTUUID / >fstab
+
+	# zfs will get imported by the service, not here:
+	sed -i '/\szfs\s/d' fstab
 }
 
 src_install() {
