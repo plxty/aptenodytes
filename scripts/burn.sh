@@ -100,28 +100,25 @@ if [[ "$(readlink "${EPREFIX}/etc/portage/make.profile")" != *"aptenodytes/profi
 	erun eselect profile set "aptenodytes:iglu/${IGLU_ID}"
 fi
 
+if guse prefix && [[ ! -e "${EPREFIX}/home" ]]; then
+	# for prefix we're using the acutal home:
+	# TODO: make a prefix-isolation to store everything elsewhere than home?
+	username="$(whoami)"
+	if hash getent 2>/dev/null; then
+		homedest="$(getent passwd "${username}" | cut -d: -f6)"
+	elif hash finger 2>/dev/null; then
+		homedest="$(finger "${username}" | awk '/^Directory/ {print $2}')"
+	else
+		die "unable to get home for prefix user ${username}"
+	fi
+	echo ">>> Symlinking home to ${username}..."
+	ln -s "$(realpath "${homedest}")" "${EPREFIX}/home"
+fi
+
 if guse prefix && ! guse prefix-guest && [[ ! -L "${EPREFIX}/usr/sbin" ]]; then
 	echo ">>> Fixing merge-usr layout for prefix..."
 	erun emerge -1 sys-apps/merge-usr
 	erun merge-usr --prefix "${EPREFIX}"
-fi
-
-if guse prefix && [[ ! -e "${EPREFIX}/home" ]]; then
-	for flag in $USE; do
-		if [[ "${flag}" != "iglu_lives_"* ]]; then
-			continue
-		fi
-		username="${flag#iglu_lives_}"
-		if hash finger 2>/dev/null; then
-			homedest="$(finger "${username}" | awk '/^Directory/ {print $2}')"
-		elif hash getent 2>/dev/null; then
-			homedest="$(getent passwd "${username}" | cut -d: -f6)"
-		else
-			die "unable to get home for prefix user ${username}"
-		fi
-	done
-	echo ">>> Symlinking home to ${username}..."
-	ln -s "${homedest}" "${EPREFIX}/home"
 fi
 
 # [[ -e ]] doesn't support glob, so test here:
