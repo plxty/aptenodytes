@@ -2,6 +2,8 @@
 
 in pseudo-declarative style :)
 
+this is not a "lint" overlay, it contains `dirty-deeds.eclass` for hack works.
+
 please note `sci-misc/aptenodytes` and `SLOT=ridgeni` in ebuild mean profile packages, which is highly personalized.
 
 # profiling

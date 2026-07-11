@@ -11,12 +11,12 @@ die() {
 IGLU_ID="$(hostname)"
 EPREFIX="/"
 SKIP_REFRESH=false
-ASK=false
+YES=false
 while [[ "${1:-}" != "" ]]; do
 	case "${1}" in
-	"--help") die "${0} [--skip-refresh] [--ask] IGLU_ID|${IGLU_ID} EPREFIX|${EPREFIX} [-- ...]" ;;
+	"--help") die "${0} [--skip-refresh] [--yes] IGLU_ID|${IGLU_ID} EPREFIX|${EPREFIX} [-- ...]" ;;
 	"--skip-refresh") SKIP_REFRESH=true ;;
-	"--ask") ASK=true ;;
+	"--yes") YES=true ;;
 	"--")
 		shift 1
 		break
@@ -57,13 +57,20 @@ while read -r user; do
 done < <(awk '-F[:/]' '$(NF-1) == "superego" {print $NF}' "../profiles/iglu/${IGLU_ID}/parent")
 
 erun() {
+	local args=("${1}")
+	if [[ "${args[0]}" == "emerge" ]] && ! "${YES}"; then
+		args+=("-va")
+	fi
+	args+=("${@:2}")
+
 	if guse prefix; then
 		# shellcheck disable=SC2016
-		"${EPREFIX}/usr/bin/bash" -c "source '${EPREFIX}/etc/profile';"'exec "${@}"' -- env "${@}"
+		"${EPREFIX}/usr/bin/bash" -c "source '${EPREFIX}/etc/profile';"'exec "${@}"' \
+			-- env "${args[@]}"
 	elif [[ "${EPREFIX}" == "/" ]]; then
-		"${@}"
+		"${args[@]}"
 	else
-		arch-chroot "${EPREFIX}" "${@}"
+		arch-chroot "${EPREFIX}" "${args[@]}"
 	fi
 }
 
@@ -138,11 +145,7 @@ if [[ "${*}" != "" ]]; then
 	erun "${@}"
 else
 	echo ">>> Burning..."
-	if "${ASK}"; then
-		erun emerge -uNDva @world
-	else
-		erun emerge -uND @world
-	fi
+	erun emerge -uND @world
 fi
 
 # setting password if needed:
