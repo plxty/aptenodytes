@@ -15,6 +15,9 @@ from urllib.error import URLError
 # before portage, we setup the overlay to here:
 os.environ["PORTDIR_OVERLAY"] = str(Path(__file__).parent / "..")
 
+# preventing sandbox here as it don't allow us to read overlay:
+os.environ["SANDBOX_ACTIVE"] = "0"
+
 import portage
 from portage.exception import PortageKeyError, UnsupportedAPIException
 from portage.package.ebuild import doebuild
@@ -22,13 +25,13 @@ from portage.dbapi.porttree import portdbapi
 
 
 # constants:
-OVERLAY_REGEX = re.compile(r"pkg_overlay(\s[\-\w\s]+)?")
+PKG_OVERRIDE_REGEX = re.compile(r"pkg_override(\s[\-\w\s]+)?")
 
 
 class WorkingEnvironment:
     # these variables are static across multiple instances (aka shared):
-    repo_name: str = "aptenodytes"
-    default_repo_name: str = Path(portage.settings["PORTDIR"]).name
+    repo_overlay: str = "aptenodytes"
+    default_repo_override: str = Path(portage.settings["PORTDIR"]).name
     repos_path: Path = Path(portage.settings["PORTDIR"]).parent
     portdbapi: portdbapi = portage.db[portage.settings["EROOT"]]["porttree"].dbapi
     accept_keywords: Set[str] = {"amd64", "arm64", "arm64-macos"}
@@ -106,13 +109,13 @@ class MyCatPkgVerRev(os.PathLike):  # Category/Package-Version-Rev
 class EbuildPackage:
     my_cpv: MyCatPkgVerRev
     source: Optional[str]
-    repo_name: str
+    repo_overlay: str
     keywords: Set[str]
 
 
 @dataclass
 class OverlayPackage(EbuildPackage):
-    repo_overlay: Optional[str]
+    repo_override: Optional[str]
     config: ConfigParser  # TODO: Remove
 
 
@@ -130,17 +133,13 @@ def progress(text: str) -> None:
 
 
 def find_repo_path(env: WorkingEnvironment, repo_name: str) -> Path:
-    if repo_name == env.repo_name:
+    if repo_name == env.repo_overlay:
         return Path(__file__).parent.parent.resolve()
     return env.repos_path / repo_name
 
 
 def find_repology_cpv(my_cpv: MyCatPkgVerRev) -> Optional[MyCatPkgVerRev]:
-    # deal with my special -p suffix...
-    normalized = quote(my_cpv.pkgname.removesuffix("-p"))
-
-    # land a rocket:
-    url = f"https://repology.org/api/v1/project/{normalized}"
+    url = f"https://repology.org/api/v1/project/{quote(my_cpv.pkgname)}"
     req = Request(url, headers={"User-Agent": "github.com/plxty/aptenodytes"})
     try:
         with urlopen(req, timeout=5) as r:
@@ -168,39 +167,29 @@ def find_best_cpv(
 ) -> Tuple[str, MyCatPkgVerRev]:
     # sanity check, if we're special packages, there's no need to check best:
     if package.my_cpv.is_meta_or_live():
-        return package.repo_name, package.my_cpv
+        return package.repo_overlay, package.my_cpv
 
-    # also no ridgeni profile:
     try:
         slot = env.portdbapi.aux_get(package.my_cpv.cpv, ["SLOT"])[0]
         if slot == "ridgeni":
-            return package.repo_name, package.my_cpv
+            return package.repo_overlay, package.my_cpv
     except PortageKeyError:
         pass
 
-    # respect package config, some may needs to be unstable:
+    accept_keywords = env.accept_keywords.copy()
     if type(package) is OverlayPackage or type(package) is ProfilePackage:
-        pin_version_prefix = package.config.get(
-            "aptenodytes", "pin_version_prefix", fallback=None
-        )
-        accept_keywords = set(
+        accept_keywords.update(
             package.config.get("aptenodytes", "accept_keywords", fallback="").split()
         )
-        accept_keywords.update(env.accept_keywords)
-    else:
-        pin_version_prefix: Optional[str] = None
-        accept_keywords = env.accept_keywords
 
-    # filtering the cpvs, we pick only what we want, no live packages, etc.
+    # overlay vs override...
+    is_overlay = type(package) is OverlayPackage
+    is_override = is_overlay and package.repo_override is not None
+
     my_cpvs: Dict[MyCatPkgVerRev, str] = dict()
     for my_cpv in package.my_cpv.cp_list(env):
         if my_cpv.is_meta_or_live():
             continue
-
-        # we only need whose prefix matching, aka. version range:
-        if pin_version_prefix is not None:
-            if not my_cpv.version.startswith(pin_version_prefix):
-                continue
 
         try:
             keywords = set(env.portdbapi.aux_get(my_cpv.cpv, ["KEYWORDS"])[0].split())
@@ -208,17 +197,27 @@ def find_best_cpv(
             continue
         if len(keywords.intersection(accept_keywords)) == 0:
             continue
-        my_cpvs[my_cpv] = cpv_find_repo(env, my_cpv, True)
 
-    # for non-overlay, we also add a repology version:
-    if type(package) is OverlayPackage and package.repo_overlay is None:
+        # targetting to override, if latest, cpv_find_repo will returns repo_overlay:
+        repo = cpv_find_repo(env, my_cpv, True)
+        if (
+            package.repo_overlay != repo
+            and is_override
+            and package.repo_override != repo
+        ):
+            continue
+
+        my_cpvs[my_cpv] = repo
+
+    # for non-override, we also add a repology version:
+    if is_overlay and not is_override:
         repology_cpv = find_repology_cpv(package.my_cpv)
         if repology_cpv is not None:
             my_cpvs[repology_cpv] = "repology"
 
     # falling back...
     if len(my_cpvs) == 0:
-        my_cpvs[package.my_cpv] = package.repo_name
+        my_cpvs[package.my_cpv] = package.repo_overlay
 
     # best!
     my_cpv = MyCatPkgVerRev.best(list(my_cpvs.keys()))
@@ -233,12 +232,12 @@ def cpv_find_repo(
     if ebuild is not None:
         return overlay.rsplit("/", maxsplit=1)[-1]
     if exact_v:
-        return env.default_repo_name
+        return env.repo_overlay
 
     # if there's any error, we pick any of one in the list... TODO: strategy?
     my_cpvs = my_cpv.cp_list(env)
     if len(my_cpvs) == 0:
-        return env.default_repo_name
+        return env.repo_overlay
     return cpv_find_repo(env, my_cpvs[0], True)
 
 
@@ -274,12 +273,11 @@ def collect_ebuild_package(
     return EbuildPackage(my_cpv, ebuild, repo_name, keywords)
 
 
-def parse_pkg_overlay(text: str, default: str) -> Optional[str]:
-    match = OVERLAY_REGEX.search(text)
+def parse_pkg_override(text: str, default: str) -> Optional[str]:
+    match = PKG_OVERRIDE_REGEX.search(text)
     if match is None:
         return None
 
-    # mostly useless now, as we query all the cpv_list regardless which repo:
     args = match[0].split()
     for i, arg in enumerate(args):
         if arg == "--repo":
@@ -290,13 +288,13 @@ def parse_pkg_overlay(text: str, default: str) -> Optional[str]:
 def collect_overlay_package(
     env: WorkingEnvironment, my_cpv: MyCatPkgVerRev
 ) -> OverlayPackage:
-    ebuild_package = collect_ebuild_package(env, env.repo_name, my_cpv)
+    ebuild_package = collect_ebuild_package(env, env.repo_overlay, my_cpv)
     ebuild = ebuild_package.source
     assert ebuild is not None
 
     # deducing the comment config and actual overlay:
     config: Optional[ConfigParser] = None
-    repo_overlay: Optional[str] = None
+    repo_override: Optional[str] = None
     with open(ebuild, "r") as reader:
         lines = reader.readlines()
     for line in lines:
@@ -305,13 +303,13 @@ def collect_overlay_package(
             if config is not None:
                 continue
 
-        if repo_overlay is None:
-            repo_overlay = parse_pkg_overlay(line, env.default_repo_name)
+        if repo_override is None:
+            repo_override = parse_pkg_override(line, env.default_repo_override)
 
     # hey i'm over laying:
     if config is None:
         config = ConfigParser()
-    return OverlayPackage(*astuple(ebuild_package), repo_overlay, config)
+    return OverlayPackage(*astuple(ebuild_package), repo_override, config)
 
 
 def collect_profile_packages(
@@ -353,7 +351,7 @@ def main() -> None:
     profile_packages: List[ProfilePackage] = list()
 
     # obtain every normal packages, filter only really overlays:
-    repo_path = find_repo_path(env, env.repo_name)
+    repo_path = find_repo_path(env, env.repo_overlay)
     for ebuild_path in repo_path.glob("**/*.ebuild", recurse_symlinks=True):
         progress(f"ebuild: {ebuild_path}")
         my_cpv = MyCatPkgVerRev(path=ebuild_path)
@@ -394,7 +392,7 @@ def main() -> None:
         else:
             typ = "profile"
         print(
-            f">>> {typ}: {package.my_cpv} ({package.repo_name}) -> {my_cpv} ({repo_name})"
+            f">>> {typ}: {package.my_cpv} ({package.repo_overlay}) -> {my_cpv} ({repo_name})"
         )
 
 
