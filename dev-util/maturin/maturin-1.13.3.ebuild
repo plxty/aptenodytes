@@ -1,7 +1,7 @@
 EAPI="8"
 
 inherit dirty-deeds
-eval "$(pkg_overlay)"
+eval "$(pkg_override)"
 
 # https://devmanual.gentoo.org/general-concepts/mirrors/index.html#restricting-automatic-mirroring
 RESTRICT="primaryuri"

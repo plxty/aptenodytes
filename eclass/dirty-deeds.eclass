@@ -34,7 +34,7 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 		fi
 	}
 
-	pkg_overlay() {
+	pkg_override() {
 		local repo=
 		local arch=
 		while [[ "${1:-}" != "" ]]; do
@@ -47,11 +47,11 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 				arch="${2}"
 				shift 2
 				;;
-			*) die "invalid argument to pkg_overlay, check it" ;;
+			*) die "invalid argument to pkg_override, check it" ;;
 			esac
 		done
 
-		# defaults to overlay the main repo:
+		# defaults to override the main repo:
 		if [[ "${repo}" == "" ]]; then
 			if guse prefix-guest; then
 				repo="gentoo_prefix"
@@ -66,7 +66,7 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 		# should eval in the outside, to keep things:
 		local text="$(<"${layer}/${PF}.ebuild")"
 		if [[ "${text}" == "" ]]; then
-			die "overlay for ${PF}::${repo} doesn't exist, maybe you need updates?"
+			die "override for ${PF}::${repo} doesn't exist, maybe you need updates?"
 		fi
 
 		# workaround for FILESDIR (readonly):
@@ -79,8 +79,8 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 		fi
 	}
 
-	class_overlay() {
-		# defaults to overlay the main repo:
+	class_override() {
+		# defaults to override the main repo:
 		local repo="gentoo"
 		if [[ "${1:-}" == "--repo" ]]; then
 			repo="${2}"

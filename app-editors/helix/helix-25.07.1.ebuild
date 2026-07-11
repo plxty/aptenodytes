@@ -1,7 +1,7 @@
 EAPI="8"
 
 inherit dirty-deeds
-eval "$(pkg_overlay)"
+eval "$(pkg_override)"
 
 KEYWORDS="${KEYWORDS} ~arm64-macos"
 PATCHES+=("${FILESDIR}/${PN}-fork-taste.patch")

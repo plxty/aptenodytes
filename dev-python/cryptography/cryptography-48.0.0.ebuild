@@ -1,7 +1,7 @@
 EAPI="8"
 
 inherit dirty-deeds
-eval "$(pkg_overlay --arch arm64-macos)"
+eval "$(pkg_override --arch arm64-macos)"
 
 # the src_prepare contains an outdated src path, we workaround it with a fake file:
 eval __"$(declare -f src_prepare)"

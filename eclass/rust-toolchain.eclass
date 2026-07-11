@@ -1,7 +1,7 @@
 if [[ -z ${_RUST_TOOLCHAIN_ECLASS} ]]; then
 	# @see man 5 portage eclass-overrides
 	inherit dirty-deeds
-	eval "$(class_overlay)"
+	eval "$(class_override)"
 
 	eval __"$(declare -f rust_abi)"
 	rust_abi() {

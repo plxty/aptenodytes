@@ -1,7 +1,7 @@
 EAPI="8"
 
 inherit dirty-deeds
-eval "$(pkg_overlay)"
+eval "$(pkg_override)"
 
 # [aptenodytes] pin_until_stable=1
 if [[ "${ARCH}" == "arm64-macos" ]]; then

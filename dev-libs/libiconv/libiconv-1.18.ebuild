@@ -2,7 +2,7 @@ EAPI="8"
 
 # [aptenodytes] pin_until_stable=1
 inherit dirty-deeds
-eval "$(pkg_overlay)"
+eval "$(pkg_override)"
 
 if [[ "${ARCH}" == *"-macos" ]]; then
 	# @see dev-libs/gnulib/gnulib-2026.01.14.22.26.00.ebuild

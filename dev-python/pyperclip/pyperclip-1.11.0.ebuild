@@ -1,7 +1,7 @@
 EAPI="8"
 
 inherit dirty-deeds
-eval "$(pkg_overlay --arch arm64-macos)"
+eval "$(pkg_override --arch arm64-macos)"
 
 # don't pull in x11 dependencies to here
 RDEPEND=""

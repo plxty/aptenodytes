@@ -8,7 +8,7 @@ rust_all_arch_uris() {
 }
 
 # eclass in here is "overrided", with the guard we add :)
-eval "$(pkg_overlay --arch arm64-macos)"
+eval "$(pkg_override --arch arm64-macos)"
 
 # don't patchelf on darwin:
 patchelf() {

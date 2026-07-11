@@ -1,10 +1,10 @@
 EAPI="8"
 
-# we simply can't make a overlay of elcass which forces gentoo to obey.
+# we simply can't make a override of elcass which forces gentoo to obey.
 # so only changing the build is possible...
 # @see kernel-build.eclass, mydbapi.repositories.get_repo_for_location(...).porttrees
 inherit dirty-deeds
-eval "$(pkg_overlay)"
+eval "$(pkg_override)"
 
 # [aptenodytes] skip=1
 

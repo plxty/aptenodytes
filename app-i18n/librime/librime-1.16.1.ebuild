@@ -1,7 +1,7 @@
 EAPI="8"
 
 inherit dirty-deeds
-eval "$(pkg_overlay)"
+eval "$(pkg_override)"
 
 # owning features:
 KEYWORDS="${KEYWORDS} ~arm64-macos"

@@ -1,7 +1,7 @@
 EAPI="8"
 
 inherit dirty-deeds
-eval "$(pkg_overlay --arch arm64-macos)"
+eval "$(pkg_override --arch arm64-macos)"
 
 # break pulling the libcxx, we're not in bootstrap, we build it from gcc:
 BDEPEND="${BDEPEND/kernel_Darwin?/!kernel_Darwin?}"

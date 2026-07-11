@@ -1,7 +1,7 @@
 EAPI="8"
 
 inherit dirty-deeds
-eval "$(pkg_overlay --arch arm64-macos)"
+eval "$(pkg_override --arch arm64-macos)"
 
 # workaround to use system compiler-rt in darwin, instead of libgcc:
 # @see clang-common

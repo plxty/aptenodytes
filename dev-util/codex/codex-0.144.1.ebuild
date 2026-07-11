@@ -1,7 +1,7 @@
 EAPI="8"
 
 inherit dirty-deeds
-eval "$(pkg_overlay --repo gentoo-zh)"
+eval "$(pkg_override --repo gentoo-zh)"
 
 # [aptenodytes] accept_keywords=~amd64
 KEYWORDS="${KEYWORDS} ~arm64-macos"

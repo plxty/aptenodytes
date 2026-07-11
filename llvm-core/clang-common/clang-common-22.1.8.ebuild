@@ -2,7 +2,7 @@ EAPI="8"
 
 # make only to macos, as stable with arm64, other should goes with official:
 inherit dirty-deeds
-eval "$(pkg_overlay --arch arm64-macos)"
+eval "$(pkg_override --arch arm64-macos)"
 
 # FIXME: ways to avoid hardcoding the gcc version?
 GCC_SLOT="16"

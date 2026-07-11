@@ -2,7 +2,7 @@ EAPI="8"
 
 # [aptenodytes] pin_until_stable=1
 inherit dirty-deeds
-eval "$(pkg_overlay)"
+eval "$(pkg_override)"
 
 if [[ "${ARCH}" == "arm64-macos" ]]; then
 	PATCHES+=("${FILESDIR}/${PN}-darwin-gcc-15.patch")
