@@ -2,12 +2,14 @@
 
 import json
 import os
-import re
+import sys
 from configparser import ConfigParser
 from dataclasses import astuple, dataclass
 from pathlib import Path
 from time import sleep
 from typing import Dict, List, Optional, Set, Tuple, Self, Any
+from subprocess import check_call
+from shutil import rmtree, copyfile
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 from urllib.error import URLError
@@ -15,26 +17,47 @@ from urllib.error import URLError
 # before portage, we setup the overlay to here:
 os.environ["PORTDIR_OVERLAY"] = str(Path(__file__).parent / "..")
 
-# preventing sandbox here as it don't allow us to read overlay:
-os.environ["SANDBOX_ACTIVE"] = "0"
-
 import portage
 from portage.exception import PortageKeyError, UnsupportedAPIException
 from portage.package.ebuild import doebuild
 from portage.dbapi.porttree import portdbapi
+from portage.package.ebuild.config import config as ebuild_config
 
-
-# constants:
-PKG_OVERRIDE_REGEX = re.compile(r"pkg_override(\s[\-\w\s]+)?")
+# enforce sync mode to allow nonexistent directory:
+portage._sync_mode = True
 
 
 class WorkingEnvironment:
     # these variables are static across multiple instances (aka shared):
-    repo_overlay: str = "aptenodytes"
-    default_repo_override: str = Path(portage.settings["PORTDIR"]).name
     repos_path: Path = Path(portage.settings["PORTDIR"]).parent
     portdbapi: portdbapi = portage.db[portage.settings["EROOT"]]["porttree"].dbapi
     accept_keywords: Set[str] = {"amd64", "arm64", "arm64-macos"}
+
+    # private vars, mostly arguments:
+    repo_override: str = Path(portage.settings["PORTDIR"]).name
+    one: Optional[str] = None
+    refresh: bool = False
+    repology: bool = False
+    pretend: bool = False
+
+    def __init__(self: Self) -> None:
+        argv = sys.argv[1:]
+        i = 0
+        while i < len(argv):
+            match argv[i]:
+                case "--repo-override":
+                    self.repo_override = argv[i + 1]
+                    i += 1
+                case "--one":
+                    self.one = argv[i + 1]
+                    i += 1
+                case "--refresh":
+                    self.refresh = True
+                case "--repology":
+                    self.repology = True
+                case "--pretend":
+                    self.pretend = True
+            i += 1
 
 
 class MyCatPkgVerRev(os.PathLike):  # Category/Package-Version-Rev
@@ -108,7 +131,7 @@ class MyCatPkgVerRev(os.PathLike):  # Category/Package-Version-Rev
 @dataclass
 class EbuildPackage:
     my_cpv: MyCatPkgVerRev
-    source: Optional[str]
+    source: Optional[Path]
     repo_overlay: str
     keywords: Set[str]
 
@@ -133,7 +156,7 @@ def progress(text: str) -> None:
 
 
 def find_repo_path(env: WorkingEnvironment, repo_name: str) -> Path:
-    if repo_name == env.repo_overlay:
+    if repo_name == "aptenodytes":
         return Path(__file__).parent.parent.resolve()
     return env.repos_path / repo_name
 
@@ -191,6 +214,11 @@ def find_best_cpv(
         if my_cpv.is_meta_or_live():
             continue
 
+        # selected myself, just let me go:
+        if package.my_cpv == my_cpv:
+            my_cpvs[my_cpv] = package.repo_overlay
+            continue
+
         try:
             keywords = set(env.portdbapi.aux_get(my_cpv.cpv, ["KEYWORDS"])[0].split())
         except PortageKeyError:
@@ -209,8 +237,8 @@ def find_best_cpv(
 
         my_cpvs[my_cpv] = repo
 
-    # for non-override, we also add a repology version:
-    if is_overlay and not is_override:
+    # for non-override, we also add a repology version, TODO: --repology switch?
+    if env.repology and is_overlay and not is_override:
         repology_cpv = find_repology_cpv(package.my_cpv)
         if repology_cpv is not None:
             my_cpvs[repology_cpv] = "repology"
@@ -232,38 +260,39 @@ def cpv_find_repo(
     if ebuild is not None:
         return overlay.rsplit("/", maxsplit=1)[-1]
     if exact_v:
-        return env.repo_overlay
+        return "aptenodytes"
 
     # if there's any error, we pick any of one in the list... TODO: strategy?
     my_cpvs = my_cpv.cp_list(env)
     if len(my_cpvs) == 0:
-        return env.repo_overlay
+        return "aptenodytes"
     return cpv_find_repo(env, my_cpvs[0], True)
 
 
-def parse_comment_config(text: str) -> Optional[ConfigParser]:
+def parse_comment_config(text: str, config: ConfigParser, append: bool) -> bool:
     if not text.startswith("# [aptenodytes]"):
-        return None
+        return False
 
     # space as return, comma as space:
     config_text = text.replace(" ", "\n").replace(",", " ")
 
     # then we're:
-    config = ConfigParser()
+    if not append:
+        config.clear()
     config.read_string(config_text)
-    return config
+    return True
 
 
 def collect_ebuild_package(
     env: WorkingEnvironment, repo_name: str, my_cpv: MyCatPkgVerRev
 ) -> EbuildPackage:
     # fetching things from ebuild, TODO: any other helpers?
-    ebuild = str(find_repo_path(env, repo_name) / my_cpv)
+    ebuild = find_repo_path(env, repo_name) / my_cpv
     try:
         settings = portage.config(clone=portage.settings)
         settings.setcpv(my_cpv.cpv, mydb=env.portdbapi)
         doebuild.doebuild_environment(
-            ebuild, "depend", settings=settings, db=env.portdbapi
+            str(ebuild), "depend", settings=settings, db=env.portdbapi
         )
         keywords = set(settings["KEYWORDS"].split())
     except (PortageKeyError, UnsupportedAPIException):
@@ -273,42 +302,38 @@ def collect_ebuild_package(
     return EbuildPackage(my_cpv, ebuild, repo_name, keywords)
 
 
-def parse_pkg_override(text: str, default: str) -> Optional[str]:
-    match = PKG_OVERRIDE_REGEX.search(text)
-    if match is None:
-        return None
-
-    args = match[0].split()
-    for i, arg in enumerate(args):
-        if arg == "--repo":
-            return args[i + 1]
-    return default
-
-
 def collect_overlay_package(
     env: WorkingEnvironment, my_cpv: MyCatPkgVerRev
 ) -> OverlayPackage:
-    ebuild_package = collect_ebuild_package(env, env.repo_overlay, my_cpv)
+    ebuild_package = collect_ebuild_package(env, "aptenodytes", my_cpv)
     ebuild = ebuild_package.source
     assert ebuild is not None
 
-    # deducing the comment config and actual overlay:
-    config: Optional[ConfigParser] = None
+    # try if package.override, and make config:
+    override = ebuild.parent / "package.override"
     repo_override: Optional[str] = None
+    config = ConfigParser()
+    if override.is_file():  # TODO: support directories...
+        with open(override, "r") as reader:
+            lines = reader.readlines()
+        for line in lines:
+            if line.startswith("diff "):
+                break
+            if parse_comment_config(line, config, False):
+                break
+        repo_override = env.repo_override
+
+    # if any options in ebuild:
     with open(ebuild, "r") as reader:
         lines = reader.readlines()
     for line in lines:
-        if config is None:
-            config = parse_comment_config(line)
-            if config is not None:
-                continue
+        if parse_comment_config(line, config, True):
+            break
 
-        if repo_override is None:
-            repo_override = parse_pkg_override(line, env.default_repo_override)
+    # try if overrides:
+    repo_override = config.get("aptenodytes", "repo_override", fallback=repo_override)
 
     # hey i'm over laying:
-    if config is None:
-        config = ConfigParser()
     return OverlayPackage(*astuple(ebuild_package), repo_override, config)
 
 
@@ -324,9 +349,7 @@ def collect_profile_packages(
     config: ConfigParser = ConfigParser()
     for line in lines:
         # config can be reused until next block, to allow bulk:
-        config_next = parse_comment_config(line)
-        if config_next is not None:
-            config = config_next
+        if parse_comment_config(line, config, False):
             continue
 
         cpv = line.removeprefix("=")
@@ -344,31 +367,116 @@ def collect_profile_packages(
     return packages
 
 
+def sync_emerge() -> None:
+    for repo in ebuild_config().repositories:
+        if repo.sync_type is None:
+            continue
+
+        sync_type = "rsync"
+        if os.path.exists(f"{repo.location}/.git/index"):
+            sync_type = "git"
+
+        if os.path.exists(repo.location) and sync_type != repo.sync_type:
+            print(f">>> Resetting repository {repo.name}...")
+            rmtree(repo.location)
+        else:
+            print(f">>> Refreshing repository {repo.name}...")
+
+        # real the work:
+        check_call(["emerge", "--sync", "--quiet", repo.name])
+
+
+def sync_overlay_package(
+    old_package: OverlayPackage, new_package: EbuildPackage
+) -> None:
+    # no way to support repology now...
+    if new_package.repo_overlay == "repology":
+        print(f"!!! Repology unavailable for {old_package.my_cpv}")
+        return
+
+    src = new_package.source
+    dst = old_package.source.parent / new_package.source.name
+    copyfile(src, dst)
+
+    override = dst.parent / "package.override"
+    if override.is_file():
+        # sync eclass if any, to handle in the patch as well:
+        for eclass in old_package.config.get(
+            "aptenodytes", "eclass_sync", fallback=""
+        ).split():
+            eclass += ".eclass"
+            eclass_src = new_package.source.parent.parent.parent / "eclass" / eclass
+            eclass_dst = old_package.source.parent.parent.parent / "eclass" / eclass
+            copyfile(eclass_src, eclass_dst)
+
+        # FIXME: replace target diff file?
+        check_call(
+            [
+                "patch",
+                "-p1",
+                "-r",
+                "/dev/null",
+                "--no-backup-if-mismatch",
+                "-i",
+                override,
+            ],
+            cwd=Path(__file__).parent.parent,
+        )
+
+        # sync filesdir as well, TODO: consider removing old files?
+        files_src = src.parent / "files"
+        if files_src.is_dir():
+            files_dst = dst.parent / "files"
+            os.makedirs(files_dst, exist_ok=True)
+            check_call(["rsync", "-a", f"{files_src}/.", files_dst])
+
+    check_call(["ebuild", dst, "manifest"])
+
+    # reseting permissions back:
+    stat = old_package.source.stat()
+    check_call(["chown", "-R", f"{stat.st_uid}:{stat.st_gid}", dst.parent])
+
+
+def sync_profile_package(
+    old_package: ProfilePackage, new_package: EbuildPackage
+) -> None:
+    print(f"!!! Profile unavilable for {old_package.my_cpv} -> {new_package.my_cpv}")
+
+
 def main() -> None:
-    # prepare things up:
     env = WorkingEnvironment()
-    overlay_packages: List[OverlayPackage] = list()
-    profile_packages: List[ProfilePackage] = list()
+
+    # oneshot for one overlay package:
+    if env.one is not None:
+        my_cpv = MyCatPkgVerRev(cpv=env.one)
+        a = collect_overlay_package(env, my_cpv)
+        b = collect_ebuild_package(env, env.repo_override, my_cpv)
+        sync_overlay_package(a, b)
+        return
+
+    # sync rest of the world first:
+    if env.refresh:
+        sync_emerge()
 
     # obtain every normal packages, filter only really overlays:
-    repo_path = find_repo_path(env, env.repo_overlay)
+    packages: List[EbuildPackage] = list()
+    repo_path = find_repo_path(env, "aptenodytes")
     for ebuild_path in repo_path.glob("**/*.ebuild", recurse_symlinks=True):
         progress(f"ebuild: {ebuild_path}")
         my_cpv = MyCatPkgVerRev(path=ebuild_path)
-        overlay_packages.append(collect_overlay_package(env, my_cpv))
+        packages.append(collect_overlay_package(env, my_cpv))
 
     # obtain profiles packages, to show if they needs update:
-    repo_profiles_path = repo_path / "profiles"
-    for profile in ["package.accept_keywords"]:
-        for profile_path in repo_profiles_path.glob(
-            f"**/{profile}", recurse_symlinks=True
-        ):
-            for package in collect_profile_packages(env, profile_path):
-                progress(f"profile: {profile_path}: {package.my_cpv}")
-                profile_packages.append(package)
+    for profile_path in (repo_path / "profiles").glob(
+        "**/package.accept_keywords", recurse_symlinks=True
+    ):
+        for package in collect_profile_packages(env, profile_path):
+            progress(f"profile: {profile_path}: {package.my_cpv}")
+            packages.append(package)
 
     # find the best cpv, check if any updates:
-    for package in overlay_packages + profile_packages:
+    pendings: List[Tuple[EbuildPackage, EbuildPackage]] = list()
+    for package in packages:
         progress(f"overlay: {package.my_cpv}")
         repo_name, my_cpv = find_best_cpv(env, package)
 
@@ -387,13 +495,33 @@ def main() -> None:
         if pin_until_stable and package.my_cpv.cmp(my_cpv) > 0:
             continue
 
-        if type(package) is OverlayPackage:
-            typ = "overlay"
+        pendings.append((package, collect_ebuild_package(env, repo_name, my_cpv)))
+
+    # try to sync:
+    for old_package, new_package in pendings:
+        if env.pretend:
+            if type(package) is OverlayPackage:
+                typ = "overlay"
+            elif type(package) is ProfilePackage:
+                typ = "profile"
+            else:
+                raise
+            print(
+                f">>> {typ}:",
+                old_package.my_cpv,
+                f"({old_package.repo_overlay})",
+                "->",
+                new_package.my_cpv,
+                f"({new_package.repo_overlay})",
+            )
+            continue
+
+        if type(old_package) is OverlayPackage:
+            sync_overlay_package(old_package, new_package)
+        elif type(old_package) is ProfilePackage:
+            sync_profile_package(old_package, new_package)
         else:
-            typ = "profile"
-        print(
-            f">>> {typ}: {package.my_cpv} ({package.repo_overlay}) -> {my_cpv} ({repo_name})"
-        )
+            raise
 
 
 if __name__ == "__main__":

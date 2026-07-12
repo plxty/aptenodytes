@@ -9,7 +9,6 @@
 =dev-python/httpx-sse-0.4.3 **
 =dev-python/sse-starlette-3.4.4 **
 =app-office/lark-cli-1.0.56 **
-=dev-util/ty-0.0.7 **
 =dev-util/bash-language-server-5.6.0 **
 =net-proxy/mihomo-1.19.28 **
 =dev-libs/v2ray-rules-dat-bin-202607092306 **

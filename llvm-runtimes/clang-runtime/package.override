@@ -1,0 +1,32 @@
+diff --git a/llvm-runtimes/clang-runtime/clang-runtime-22.ebuild b/llvm-runtimes/clang-runtime/clang-runtime-22.ebuild
+index 53f62eeeb6a3..da1c75275d4b 100644
+--- a/llvm-runtimes/clang-runtime/clang-runtime-22.ebuild
++++ b/llvm-runtimes/clang-runtime/clang-runtime-22.ebuild
+@@ -11,7 +11,7 @@ S=${WORKDIR}
+ 
+ LICENSE="public-domain"
+ SLOT="${PV}"
+-KEYWORDS="amd64 arm arm64 ~loong ~mips ppc ppc64 ~riscv ~sparc x86 ~arm64-macos ~x64-macos"
++KEYWORDS="~arm64-macos"
+ IUSE="
+ 	+compiler-rt libcxx offload openmp +sanitize
+ 	default-compiler-rt default-libcxx default-lld llvm-libunwind polly
+@@ -131,4 +131,18 @@ src_install() {
+ 	fi
+ 
+ 	multilib_foreach_abi doclang_cfg
++
++	for abi in $(get_all_abis); do
++		# append the runtime directory actually, for -lclang_rt.osx to work:
++		local abi_chost=$(get_abi_CHOST "${abi}")
++		{
++			echo "-Wl,-rpath,${EPREFIX}/usr/lib/clang/${SLOT}/lib/darwin"
++			echo "-Wl,-L,${EPREFIX}/usr/lib/clang/${SLOT}/lib/darwin"
++		} >>"${ED}/etc/clang/${SLOT}/gentoo-runtimes.cfg"
++
++		# sync with @see clang-common
++		for tool in clang{,++,-cpp}; do
++			dosym "${abi_chost}-${tool}.cfg" "/etc/clang/${SLOT}/${abi_chost/darwin25/macosx}-${tool}.cfg"
++		done
++	done
+ }

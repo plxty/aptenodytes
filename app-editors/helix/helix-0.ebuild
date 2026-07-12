@@ -6,11 +6,13 @@ eval "$(pkg_profile)"
 
 KEYWORDS="amd64 arm64-macos"
 IUSE="iglu_lives_byte"
+
+# dev-util/ty is quite un-maintained, using a more stable one...
 RDEPEND+="
 	!app-editors/helix-p
 	iglu_lives_byte? ( acct-user/byte )
 	dev-util/ruff
-	dev-util/ty
+	dev-python/python-lsp-server
 	dev-util/bash-language-server
 	dev-util/shellcheck-bin
 "

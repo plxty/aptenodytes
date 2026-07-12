@@ -1,11 +1,49 @@
-EAPI="8"
+# Copyright 1999-2025 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
 
-inherit dirty-deeds
-eval "$(pkg_override --arch arm64-macos)"
+EAPI=8
 
-# don't pull in x11 dependencies to here
+DISTUTILS_USE_PEP517=setuptools
+PYTHON_COMPAT=( python3_{11..14} )
+
+inherit distutils-r1 virtualx pypi
+
+DESCRIPTION="A cross-platform clipboard module for Python"
+HOMEPAGE="
+	https://github.com/asweigart/pyperclip/
+	https://pypi.org/project/pyperclip/
+"
+
+LICENSE="BSD"
+SLOT="0"
+KEYWORDS="~arm64-macos"
+
+# don't pull in x11 dependencies to here:
 RDEPEND=""
+BDEPEND=""
 
-# avoid using FILESDIR, we don't want to handle it
-src_prepare_text="$(declare -f src_prepare)"
-eval "${src_prepare_text//PATCHES/_}"
+src_prepare() {
+	local PATCHES=(
+		"${FILESDIR}/${PN}-1.9.0-fix-test.patch"
+	)
+
+	# stupid windows
+	find -type f -exec sed -i -e 's:\r$::' {} + || die
+
+	distutils-r1_src_prepare
+
+	# klipper is hard to get working, and once we make it work,
+	# it breaks most of the other backends
+	# wl-copy requires wayland, not Xvfb
+	sed -e 's:_executable_exists("\(klipper\|wl-copy\)"):False:' \
+		-i tests/test_pyperclip.py || die
+}
+
+python_test() {
+	"${EPYTHON}" tests/test_pyperclip.py -vv ||
+		die "Tests fail on ${EPYTHON}"
+}
+
+src_test() {
+	virtx distutils-r1_src_test
+}

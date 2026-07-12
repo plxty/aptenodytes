@@ -1,0 +1,69 @@
+diff --git a/dev-util/codex/codex-0.144.1.ebuild b/dev-util/codex/codex-0.144.1.ebuild
+index 1bc498f57..609391c67 100644
+--- a/dev-util/codex/codex-0.144.1.ebuild
++++ b/dev-util/codex/codex-0.144.1.ebuild
+@@ -65,9 +65,18 @@ SRC_URI="
+ 		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_aarch64-unknown-linux-musl.rs
+ 			-> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_aarch64-unknown-linux-musl.rs
+ 	)
++	arm64-macos? (
++		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/librusty_v8_release_aarch64-apple-darwin.a.gz
++			-> rusty_v8_${RUSTY_V8_TAG}_librusty_v8_release_aarch64-apple-darwin.a.gz
++		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_aarch64-apple-darwin.rs
++			-> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_aarch64-apple-darwin.rs
++	)
+ 	${CARGO_CRATE_URIS}
+ "
+ 
++# we need the patches all over the world :/
++PATCHES=("${FILESDIR}/${PN}-speedy-startup.patch")
++
+ S="${WORKDIR}/${PN}-rust-v${PV}/codex-rs"
+ 
+ LICENSE="Apache-2.0"
+@@ -77,13 +86,14 @@ LICENSE+="
+ 	CC0-1.0 CDLA-Permissive-2.0 ISC MIT MPL-2.0 Unicode-3.0 ZLIB
+ "
+ SLOT="0"
+-KEYWORDS="-* ~amd64 ~arm64"
++# [aptenodytes] accept_keywords=~amd64 repo_override=gentoo-zh
++KEYWORDS="-* ~amd64 ~arm64 ~arm64-macos"
+ # Tests fail due to ring crate conflicts with system OpenSSL
+ RESTRICT="test"
+ 
+ DEPEND="
+ 	dev-libs/openssl:=
+-	sys-apps/dbus
++	!kernel_Darwin? ( sys-apps/dbus )
+ "
+ RDEPEND="${DEPEND}"
+ BDEPEND="virtual/pkgconfig"
+@@ -91,6 +101,13 @@ BDEPEND="virtual/pkgconfig"
+ # rust does not use *FLAGS from make.conf, silence portage warning
+ QA_FLAGS_IGNORED="usr/bin/${PN}"
+ 
++if [[ "${ARCH}" == "arm64-macos" ]]; then
++	# must linking with cxx, otherwise libraries like -lc++abi will get lost:
++	RUSTFLAGS="${RUSTFLAGS} -C linker=${CXX}"
++	# https://github.com/llvm/llvm-project/issues/50920
++	RUSTFLAGS="${RUSTFLAGS} -C link-arg=-Wl,--slop_scale=1024"
++fi
++
+ pkg_pretend() {
+ 	check-reqs_pkg_pretend
+ }
+@@ -139,12 +156,14 @@ src_compile() {
+ 	local rusty_v8_triple
+ 	use amd64 && rusty_v8_triple=x86_64-unknown-linux-musl
+ 	use arm64 && rusty_v8_triple=aarch64-unknown-linux-musl
++	use arm64-macos && rusty_v8_triple=aarch64-apple-darwin
+ 
+ 	# codex-core trait resolution overflows rustc's default 8MiB stack
+ 	export RUST_MIN_STACK=16777216
+ 
+ 	RUSTY_V8_ARCHIVE="${DISTDIR}/rusty_v8_${RUSTY_V8_TAG}_librusty_v8_release_${rusty_v8_triple}.a.gz" \
+ 	RUSTY_V8_SRC_BINDING_PATH="${DISTDIR}/rusty_v8_${RUSTY_V8_TAG}_src_binding_release_${rusty_v8_triple}.rs" \
++	AWS_LC_SYS_NO_JITTER_ENTROPY="1" \
+ 		cargo_src_compile --package codex-cli
+ }
+ 

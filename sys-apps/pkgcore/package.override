@@ -1,0 +1,12 @@
+diff --git a/sys-apps/pkgcore/pkgcore-0.12.35.ebuild b/sys-apps/pkgcore/pkgcore-0.12.35.ebuild
+index abbe7cb25d55..c6c39c4ebe41 100644
+--- a/sys-apps/pkgcore/pkgcore-0.12.35.ebuild
++++ b/sys-apps/pkgcore/pkgcore-0.12.35.ebuild
+@@ -21,6 +21,7 @@ HOMEPAGE="https://github.com/pkgcore/pkgcore"
+ 
+ LICENSE="BSD MIT"
+ SLOT="0"
++PATCHES=("${FILESDIR}/${PN}-repo-aliases.patch")
+ 
+ if [[ ${PV} == *9999 ]]; then
+ 	RDEPEND="~dev-python/snakeoil-9999[${PYTHON_USEDEP}]"

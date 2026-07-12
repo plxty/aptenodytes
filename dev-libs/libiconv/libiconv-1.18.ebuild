@@ -1,32 +1,81 @@
-EAPI="8"
+# Copyright 1999-2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
 
-# [aptenodytes] pin_until_stable=1
-inherit dirty-deeds
-eval "$(pkg_override)"
+EAPI=8
 
-if [[ "${ARCH}" == *"-macos" ]]; then
-	# @see dev-libs/gnulib/gnulib-2026.01.14.22.26.00.ebuild
-	GNULIB_GIT_TAG="2a288c048e2a23ea9cd8cbef9a60aa4ac82bdc3d"
+VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/gettext.asc
+inherit multilib-minimal verify-sig
 
-	# fix utf-8-mac:
-	SRC_URI="
-    https://github.com/fumiyas/libiconv-utf8mac/archive/refs/heads/utf-8-mac-51.200.6.libiconv-${PV}.zip
-    https://codeberg.org/gnulib/gnulib/archive/${GNULIB_GIT_TAG}.tar.gz -> gnulib-${GNULIB_GIT_TAG}.tar.gz
-  "
-	S="${WORKDIR}/libiconv-utf8mac-utf-8-mac-51.200.6.libiconv-${PV}"
+# @see dev-libs/gnulib/gnulib-2026.01.14.22.26.00.ebuild
+GNULIB_GIT_TAG="2a288c048e2a23ea9cd8cbef9a60aa4ac82bdc3d"
 
-	src_prepare() {
-		default
+DESCRIPTION="GNU charset conversion library for libc which doesn't implement it"
+HOMEPAGE="https://www.gnu.org/software/libiconv/"
+# fix utf-8-mac:
+SRC_URI="
+	https://github.com/fumiyas/libiconv-utf8mac/archive/refs/heads/utf-8-mac-51.200.6.libiconv-${PV}.zip
+	https://codeberg.org/gnulib/gnulib/archive/${GNULIB_GIT_TAG}.tar.gz -> gnulib-${GNULIB_GIT_TAG}.tar.gz
+"
+S="${WORKDIR}/libiconv-utf8mac-utf-8-mac-51.200.6.libiconv-${PV}"
 
-		# workaround...
-		echo >gitsub.sh
-		ln -s "${WORKDIR}/gnulib" gnulib
 
-		# no hardcode...
-		sed -i -e '/SHELL/d' \
-			-e 's/automake-1.17/automake/' \
-			-e 's/aclocal-1.17/aclocal/' \
-			Makefile.devel
-		make -f Makefile.utf8mac autogen
-	}
-fi
+LICENSE="LGPL-2.1+ GPL-3+"
+SLOT="0"
+KEYWORDS="~arm64-macos"
+IUSE="prefix static-libs"
+
+DEPEND="
+	!sys-libs/glibc
+	!sys-libs/musl
+"
+RDEPEND="${DEPEND}"
+BDEPEND="verify-sig? ( sec-keys/openpgp-keys-gettext )"
+
+PATCHES=(
+	"${FILESDIR}"/${PN}-1.18-fix-link-install.patch
+)
+
+src_prepare() {
+	default
+
+	# workaround...
+	echo >gitsub.sh
+	ln -s "${WORKDIR}/gnulib" gnulib
+
+	# no hardcode...
+	sed -i -e '/SHELL/d' \
+		-e 's/automake-1.17/automake/' \
+		-e 's/aclocal-1.17/aclocal/' \
+		Makefile.devel
+	make -f Makefile.utf8mac autogen
+}
+
+multilib_src_configure() {
+	if use prefix ; then
+		# In Prefix we want to have the same header declaration on every
+		# platform, so make configure find that it should do
+		# "const char * *inbuf"
+		export am_cv_func_iconv=no
+	fi
+
+	# Disable NLS support because that creates a circular dependency
+	# between libiconv and gettext
+	ECONF_SOURCE="${S}" \
+	econf \
+		--cache-file="${BUILD_DIR}"/config.cache \
+		--docdir="\$(datarootdir)/doc/${PF}/html" \
+		--disable-nls \
+		--enable-shared \
+		$(use_enable static-libs static)
+}
+
+multilib_src_install_all() {
+	use static-libs || find "${ED}" -name 'lib*.la' -delete
+
+	# We need to rename our copies, bug #503162
+	cd "${ED}"/usr/share/man || die
+	local f
+	for f in man*/*.[0-9] ; do
+		mv "${f}" "${f%/*}/${PN}-${f#*/}" || die
+	done
+}

@@ -34,65 +34,6 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 		fi
 	}
 
-	pkg_override() {
-		local repo=
-		local arch=
-		while [[ "${1:-}" != "" ]]; do
-			case "${1}" in
-			"--repo")
-				repo="${2}"
-				shift 2
-				;;
-			"--arch")
-				arch="${2}"
-				shift 2
-				;;
-			*) die "invalid argument to pkg_override, check it" ;;
-			esac
-		done
-
-		# defaults to override the main repo:
-		if [[ "${repo}" == "" ]]; then
-			if guse prefix-guest; then
-				repo="gentoo_prefix"
-			else
-				repo="gentoo"
-			fi
-		fi
-
-		# in global scope, the EPREFIX seems not set yet:
-		local layer="${PORTAGE_CONFIGROOT}/var/db/repos/${repo}/${CATEGORY}/${PN}"
-
-		# should eval in the outside, to keep things:
-		local text="$(<"${layer}/${PF}.ebuild")"
-		if [[ "${text}" == "" ]]; then
-			die "override for ${PF}::${repo} doesn't exist, maybe you need updates?"
-		fi
-
-		# workaround for FILESDIR (readonly):
-		echo "OLDFILESDIR='${layer}/files'"
-		echo "${text//FILESDIR/OLDFILESDIR}"
-
-		# restrict keywords for specified arch only:
-		if [[ "${arch}" != "" ]]; then
-			echo "KEYWORDS=\"${arch}\""
-		fi
-	}
-
-	class_override() {
-		# defaults to override the main repo:
-		local repo="gentoo"
-		if [[ "${1:-}" == "--repo" ]]; then
-			repo="${2}"
-			shift 2
-		elif guse prefix-guest; then
-			repo="gentoo_prefix"
-		fi
-
-		local text="$(<"${PORTAGE_CONFIGROOT}/var/db/repos/${repo}/eclass/${ECLASS}.eclass")"
-		echo -n "${text}"
-	}
-
 	escript() {
 		local script_dir="${PORTAGE_CONFIGROOT}/var/db/repos/aptenodytes/scripts"
 		local exe="${1}"

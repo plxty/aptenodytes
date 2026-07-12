@@ -1,0 +1,31 @@
+diff --git a/app-i18n/librime-lua/librime-lua-20250707183812.ebuild b/app-i18n/librime-lua/librime-lua-20250707183812.ebuild
+index 99ff4a97115f..d6d9c5f1b3da 100644
+--- a/app-i18n/librime-lua/librime-lua-20250707183812.ebuild
++++ b/app-i18n/librime-lua/librime-lua-20250707183812.ebuild
+@@ -19,10 +19,12 @@ HOMEPAGE="https://github.com/hchunhui/librime-lua"
+ if [[ "${PV}" != "99999999999999" ]]; then
+ 	SRC_URI="https://github.com/hchunhui/${PN}/archive/${LIBRIME_LUA_GIT_REVISION}.tar.gz -> ${P}.tar.gz"
+ fi
++# fixing x11 includes in darwin, we use librime's hardcoded:
++PATCHES=("${FILESDIR}/${PN}-x11-keysym.patch")
+ 
+ LICENSE="BSD MIT"
+ SLOT="0"
+-KEYWORDS="~amd64 ~ppc ~ppc64 ~x86"
++KEYWORDS="~arm64-macos"
+ REQUIRED_USE="${LUA_REQUIRED_USE}"
+ 
+ RDEPEND=">=app-i18n/librime-1.6:0=
+@@ -45,6 +47,12 @@ src_prepare() {
+ 		-e "\$ainstall(TARGETS \${plugin_modules} DESTINATION $(get_libdir)/rime-plugins)" \
+ 		-i CMakeLists.txt || die
+ 
++	# adding more related dependencies...
++	{
++		echo "include_directories(thirdparty/x11)"
++		echo "target_link_libraries(lua glog opencc)"
++	} >>CMakeLists.txt
++
+ 	cmake_src_prepare
+ }
+ 

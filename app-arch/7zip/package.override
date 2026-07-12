@@ -1,0 +1,15 @@
+diff --git a/app-arch/7zip/7zip-26.01.ebuild b/app-arch/7zip/7zip-26.01.ebuild
+index 8ebaf831adba..13e9c07a6c0c 100644
+--- a/app-arch/7zip/7zip-26.01.ebuild
++++ b/app-arch/7zip/7zip-26.01.ebuild
+@@ -78,7 +78,9 @@ src_compile() {
+ 	pushd "./CPP/7zip/Bundles/Alone2" || die "Unable to switch directory"
+ 
+ 	# avoid executable stack when using uasm/jwasm, harmless otherwise
+-	append-ldflags -Wl,-z,noexecstack
++	if ! use kernel_Darwin; then
++		append-ldflags -Wl,-z,noexecstack
++	fi
+ 	export G_CFLAGS=${CFLAGS}
+ 	export G_CXXFLAGS=${CXXFLAGS}
+ 	export G_LDFLAGS=${LDFLAGS}

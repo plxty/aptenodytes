@@ -9,21 +9,21 @@ die() {
 
 # [--opts...] [iglu_id] [eprefix]
 IGLU_ID="$(hostname)"
-EPREFIX="/"
+EPREFIX=
 SKIP_REFRESH=false
 YES=false
 while [[ "${1:-}" != "" ]]; do
 	case "${1}" in
-	"--help") die "${0} [--skip-refresh] [--yes] IGLU_ID|${IGLU_ID} EPREFIX|${EPREFIX} [-- ...]" ;;
+	"--help") die "${0} [--skip-refresh] [--yes] [IGLU_ID|${IGLU_ID}] [EPREFIX] [-- ...]" ;;
 	"--skip-refresh") SKIP_REFRESH=true ;;
 	"--yes") YES=true ;;
 	"--")
 		shift 1
 		break
 		;;
-	"-"*) die "unsupported argument ${1}" ;;
+	"-"*) die "Unsupported argument ${1}" ;;
 	*)
-		if [[ "${EPREFIX}" != "/" ]]; then
+		if [[ "${EPREFIX}" != "" ]]; then
 			IGLU_ID="${EPREFIX}"
 		fi
 		EPREFIX="${1}"
@@ -32,15 +32,24 @@ while [[ "${1:-}" != "" ]]; do
 	shift 1
 done
 
-EPREFIX="$(realpath "${EPREFIX}")"
-if [[ "${IGLU_ID}" == "" || "${EPREFIX}" == "" ]]; then
-	die "Invalid arguments"
-fi
-
 # bring in guse or other stuffs:
 cd "$(dirname "${BASH_SOURCE[0]}")"
 EAPI="8"
 source ../eclass/dirty-deeds.eclass
+
+# sanity:
+if [[ ! -e "../profiles/iglu/${IGLU_ID}" ]]; then
+	die "Invalid IGLU_ID: ${IGLU_ID}"
+fi
+if [[ "${EPREFIX}" != "" ]]; then
+	EPREFIX="$(realpath "${EPREFIX}")"
+	if [[ "${EPREFIX}" == "" ]]; then
+		die "Invalid EPREFIX: ${EPREFIX}"
+	fi
+	if [[ "${EPREFIX}" == "/" ]]; then
+		EPREFIX=
+	fi
+fi
 
 # check if is a prefix or gentoo install
 USE="${USE:-} "
@@ -58,8 +67,10 @@ done < <(awk '-F[:/]' '$(NF-1) == "superego" {print $NF}' "../profiles/iglu/${IG
 
 erun() {
 	local args=("${1}")
-	if [[ "${args[0]}" == "emerge" ]] && ! "${YES}"; then
-		args+=("-va")
+	if ! "${YES}"; then
+		case "${args[0]}" in
+		"emerge") args+=("-va") ;;
+		esac
 	fi
 	args+=("${@:2}")
 
@@ -67,7 +78,7 @@ erun() {
 		# shellcheck disable=SC2016
 		"${EPREFIX}/usr/bin/bash" -c "source '${EPREFIX}/etc/profile';"'exec "${@}"' \
 			-- env "${args[@]}"
-	elif [[ "${EPREFIX}" == "/" ]]; then
+	elif [[ "${EPREFIX}" == "" ]]; then
 		"${args[@]}"
 	else
 		arch-chroot "${EPREFIX}" "${args[@]}"
@@ -136,7 +147,7 @@ fi
 
 # now try to sync the repo with git to ensure we've setup:
 if ! "${SKIP_REFRESH}"; then
-	erun "${PWD}/emerge-sync.py" --quiet
+	erun "${PWD}/keep-in-sync.py" --refresh
 fi
 
 # update-the-world if !shell-instead

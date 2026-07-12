@@ -1,5 +1,5 @@
 # /etc/portage/mirrors?
-GENTOO_MIRRORS="https://mirrors.ustc.edu.cn/gentoo"
+GENTOO_MIRRORS="https://mirrors.nju.edu.cn/gentoo"
 
 # @see https://wiki.gentoo.org/wiki/CONFIG_PROTECT_MASK, managed by -p :)
 CONFIG_PROTECT_MASK="
