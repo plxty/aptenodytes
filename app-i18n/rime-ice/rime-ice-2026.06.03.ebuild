@@ -12,6 +12,7 @@ PATCHES=("${FILESDIR}/${APN}-double-pinyin-abc.patch")
 KEYWORDS="arm64-macos amd64"
 IUSE="iglu_lives_byte"
 RDEPEND="
+	!app-i18n/rime-ice-p
 	app-i18n/librime
 	app-i18n/librime-lua
 	iglu_lives_byte? ( acct-user/byte )
