@@ -398,6 +398,10 @@ def sync_overlay_package(
     dst = old_package.source.parent / new_package.source.name
     copyfile(src, dst)
 
+    # the reason why it becomes complex, is gentoo forced sandbox in the depend
+    # phase, causing all reads outside current overlay fails, so the only way
+    # we can workaround (without patching portage) is to copy-then-patch, huh.
+    # @see https://github.com/gentoo/portage/commit/4671dba39326c02d2e649b95f211e16aa46cd275
     override = dst.parent / "package.override"
     if override.is_file():
         # sync eclass if any, to handle in the patch as well:
