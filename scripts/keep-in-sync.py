@@ -266,18 +266,20 @@ def cpv_find_repo(
     return cpv_find_repo(env, my_cpvs[0], True)
 
 
-def parse_comment_config(text: str, config: ConfigParser, append: bool) -> bool:
+def parse_comment_config(
+    text: str, config: Optional[ConfigParser]
+) -> Optional[ConfigParser]:
     if not text.startswith("# [aptenodytes]"):
-        return False
+        return None
 
     # space as return, comma as space:
     config_text = text.replace(" ", "\n").replace(",", " ")
 
-    # then we're:
-    if not append:
-        config.clear()
+    # then we're, the read_string will not clear existences:
+    if config is None:
+        config = ConfigParser()
     config.read_string(config_text)
-    return True
+    return config
 
 
 def collect_ebuild_package(
@@ -316,16 +318,16 @@ def collect_overlay_package(
         for line in lines:
             if line.startswith("diff "):
                 break
-            if parse_comment_config(line, config, False):
-                break
+            if parse_comment_config(line, config) is not None:
+                continue
         repo_override = env.repo_override
 
     # if any options in ebuild:
     with open(ebuild, "r") as reader:
         lines = reader.readlines()
     for line in lines:
-        if parse_comment_config(line, config, True):
-            break
+        if parse_comment_config(line, config) is not None:
+            continue
 
     # try if overrides:
     repo_override = config.get("aptenodytes", "repo_override", fallback=repo_override)
@@ -346,7 +348,8 @@ def collect_profile_packages(
     config: ConfigParser = ConfigParser()
     for line in lines:
         # config can be reused until next block, to allow bulk:
-        if parse_comment_config(line, config, False):
+        if (next_config := parse_comment_config(line, None)) is not None:
+            config = next_config
             continue
 
         cpv = line.removeprefix("=")
@@ -466,6 +469,10 @@ def sync_profile_package(
 def main() -> None:
     env = WorkingEnvironment()
 
+    # sync rest of the world first:
+    if not env.skip_refresh:
+        sync_emerge()
+
     # oneshot for one overlay package:
     if env.oneshot is not None:
         my_cpv = MyCatPkgVerRev(cpv=env.oneshot)
@@ -474,15 +481,11 @@ def main() -> None:
         sync_overlay_package(a, b)
         return
 
-    # sync rest of the world first:
-    if not env.skip_refresh:
-        sync_emerge()
-
     # obtain every normal packages, filter only really overlays:
     packages: List[EbuildPackage] = list()
     repo_path = find_repo_path(env, "aptenodytes")
     for ebuild_path in repo_path.glob("**/*.ebuild", recurse_symlinks=True):
-        progress(f"ebuild: {ebuild_path}")
+        progress(f"overlay: {ebuild_path}")
         my_cpv = MyCatPkgVerRev(path=ebuild_path)
         packages.append(collect_overlay_package(env, my_cpv))
 
@@ -497,7 +500,7 @@ def main() -> None:
     # find the best cpv, check if any updates:
     pendings: List[Tuple[EbuildPackage, EbuildPackage]] = list()
     for package in packages:
-        progress(f"overlay: {package.my_cpv}")
+        progress(f"package: {package.my_cpv}")
         repo_name, my_cpv = find_best_cpv(env, package)
 
         # nothing changes:
