@@ -48,11 +48,27 @@ dns:
     # qnap
     - DOMAIN-SUFFIX,myqnapcloud.cn,real-ip
     - DOMAIN-SUFFIX,myqnapcloud.io,real-ip
-    # steam, https://robinxb.com/posts/2025/clash-verge-with-steam/
-    - DOMAIN,steamcdn-a.akamaihd.net,real-ip
+    # steam, https://github.com/v2fly/domain-list-community/blob/master/data/steam
+    - DOMAIN,csgo.wmsj.cn,real-ip
+    - DOMAIN,dl.steam.clngaa.com,real-ip
+    - DOMAIN,dl.steam.ksyna.com,real-ip
+    - DOMAIN,dota2.wmsj.cn,real-ip
+    - DOMAIN,st.dl.bscstorage.net,real-ip
+    - DOMAIN,st.dl.eccdnx.com,real-ip
+    - DOMAIN,st.dl.pinyuncloud.com,real-ip
+    - DOMAIN,steampipe.steamcontent.tnkjmec.com,real-ip
+    - DOMAIN,steampowered.com.8686c.com,real-ip
+    - DOMAIN,steamstatic.com.8686c.com,real-ip
+    - DOMAIN,wmsjsteam.com,real-ip
+    - DOMAIN,xz.pphimalayanrt.com,real-ip
     - DOMAIN-SUFFIX,cm.steampowered.com,real-ip
-    - DOMAIN-SUFFIX,steamserver.net,real-ip
+    - DOMAIN-SUFFIX,steamchina.com,real-ip
     - DOMAIN-SUFFIX,steamcontent.com,real-ip
+    - DOMAIN-SUFFIX,steamusercontent.com,real-ip
+    - DOMAIN,steamcdn-a.akamaihd.net,real-ip
+    - DOMAIN-SUFFIX,steamserver.net,real-ip
+    - DOMAIN,gstore.val.manlaxy.com,real-ip
+    - GEOSITE,category-games-cn,real-ip
     # google, https://github.com/vernesong/OpenClash/discussions/3131#discussioncomment-14898388
     # - DOMAIN-SUFFIX,xn--ngstr-lra8j.com,real-ip
     # - DOMAIN-SUFFIX,googleapis.cn,fake-ip
@@ -64,7 +80,7 @@ dns:
 rules:
   # by-site, order matters:
   - GEOSITE,openai,PROXY
-  - GEOSITE,category-games,PROXY
+  - GEOSITE,category-games-!cn,PROXY
   - GEOSITE,github,PROXY
   - GEOSITE,telegram,PROXY
   - GEOSITE,twitter,PROXY

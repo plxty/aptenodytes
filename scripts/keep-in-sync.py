@@ -141,6 +141,7 @@ class OverlayPackage(EbuildPackage):
 
 @dataclass
 class ProfilePackage(EbuildPackage):
+    profile_path: Path
     config: ConfigParser  # TODO: Remove
 
 
@@ -361,7 +362,7 @@ def collect_profile_packages(
         # it may not exists in the repo, so we need searching:
         repo_name = cpv_find_repo(env, my_cpv, False)
         ebuild_package = collect_ebuild_package(env, repo_name, my_cpv)
-        profile_package = ProfilePackage(*astuple(ebuild_package), config)
+        profile_package = ProfilePackage(*astuple(ebuild_package), fullpath, config)
         packages.append(profile_package)
 
     return packages
@@ -458,12 +459,21 @@ def sync_overlay_package(
     # reseting permissions back:
     stat = old_package.source.stat()
     check_call(["chown", "-R", f"{stat.st_uid}:{stat.st_gid}", dst.parent])
+    print(f"=== Syncd overlay: {new_package.my_cpv}::{new_package.repo_overlay}")
 
 
 def sync_profile_package(
     old_package: ProfilePackage, new_package: EbuildPackage
 ) -> None:
-    print(f"!!! Profile unavilable for {old_package.my_cpv} -> {new_package.my_cpv}")
+    profile_path = old_package.profile_path
+    with open(profile_path, "r") as reader:
+        lines = reader.readlines()
+    with open(profile_path, "w") as writer:
+        for line in lines:
+            if line.startswith("="):
+                line = line.replace(str(old_package.my_cpv), str(new_package.my_cpv))
+            writer.write(line)
+    print(f"=== Syncd profile: {new_package.my_cpv}::{new_package.repo_overlay}")
 
 
 def main() -> None:
@@ -521,6 +531,7 @@ def main() -> None:
         pendings.append((package, collect_ebuild_package(env, repo_name, my_cpv)))
 
     # try to sync:
+    progress("")
     for old_package, new_package in pendings:
         if env.pretend:
             if type(package) is OverlayPackage:
