@@ -8,7 +8,7 @@ from dataclasses import astuple, dataclass
 from pathlib import Path
 from time import sleep
 from typing import Dict, List, Optional, Set, Tuple, Self, Any
-from subprocess import check_call
+from subprocess import check_call, Popen, PIPE
 from shutil import rmtree, copyfile
 from urllib.parse import quote
 from urllib.request import Request, urlopen
@@ -30,13 +30,13 @@ portage._sync_mode = True
 class WorkingEnvironment:
     # these variables are static across multiple instances (aka shared):
     repos_path: Path = Path(portage.settings["PORTDIR"]).parent
+    repo_override: str = Path(portage.settings["PORTDIR"]).name
     portdbapi: portdbapi = portage.db[portage.settings["EROOT"]]["porttree"].dbapi
     accept_keywords: Set[str] = {"amd64", "arm64", "arm64-macos"}
 
     # private vars, mostly arguments:
-    repo_override: str = Path(portage.settings["PORTDIR"]).name
-    one: Optional[str] = None
-    refresh: bool = False
+    oneshot: Optional[str] = None
+    skip_refresh: bool = False
     repology: bool = False
     pretend: bool = False
 
@@ -45,14 +45,11 @@ class WorkingEnvironment:
         i = 0
         while i < len(argv):
             match argv[i]:
-                case "--repo-override":
-                    self.repo_override = argv[i + 1]
+                case "--oneshot":
+                    self.oneshot = argv[i + 1]
                     i += 1
-                case "--one":
-                    self.one = argv[i + 1]
-                    i += 1
-                case "--refresh":
-                    self.refresh = True
+                case "--skip-refresh":
+                    self.skip_refresh = True
                 case "--repology":
                     self.repology = True
                 case "--pretend":
@@ -157,7 +154,7 @@ def progress(text: str) -> None:
 
 def find_repo_path(env: WorkingEnvironment, repo_name: str) -> Path:
     if repo_name == "aptenodytes":
-        return Path(__file__).parent.parent.resolve()
+        return Path(__file__).parents[1].resolve()
     return env.repos_path / repo_name
 
 
@@ -409,23 +406,42 @@ def sync_overlay_package(
             "aptenodytes", "eclass_sync", fallback=""
         ).split():
             eclass += ".eclass"
-            eclass_src = new_package.source.parent.parent.parent / "eclass" / eclass
-            eclass_dst = old_package.source.parent.parent.parent / "eclass" / eclass
+            eclass_src = new_package.source.parents[2] / "eclass" / eclass
+            eclass_dst = old_package.source.parents[2] / "eclass" / eclass
             copyfile(eclass_src, eclass_dst)
 
-        # FIXME: replace target diff file?
-        check_call(
+        patch_process = Popen(
             [
                 "patch",
                 "-p1",
                 "-r",
                 "/dev/null",
                 "--no-backup-if-mismatch",
-                "-i",
-                override,
             ],
-            cwd=Path(__file__).parent.parent,
+            text=True,
+            cwd=Path(__file__).parents[1],
+            stdin=PIPE,
         )
+
+        # modify the patch file to pointing to latest file:
+        with open(override, "r") as reader:
+            lines = reader.readlines()
+        patch_src = new_package.source.relative_to(new_package.source.parents[2])
+        for line in lines:
+            # TODO: better replace :(
+            if not line.endswith(".ebuild\n"):
+                pass
+            elif line.startswith("diff --git a/"):
+                line = f"diff --git a/{patch_src} b/{patch_src}\n"
+            elif line.startswith("--- a/"):
+                line = f"--- a/{patch_src}\n"
+            elif line.startswith("+++ b/"):
+                line = f"+++ b/{patch_src}\n"
+            patch_process.stdin.write(line)
+
+        patch_process.stdin.close()
+        if patch_process.wait() != 0:
+            raise
 
         # sync filesdir as well, TODO: consider removing old files?
         files_src = src.parent / "files"
@@ -451,15 +467,15 @@ def main() -> None:
     env = WorkingEnvironment()
 
     # oneshot for one overlay package:
-    if env.one is not None:
-        my_cpv = MyCatPkgVerRev(cpv=env.one)
+    if env.oneshot is not None:
+        my_cpv = MyCatPkgVerRev(cpv=env.oneshot)
         a = collect_overlay_package(env, my_cpv)
-        b = collect_ebuild_package(env, env.repo_override, my_cpv)
+        b = collect_ebuild_package(env, a.repo_override, my_cpv)
         sync_overlay_package(a, b)
         return
 
     # sync rest of the world first:
-    if env.refresh:
+    if not env.skip_refresh:
         sync_emerge()
 
     # obtain every normal packages, filter only really overlays:
