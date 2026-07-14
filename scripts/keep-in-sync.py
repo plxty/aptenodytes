@@ -534,9 +534,9 @@ def main() -> None:
     progress("")
     for old_package, new_package in pendings:
         if env.pretend:
-            if type(package) is OverlayPackage:
+            if type(old_package) is OverlayPackage:
                 typ = "overlay"
-            elif type(package) is ProfilePackage:
+            elif type(old_package) is ProfilePackage:
                 typ = "profile"
             else:
                 raise
