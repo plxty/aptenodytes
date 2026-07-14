@@ -3,6 +3,7 @@
 import json
 import os
 import sys
+from grp import getgrgid
 from configparser import ConfigParser
 from dataclasses import astuple, dataclass
 from pathlib import Path
@@ -291,6 +292,14 @@ def collect_ebuild_package(
     try:
         settings = portage.config(clone=portage.settings)
         settings.setcpv(my_cpv.cpv, mydb=env.portdbapi)
+
+        # setting to me, portage uses a user that cannot access pwd when sudo:
+        # @see portage _get_global
+        if all(map(lambda v: v in os.environ, ["SUDO_USER", "SUDO_GID"])):
+            group = getgrgid(int(os.environ["SUDO_GID"])).gr_name
+            settings["PORTAGE_GRPNAME"] = group
+            settings["PORTAGE_USERNAME"] = os.environ["SUDO_USER"]
+
         doebuild.doebuild_environment(
             str(ebuild), "depend", settings=settings, db=env.portdbapi
         )
