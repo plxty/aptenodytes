@@ -1,10 +1,77 @@
-diff --git a/tui/src/tooltips.rs b/tui/src/tooltips.rs
+diff --git a/codex-rs/linux-sandbox/src/bwrap.rs b/codex-rs/linux-sandbox/src/bwrap.rs
+index 25a3814fb5..e97274168e 100644
+--- a/codex-rs/linux-sandbox/src/bwrap.rs
++++ b/codex-rs/linux-sandbox/src/bwrap.rs
+@@ -51,6 +51,7 @@ const LINUX_PLATFORM_DEFAULT_READ_ROOTS: &[&str] = &[
+     "/lib64",
+     "/nix/store",
+     "/run/current-system/sw",
++    "${EPREFIX}"
+ ];
+ 
+ const MAX_UNREADABLE_GLOB_MATCHES: usize = 8192;
+diff --git a/codex-rs/tui/src/chatwidget.rs b/codex-rs/tui/src/chatwidget.rs
+index fa745c652e..468b10df48 100644
+--- a/codex-rs/tui/src/chatwidget.rs
++++ b/codex-rs/tui/src/chatwidget.rs
+@@ -169,7 +169,6 @@ use crossterm::event::KeyCode;
+ use crossterm::event::KeyEvent;
+ use crossterm::event::KeyEventKind;
+ use crossterm::event::KeyModifiers;
+-use rand::Rng;
+ use ratatui::buffer::Buffer;
+ use ratatui::layout::Rect;
+ use ratatui::style::Color;
+@@ -2023,23 +2022,6 @@ impl Drop for ChatWidget {
+     }
+ }
+ 
+-const PLACEHOLDERS: [&str; 8] = [
+-    "Explain this codebase",
+-    "Summarize recent commits",
+-    "Implement {feature}",
+-    "Find and fix a bug in @filename",
+-    "Write tests for @filename",
+-    "Improve documentation in @filename",
+-    "Run /review on my current changes",
+-    "Use /skills to list available skills",
+-];
+-
+-const SIDE_PLACEHOLDERS: [&str; 3] = [
+-    "Check recently modified functions for compatibility",
+-    "How many files have been modified?",
+-    "Will this algorithm scale well?",
+-];
+-
+ // Extract the first bold (Markdown) element in the form **...** from `s`.
+ // Returns the inner text if found; otherwise `None`.
+ fn extract_first_bold(s: &str) -> Option<String> {
+diff --git a/codex-rs/tui/src/chatwidget/constructor.rs b/codex-rs/tui/src/chatwidget/constructor.rs
+index 7fb6fe54e9..cc0358a217 100644
+--- a/codex-rs/tui/src/chatwidget/constructor.rs
++++ b/codex-rs/tui/src/chatwidget/constructor.rs
+@@ -36,10 +36,10 @@ impl ChatWidget {
+         let mut config = config;
+         config.model = model.clone();
+         let prevent_idle_sleep = config.features.enabled(Feature::PreventIdleSleep);
+-        let mut rng = rand::rng();
+-        let placeholder = PLACEHOLDERS[rng.random_range(0..PLACEHOLDERS.len())].to_string();
+-        let side_placeholder =
+-            SIDE_PLACEHOLDERS[rng.random_range(0..SIDE_PLACEHOLDERS.len())].to_string();
++
++        /* No annoying placeholders :) */
++        let placeholder = String::new();
++        let side_placeholder = String::new();
+ 
+         let model_override = model.as_deref();
+         let model_for_header = model
+diff --git a/codex-rs/tui/src/tooltips.rs b/codex-rs/tui/src/tooltips.rs
 index 8eb156156e..2f9d87a4c4 100644
---- a/tui/src/tooltips.rs
-+++ b/tui/src/tooltips.rs
+--- a/codex-rs/tui/src/tooltips.rs
++++ b/codex-rs/tui/src/tooltips.rs
 @@ -207,17 +207,7 @@ pub(crate) mod announcement {
      }
-
+ 
      fn blocking_init_announcement_tip() -> Option<String> {
 -        // Avoid system proxy detection to prevent macOS system-configuration panics (#8912).
 -        let client = reqwest::blocking::Client::builder()
@@ -19,15 +86,15 @@ index 8eb156156e..2f9d87a4c4 100644
 -        response.error_for_status().ok()?.text().ok()
 +        return None
      }
-
+ 
      pub(crate) fn parse_announcement_tip_toml(
-diff --git a/tui/src/tui/keyboard_modes.rs b/tui/src/tui/keyboard_modes.rs
+diff --git a/codex-rs/tui/src/tui/keyboard_modes.rs b/codex-rs/tui/src/tui/keyboard_modes.rs
 index ca4ae3bce2..4b2aa81164 100644
---- a/tui/src/tui/keyboard_modes.rs
-+++ b/tui/src/tui/keyboard_modes.rs
+--- a/codex-rs/tui/src/tui/keyboard_modes.rs
++++ b/codex-rs/tui/src/tui/keyboard_modes.rs
 @@ -167,31 +167,7 @@ fn tmux_should_enable_modify_other_keys_for(
  }
-
+ 
  fn read_tmux_extended_keys_format() -> Option<String> {
 -    for args in [
 -        ["display-message", "-p", "#{extended-keys-format}"],
@@ -56,5 +123,5 @@ index ca4ae3bce2..4b2aa81164 100644
 -    None
 +    Some(String::from("xterm"))
  }
-
+ 
  pub(super) fn restore_keyboard_enhancement_stack() {

@@ -1,33 +1,39 @@
-diff --git a/dev-util/codex/codex-0.144.1.ebuild b/dev-util/codex/codex-0.144.1.ebuild
-index 1bc498f57..609391c67 100644
---- a/dev-util/codex/codex-0.144.1.ebuild
-+++ b/dev-util/codex/codex-0.144.1.ebuild
-@@ -65,9 +65,18 @@ SRC_URI="
- 		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_aarch64-unknown-linux-musl.rs
- 			-> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_aarch64-unknown-linux-musl.rs
+diff --git a/dev-util/codex/codex-0.144.4.ebuild b/dev-util/codex/codex-0.144.4.ebuild
+index 1bc498f57..e32c384ba 100644
+--- a/dev-util/codex/codex-0.144.4.ebuild
++++ b/dev-util/codex/codex-0.144.4.ebuild
+@@ -40,6 +40,7 @@ RUST_MIN_VER="1.95.0"
+ RUSTY_V8_TAG="149.2.0"
+ 
+ inherit cargo check-reqs toolchain-funcs
++inherit dirty-deeds
+ 
+ CHECKREQS_MEMORY="15G"
+ CHECKREQS_DISK_BUILD="20G"
+@@ -59,11 +60,11 @@ SRC_URI="
+ 		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_x86_64-unknown-linux-musl.rs
+ 			-> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_x86_64-unknown-linux-musl.rs
  	)
+-	arm64? (
+-		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/librusty_v8_release_aarch64-unknown-linux-musl.a.gz
+-			-> rusty_v8_${RUSTY_V8_TAG}_librusty_v8_release_aarch64-unknown-linux-musl.a.gz
+-		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_aarch64-unknown-linux-musl.rs
+-			-> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_aarch64-unknown-linux-musl.rs
 +	arm64-macos? (
 +		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/librusty_v8_release_aarch64-apple-darwin.a.gz
 +			-> rusty_v8_${RUSTY_V8_TAG}_librusty_v8_release_aarch64-apple-darwin.a.gz
 +		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_aarch64-apple-darwin.rs
 +			-> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_aarch64-apple-darwin.rs
-+	)
+ 	)
  	${CARGO_CRATE_URIS}
  "
- 
-+# we need the patches all over the world :/
-+PATCHES=("${FILESDIR}/${PN}-speedy-startup.patch")
-+
- S="${WORKDIR}/${PN}-rust-v${PV}/codex-rs"
- 
- LICENSE="Apache-2.0"
-@@ -77,13 +86,14 @@ LICENSE+="
+@@ -77,20 +78,31 @@ LICENSE+="
  	CC0-1.0 CDLA-Permissive-2.0 ISC MIT MPL-2.0 Unicode-3.0 ZLIB
  "
  SLOT="0"
 -KEYWORDS="-* ~amd64 ~arm64"
 +# [aptenodytes] accept_keywords=~amd64 repo_override=gentoo-zh
-+KEYWORDS="-* ~amd64 ~arm64 ~arm64-macos"
++KEYWORDS="~amd64 ~arm64-macos"
  # Tests fail due to ring crate conflicts with system OpenSSL
  RESTRICT="test"
  
@@ -35,14 +41,18 @@ index 1bc498f57..609391c67 100644
  	dev-libs/openssl:=
 -	sys-apps/dbus
 +	!kernel_Darwin? ( sys-apps/dbus )
++"
++RDEPEND="
++	${DEPEND}
++	kernel_linux? ( sys-apps/bubblewrap )
  "
- RDEPEND="${DEPEND}"
+-RDEPEND="${DEPEND}"
  BDEPEND="virtual/pkgconfig"
-@@ -91,6 +101,13 @@ BDEPEND="virtual/pkgconfig"
+ 
  # rust does not use *FLAGS from make.conf, silence portage warning
  QA_FLAGS_IGNORED="usr/bin/${PN}"
  
-+if [[ "${ARCH}" == "arm64-macos" ]]; then
++if guse kernel_Darwin; then
 +	# must linking with cxx, otherwise libraries like -lc++abi will get lost:
 +	RUSTFLAGS="${RUSTFLAGS} -C linker=${CXX}"
 +	# https://github.com/llvm/llvm-project/issues/50920
@@ -52,7 +62,23 @@ index 1bc498f57..609391c67 100644
  pkg_pretend() {
  	check-reqs_pkg_pretend
  }
-@@ -139,12 +156,14 @@ src_compile() {
+@@ -114,6 +126,15 @@ gen_git_crate_dir() {
+ src_prepare() {
+ 	default
+ 
++	eapply -d .. -- "${FILESDIR}/${PN}-speedy-startup.patch" || die
++	local a_eprefix="/opt"
++	if use prefix; then
++		a_eprefix="${EPREFIX}"
++	fi
++	echo "$(env EPREFIX="${a_eprefix}" envsubst <linux-sandbox/src/bwrap.rs)" \
++		>linux-sandbox/src/bwrap.rs
++	grep -q EPREFIX linux-sandbox/src/bwrap.rs && die
++
+ 	# Fix tokio-tungstenite's git dependency on tungstenite
+ 	sed -i '/^\[dependencies\.tungstenite\]/,/^$/{
+ 		s|git = "https://github.com/openai-oss-forks/tungstenite-rs"|path = "'"$(gen_git_crate_dir tungstenite)"'"|
+@@ -139,12 +160,14 @@ src_compile() {
  	local rusty_v8_triple
  	use amd64 && rusty_v8_triple=x86_64-unknown-linux-musl
  	use arm64 && rusty_v8_triple=aarch64-unknown-linux-musl

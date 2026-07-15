@@ -10,7 +10,7 @@ from pathlib import Path
 from time import sleep
 from typing import Dict, List, Optional, Set, Tuple, Self, Any
 from subprocess import check_call, Popen, PIPE
-from shutil import rmtree, copyfile
+from shutil import rmtree, copyfile, SameFileError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 from urllib.error import URLError
@@ -328,16 +328,20 @@ def collect_overlay_package(
         for line in lines:
             if line.startswith("diff "):
                 break
-            if parse_comment_config(line, config) is not None:
+            # consider config within the patch:
+            if parse_comment_config(line, config) is not None or (
+                line.startswith("+")
+                and parse_comment_config(line[1:], config) is not None
+            ):
                 continue
         repo_override = env.repo_override
-
-    # if any options in ebuild:
-    with open(ebuild, "r") as reader:
-        lines = reader.readlines()
-    for line in lines:
-        if parse_comment_config(line, config) is not None:
-            continue
+    else:
+        # only collect from ebuild if it's not a override, aka owned:
+        with open(ebuild, "r") as reader:
+            lines = reader.readlines()
+        for line in lines:
+            if parse_comment_config(line, config) is not None:
+                continue
 
     # try if overrides:
     repo_override = config.get("aptenodytes", "repo_override", fallback=repo_override)
@@ -406,7 +410,10 @@ def sync_overlay_package(
 
     src = new_package.source
     dst = old_package.source.parent / new_package.source.name
-    copyfile(src, dst)
+    try:
+        copyfile(src, dst)
+    except SameFileError:
+        pass
 
     # the reason why it becomes complex, is gentoo forced sandbox in the depend
     # phase, causing all reads outside current overlay fails, so the only way
@@ -466,6 +473,11 @@ def sync_overlay_package(
         patch_process.stdin.close()
         if patch_process.wait() != 0:
             raise
+
+        # patch is success, store back for furthur simple modification:
+        with open(override, "w") as writer:
+            for line in lines:
+                writer.write(line)
 
         # sync filesdir as well, TODO: consider removing old files?
         files_src = src.parent / "files"

@@ -40,6 +40,7 @@ RUST_MIN_VER="1.95.0"
 RUSTY_V8_TAG="149.2.0"
 
 inherit cargo check-reqs toolchain-funcs
+inherit dirty-deeds
 
 CHECKREQS_MEMORY="15G"
 CHECKREQS_DISK_BUILD="20G"
@@ -59,12 +60,6 @@ SRC_URI="
 		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_x86_64-unknown-linux-musl.rs
 			-> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_x86_64-unknown-linux-musl.rs
 	)
-	arm64? (
-		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/librusty_v8_release_aarch64-unknown-linux-musl.a.gz
-			-> rusty_v8_${RUSTY_V8_TAG}_librusty_v8_release_aarch64-unknown-linux-musl.a.gz
-		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_aarch64-unknown-linux-musl.rs
-			-> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_aarch64-unknown-linux-musl.rs
-	)
 	arm64-macos? (
 		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/librusty_v8_release_aarch64-apple-darwin.a.gz
 			-> rusty_v8_${RUSTY_V8_TAG}_librusty_v8_release_aarch64-apple-darwin.a.gz
@@ -73,9 +68,6 @@ SRC_URI="
 	)
 	${CARGO_CRATE_URIS}
 "
-
-# we need the patches all over the world :/
-PATCHES=("${FILESDIR}/${PN}-speedy-startup.patch")
 
 S="${WORKDIR}/${PN}-rust-v${PV}/codex-rs"
 
@@ -87,7 +79,7 @@ LICENSE+="
 "
 SLOT="0"
 # [aptenodytes] accept_keywords=~amd64 repo_override=gentoo-zh
-KEYWORDS="-* ~amd64 ~arm64 ~arm64-macos"
+KEYWORDS="~amd64 ~arm64-macos"
 # Tests fail due to ring crate conflicts with system OpenSSL
 RESTRICT="test"
 
@@ -95,13 +87,16 @@ DEPEND="
 	dev-libs/openssl:=
 	!kernel_Darwin? ( sys-apps/dbus )
 "
-RDEPEND="${DEPEND}"
+RDEPEND="
+	${DEPEND}
+	kernel_linux? ( sys-apps/bubblewrap )
+"
 BDEPEND="virtual/pkgconfig"
 
 # rust does not use *FLAGS from make.conf, silence portage warning
 QA_FLAGS_IGNORED="usr/bin/${PN}"
 
-if [[ "${ARCH}" == "arm64-macos" ]]; then
+if guse kernel_Darwin; then
 	# must linking with cxx, otherwise libraries like -lc++abi will get lost:
 	RUSTFLAGS="${RUSTFLAGS} -C linker=${CXX}"
 	# https://github.com/llvm/llvm-project/issues/50920
@@ -130,6 +125,15 @@ gen_git_crate_dir() {
 
 src_prepare() {
 	default
+
+	eapply -d .. -- "${FILESDIR}/${PN}-speedy-startup.patch" || die
+	local a_eprefix="/opt"
+	if use prefix; then
+		a_eprefix="${EPREFIX}"
+	fi
+	echo "$(env EPREFIX="${a_eprefix}" envsubst <linux-sandbox/src/bwrap.rs)" \
+		>linux-sandbox/src/bwrap.rs
+	grep -q EPREFIX linux-sandbox/src/bwrap.rs && die
 
 	# Fix tokio-tungstenite's git dependency on tungstenite
 	sed -i '/^\[dependencies\.tungstenite\]/,/^$/{
