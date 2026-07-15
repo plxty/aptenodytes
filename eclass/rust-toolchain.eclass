@@ -119,6 +119,6 @@ rust_all_arch_uris()
 	riscv? ( elibc_glibc? ( $(rust_arch_uri riscv64gc-unknown-linux-gnu "${alt_basename}" "${rename_param}") ) )
 	s390?  ( elibc_glibc? ( $(rust_arch_uri s390x-unknown-linux-gnu     "${alt_basename}" "${rename_param}") ) )
 	loong? ( elibc_glibc? ( $(rust_arch_uri loongarch64-unknown-linux-gnu "${alt_basename}" "${rename_param}") ) )
-	arm64-macos? ( $(rust_arch_uri aarch64-apple-darwin "${1}" "${2}") )
+	arm64-macos? ( $(rust_arch_uri aarch64-apple-darwin "${alt_basename}" "${rename_param}") )
 	"
 }

@@ -414,15 +414,41 @@ def sync_overlay_package(
     # @see https://github.com/gentoo/portage/commit/4671dba39326c02d2e649b95f211e16aa46cd275
     override = dst.parent / "package.override"
     if override.is_file():
-        # sync eclass if any, to handle in the patch as well:
-        for eclass in old_package.config.get(
-            "aptenodytes", "eclass_sync", fallback=""
-        ).split():
-            eclass += ".eclass"
-            eclass_src = new_package.source.parents[2] / "eclass" / eclass
-            eclass_dst = old_package.source.parents[2] / "eclass" / eclass
-            copyfile(eclass_src, eclass_dst)
+        with open(override, "r") as reader:
+            lines = reader.readlines()
 
+        # modify the patch file to pointing to latest file:
+        a: Optional[str] = None  # to verify the diff format
+        for i, line in enumerate(lines):
+            if line.startswith("diff --git a/"):
+                _, a, b = line.strip().rsplit(maxsplit=2)
+                a, b = a[len("a/") :], b[len("b/") :]
+                assert a == b
+            elif line.startswith("index "):
+                continue
+            elif line.startswith("--- a/") or line.startswith("+++ b/"):
+                _, b = line.strip().rsplit(maxsplit=1)
+                b = b[len("x/") :]
+                assert a == b
+            else:
+                a = None
+                continue
+
+            assert a is not None
+            if a.endswith(".ebuild"):
+                patch_src = new_package.source.relative_to(
+                    new_package.source.parents[2]
+                )
+                lines[i] = line.replace(a, str(patch_src))
+            elif a.endswith(".eclass"):
+                # sync eclass if any, to handle in the patch as well:
+                eclass_src = new_package.source.parents[2] / a
+                eclass_dst = old_package.source.parents[2] / a
+                copyfile(eclass_src, eclass_dst)
+            else:
+                raise
+
+        # TODO: check_output with input=?
         patch_process = Popen(
             [
                 "patch",
@@ -435,23 +461,8 @@ def sync_overlay_package(
             cwd=Path(__file__).parents[1],
             stdin=PIPE,
         )
-
-        # modify the patch file to pointing to latest file:
-        with open(override, "r") as reader:
-            lines = reader.readlines()
-        patch_src = new_package.source.relative_to(new_package.source.parents[2])
         for line in lines:
-            # TODO: better replace :(
-            if not line.endswith(".ebuild\n"):
-                pass
-            elif line.startswith("diff --git a/"):
-                line = f"diff --git a/{patch_src} b/{patch_src}\n"
-            elif line.startswith("--- a/"):
-                line = f"--- a/{patch_src}\n"
-            elif line.startswith("+++ b/"):
-                line = f"+++ b/{patch_src}\n"
             patch_process.stdin.write(line)
-
         patch_process.stdin.close()
         if patch_process.wait() != 0:
             raise

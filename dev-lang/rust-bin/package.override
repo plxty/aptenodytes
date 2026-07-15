@@ -1,30 +1,39 @@
-# [aptenodytes] eclass_sync=rust-toolchain
 diff --git a/dev-lang/rust-bin/rust-bin-1.95.0.ebuild b/dev-lang/rust-bin/rust-bin-1.95.0.ebuild
-index 6e56692792f6..0ac2c775a8c8 100644
+index 6e56692792f6..af4911be5430 100644
 --- a/dev-lang/rust-bin/rust-bin-1.95.0.ebuild
 +++ b/dev-lang/rust-bin/rust-bin-1.95.0.ebuild
-@@ -8,6 +8,11 @@ LLVM_OPTIONAL="yes"
+@@ -7,6 +7,21 @@ LLVM_COMPAT=( 22 )
+ LLVM_OPTIONAL="yes"
  
  inherit edo llvm-r1 multilib prefix rust-toolchain verify-sig multilib-minimal optfeature
- 
-+# filter to have only darwin to reduce download size, @see rust-toolchain.eclass
-+rust_all_arch_uris() {
-+	rust_arch_uri aarch64-apple-darwin "${1}" "${2}"
-+}
++inherit dirty-deeds
 +
++# filter to have only used platforms to reduce download size, @see rust-toolchain.eclass
++rust_all_arch_uris() {
++	local alt_basename="$1"
++	local rename_param="$2"
++
++	echo "
++	abi_x86_64? (
++		elibc_glibc? ( $(rust_arch_uri x86_64-unknown-linux-gnu  "${alt_basename}" "${rename_param}") )
++		elibc_musl?  ( $(rust_arch_uri x86_64-unknown-linux-musl "${alt_basename}" "${rename_param}") )
++	)
++	arm64-macos? ( $(rust_arch_uri aarch64-apple-darwin "${alt_basename}" "${rename_param}") )
++	"
++}
+ 
  if [[ ${PV} == *9999* ]]; then
  	# We need to fetch a tarball in src_unpack
- 	PROPERTIES+=" live"
-@@ -24,7 +29,7 @@ else
+@@ -24,7 +39,7 @@ else
  	SRC_URI="$(rust_all_arch_uris "rust-${PV}")
  		rust-src? ( ${RUST_TOOLCHAIN_BASEURL%/}/2026-04-16/rust-src-${PV}.tar.xz )
  	"
 -	KEYWORDS="amd64 arm arm64 ~loong ~mips ppc ppc64 ~riscv ~s390 ~sparc x86"
-+	KEYWORDS="~arm64-macos"
++	KEYWORDS="amd64 ~arm64-macos"
  fi
  
  GENTOO_BIN_BASEURI="https://github.com/projg2/rust-bootstrap/releases/download/${PVR}" # omit trailing slash
-@@ -32,27 +37,6 @@ GENTOO_BIN_BASEURI="https://github.com/projg2/rust-bootstrap/releases/download/$
+@@ -32,27 +47,6 @@ GENTOO_BIN_BASEURI="https://github.com/projg2/rust-bootstrap/releases/download/$
  DESCRIPTION="Systems programming language from Mozilla"
  HOMEPAGE="https://www.rust-lang.org/"
  
@@ -52,40 +61,50 @@ index 6e56692792f6..0ac2c775a8c8 100644
  LICENSE="|| ( MIT Apache-2.0 ) BSD BSD-1 BSD-2 BSD-4"
  SLOT="${PV%%_*}" # Beta releases get to share the same SLOT as the eventual stable
  IUSE="big-endian +clippy cpu_flags_x86_sse2 +doc prefix rust-analyzer rust-src +rustfmt"
-@@ -62,7 +46,6 @@ RDEPEND="
+@@ -62,7 +56,7 @@ RDEPEND="
  	>=app-eselect/eselect-rust-20190311
  	dev-libs/openssl
  	net-misc/curl
 -	sys-apps/lsb-release
++	kernel_linux? ( sys-apps/lsb-release )
  	|| (
  		llvm-runtimes/libgcc
  		sys-devel/gcc:*
-@@ -70,10 +53,7 @@ RDEPEND="
- 	!dev-lang/rust:stable
+@@ -71,7 +65,7 @@ RDEPEND="
  	!dev-lang/rust-bin:stable
  "
--BDEPEND="
+ BDEPEND="
 -	prefix? ( dev-util/patchelf )
--	verify-sig? ( sec-keys/openpgp-keys-rust )
--"
-+BDEPEND="verify-sig? ( sec-keys/openpgp-keys-rust )"
++	kernel_linux? ( prefix? ( dev-util/patchelf ) )
+ 	verify-sig? ( sec-keys/openpgp-keys-rust )
+ "
  [[ ${PV} == *9999* ]] && BDEPEND+=" net-misc/curl"
- 
- REQUIRED_USE="x86? ( cpu_flags_x86_sse2 )"
-@@ -162,6 +142,11 @@ src_unpack() {
+@@ -162,6 +156,12 @@ src_unpack() {
  	esac
  }
  
-+# don't patchelf on darwin:
-+patchelf() {
-+	:
-+}
++if ! guse kernel_linux; then
++	patchelf() {
++		: # don't patchelf on darwin:
++	}
++fi
 +
  patchelf_for_bin() {
  	local filetype=$(file -b ${1})
  	if [[ ${filetype} == *ELF*interpreter* ]]; then
+@@ -211,8 +211,8 @@ rust_native_abi_install() {
+ 
+ 	if use prefix; then
+ 		local interpreter=$(patchelf --print-interpreter "${EPREFIX}"/bin/bash)
+-		ebegin "Changing interpreter to ${interpreter} for Gentoo prefix at ${ED}/opt/rust-bin-${SLOT}/bin"
+-		find "${ED}/opt/rust-bin-${SLOT}/bin" -type f -print0 | \
++		ebegin "Changing interpreter to ${interpreter} for Gentoo prefix at ${ED}/opt/rust-bin-${SLOT}/{bin,libexec}"
++		find "${ED}/opt/rust-bin-${SLOT}/"{bin,libexec} -type f -print0 | \
+ 			while IFS=  read -r -d '' filename; do
+ 				patchelf_for_bin ${filename} ${interpreter} \; || die
+ 			done
 diff --git a/eclass/rust-toolchain.eclass b/eclass/rust-toolchain.eclass
-index 41fccb7c4a07..bdc86775f69f 100644
+index 41fccb7c4a07..8e1ce4b9c55a 100644
 --- a/eclass/rust-toolchain.eclass
 +++ b/eclass/rust-toolchain.eclass
 @@ -54,6 +54,7 @@ rust_abi() {
@@ -100,6 +119,6 @@ index 41fccb7c4a07..bdc86775f69f 100644
  	riscv? ( elibc_glibc? ( $(rust_arch_uri riscv64gc-unknown-linux-gnu "${alt_basename}" "${rename_param}") ) )
  	s390?  ( elibc_glibc? ( $(rust_arch_uri s390x-unknown-linux-gnu     "${alt_basename}" "${rename_param}") ) )
  	loong? ( elibc_glibc? ( $(rust_arch_uri loongarch64-unknown-linux-gnu "${alt_basename}" "${rename_param}") ) )
-+	arm64-macos? ( $(rust_arch_uri aarch64-apple-darwin "${1}" "${2}") )
++	arm64-macos? ( $(rust_arch_uri aarch64-apple-darwin "${alt_basename}" "${rename_param}") )
  	"
  }

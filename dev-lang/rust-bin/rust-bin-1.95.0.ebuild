@@ -7,10 +7,20 @@ LLVM_COMPAT=( 22 )
 LLVM_OPTIONAL="yes"
 
 inherit edo llvm-r1 multilib prefix rust-toolchain verify-sig multilib-minimal optfeature
+inherit dirty-deeds
 
-# filter to have only darwin to reduce download size, @see rust-toolchain.eclass
+# filter to have only used platforms to reduce download size, @see rust-toolchain.eclass
 rust_all_arch_uris() {
-	rust_arch_uri aarch64-apple-darwin "${1}" "${2}"
+	local alt_basename="$1"
+	local rename_param="$2"
+
+	echo "
+	abi_x86_64? (
+		elibc_glibc? ( $(rust_arch_uri x86_64-unknown-linux-gnu  "${alt_basename}" "${rename_param}") )
+		elibc_musl?  ( $(rust_arch_uri x86_64-unknown-linux-musl "${alt_basename}" "${rename_param}") )
+	)
+	arm64-macos? ( $(rust_arch_uri aarch64-apple-darwin "${alt_basename}" "${rename_param}") )
+	"
 }
 
 if [[ ${PV} == *9999* ]]; then
@@ -29,7 +39,7 @@ else
 	SRC_URI="$(rust_all_arch_uris "rust-${PV}")
 		rust-src? ( ${RUST_TOOLCHAIN_BASEURL%/}/2026-04-16/rust-src-${PV}.tar.xz )
 	"
-	KEYWORDS="~arm64-macos"
+	KEYWORDS="amd64 ~arm64-macos"
 fi
 
 GENTOO_BIN_BASEURI="https://github.com/projg2/rust-bootstrap/releases/download/${PVR}" # omit trailing slash
@@ -46,6 +56,7 @@ RDEPEND="
 	>=app-eselect/eselect-rust-20190311
 	dev-libs/openssl
 	net-misc/curl
+	kernel_linux? ( sys-apps/lsb-release )
 	|| (
 		llvm-runtimes/libgcc
 		sys-devel/gcc:*
@@ -53,7 +64,10 @@ RDEPEND="
 	!dev-lang/rust:stable
 	!dev-lang/rust-bin:stable
 "
-BDEPEND="verify-sig? ( sec-keys/openpgp-keys-rust )"
+BDEPEND="
+	kernel_linux? ( prefix? ( dev-util/patchelf ) )
+	verify-sig? ( sec-keys/openpgp-keys-rust )
+"
 [[ ${PV} == *9999* ]] && BDEPEND+=" net-misc/curl"
 
 REQUIRED_USE="x86? ( cpu_flags_x86_sse2 )"
@@ -142,10 +156,11 @@ src_unpack() {
 	esac
 }
 
-# don't patchelf on darwin:
-patchelf() {
-	:
-}
+if ! guse kernel_linux; then
+	patchelf() {
+		: # don't patchelf on darwin:
+	}
+fi
 
 patchelf_for_bin() {
 	local filetype=$(file -b ${1})
@@ -196,8 +211,8 @@ rust_native_abi_install() {
 
 	if use prefix; then
 		local interpreter=$(patchelf --print-interpreter "${EPREFIX}"/bin/bash)
-		ebegin "Changing interpreter to ${interpreter} for Gentoo prefix at ${ED}/opt/rust-bin-${SLOT}/bin"
-		find "${ED}/opt/rust-bin-${SLOT}/bin" -type f -print0 | \
+		ebegin "Changing interpreter to ${interpreter} for Gentoo prefix at ${ED}/opt/rust-bin-${SLOT}/{bin,libexec}"
+		find "${ED}/opt/rust-bin-${SLOT}/"{bin,libexec} -type f -print0 | \
 			while IFS=  read -r -d '' filename; do
 				patchelf_for_bin ${filename} ${interpreter} \; || die
 			done
