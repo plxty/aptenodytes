@@ -1,0 +1,12 @@
+diff --git a/dev-util/crash/crash-9.0.2.ebuild b/dev-util/crash/crash-9.0.2.ebuild
+index 2184d92c5..3387c8ade 100644
+--- a/dev-util/crash/crash-9.0.2.ebuild
++++ b/dev-util/crash/crash-9.0.2.ebuild
+@@ -66,3 +66,7 @@ src_compile() {
+ 		AR="$(tc-getAR)" \
+ 		CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}"
+ }
++
++src_install() {
++	emake DESTDIR="${ED}" install
++}
