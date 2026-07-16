@@ -14,4 +14,6 @@
 =dev-libs/v2ray-rules-dat-bin-202607092306 **
 =app-crypt/age-1.3.1-r1 **
 =dev-util/crash-9.0.2 **
+=dev-debug/drgn-0.1.0 **
+=dev-libs/libkdumpfile-0.5.6 **
 # [aptenodytes]

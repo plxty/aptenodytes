@@ -1,5 +1,6 @@
 # mostly for kernel development:
 *app-containers/podman
 *dev-util/crash
+*dev-debug/drgn
 *dev-util/pahole
 *dev-python/gitpython
