@@ -1,7 +1,7 @@
-diff --git a/app-arch/7zip/7zip-26.01.ebuild b/app-arch/7zip/7zip-26.01.ebuild
+diff --git a/app-arch/7zip/7zip-26.02.ebuild b/app-arch/7zip/7zip-26.02.ebuild
 index 8ebaf831adba..13e9c07a6c0c 100644
---- a/app-arch/7zip/7zip-26.01.ebuild
-+++ b/app-arch/7zip/7zip-26.01.ebuild
+--- a/app-arch/7zip/7zip-26.02.ebuild
++++ b/app-arch/7zip/7zip-26.02.ebuild
 @@ -78,7 +78,9 @@ src_compile() {
  	pushd "./CPP/7zip/Bundles/Alone2" || die "Unable to switch directory"
  
