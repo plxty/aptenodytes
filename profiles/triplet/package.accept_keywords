@@ -1,7 +1,7 @@
 # everybody wants unstable:
 # [aptenodytes] accept_keywords=~amd64,~arm64
 =app-shells/zoxide-0.9.9 **
-=dev-util/codex-0.144.5 **
+=dev-util/codex-0.144.6 **
 =dev-util/flamelens-0.4.0 **
 =dev-util/inferno-0.12.6 **
 =app-misc/glow-2.1.2-r1 **
@@ -10,7 +10,7 @@
 =dev-python/sse-starlette-3.4.4 **
 =app-office/lark-cli-1.0.56 **
 =dev-util/bash-language-server-5.6.0 **
-=net-proxy/mihomo-1.19.28 **
+=net-proxy/mihomo-1.19.29 **
 =dev-libs/v2ray-rules-dat-bin-202607092306 **
 =app-crypt/age-1.3.1-r1 **
 =dev-util/crash-9.0.2 **

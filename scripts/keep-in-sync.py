@@ -326,12 +326,14 @@ def collect_overlay_package(
         with open(override, "r") as reader:
             lines = reader.readlines()
         for line in lines:
-            if line.startswith("diff "):
-                break
-            # consider config within the patch:
-            if parse_comment_config(line, config) is not None or (
-                line.startswith("+")
-                and parse_comment_config(line[1:], config) is not None
+            if (
+                line.startswith("diff ")
+                # consider config within the patch:
+                or parse_comment_config(line, config) is not None
+                or (
+                    line.startswith("+")
+                    and parse_comment_config(line[1:], config) is not None
+                )
             ):
                 continue
         repo_override = env.repo_override
@@ -401,7 +403,7 @@ def sync_emerge() -> None:
 
 
 def sync_overlay_package(
-    old_package: OverlayPackage, new_package: EbuildPackage
+    old_package: OverlayPackage, new_package: EbuildPackage, manifest: bool
 ) -> None:
     # no way to support repology now...
     if new_package.repo_overlay == "repology":
@@ -486,7 +488,9 @@ def sync_overlay_package(
             os.makedirs(files_dst, exist_ok=True)
             check_call(["rsync", "-a", f"{files_src}/.", files_dst])
 
-    check_call(["ebuild", dst, "manifest"])
+    # TODO: make-bundle.py
+    if manifest:
+        check_call(["ebuild", dst, "manifest"])
 
     # reseting permissions back:
     stat = old_package.source.stat()
@@ -520,7 +524,7 @@ def main() -> None:
         my_cpv = MyCatPkgVerRev(cpv=env.oneshot)
         a = collect_overlay_package(env, my_cpv)
         b = collect_ebuild_package(env, a.repo_override, my_cpv)
-        sync_overlay_package(a, b)
+        sync_overlay_package(a, b, False)
         return
 
     # obtain every normal packages, filter only really overlays:
@@ -583,7 +587,7 @@ def main() -> None:
             continue
 
         if type(old_package) is OverlayPackage:
-            sync_overlay_package(old_package, new_package)
+            sync_overlay_package(old_package, new_package, True)
         elif type(old_package) is ProfilePackage:
             sync_profile_package(old_package, new_package)
         else:

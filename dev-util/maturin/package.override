@@ -1,13 +1,13 @@
-diff --git a/dev-util/maturin/maturin-1.13.3.ebuild b/dev-util/maturin/maturin-1.13.3.ebuild
+diff --git a/dev-util/maturin/maturin-1.14.1.ebuild b/dev-util/maturin/maturin-1.14.1.ebuild
 index a2eda0116b65..44b1995a4630 100644
---- a/dev-util/maturin/maturin-1.13.3.ebuild
-+++ b/dev-util/maturin/maturin-1.13.3.ebuild
+--- a/dev-util/maturin/maturin-1.14.1.ebuild
++++ b/dev-util/maturin/maturin-1.14.1.ebuild
 @@ -14,9 +14,10 @@ HOMEPAGE="https://www.maturin.rs/"
  SRC_URI="
  	https://github.com/PyO3/maturin/archive/refs/tags/v${PV}.tar.gz
  		-> ${P}.gh.tar.gz
 -	https://distfiles.gentoo.org/pub/dev/ionen@gentoo.org/${P}-vendor.tar.xz
-+	https://github.com/plxty/aptenodytes/releases/download/dist/${P}-vendor.tar.xz
++	https://github.com/plxty/aptenodytes/releases/download/dist/${P}-crates.tar.xz
  "
  # ^ tarball also includes test-crates' Cargo.lock(s) crates for tests
 +PATCHES=("${FILESDIR}/${PN}-workaround-mach-o-rpath.patch")

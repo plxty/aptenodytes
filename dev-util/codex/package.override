@@ -1,7 +1,7 @@
-diff --git a/dev-util/codex/codex-0.144.4.ebuild b/dev-util/codex/codex-0.144.4.ebuild
+diff --git a/dev-util/codex/codex-0.144.6.ebuild b/dev-util/codex/codex-0.144.6.ebuild
 index 1bc498f57..e32c384ba 100644
---- a/dev-util/codex/codex-0.144.4.ebuild
-+++ b/dev-util/codex/codex-0.144.4.ebuild
+--- a/dev-util/codex/codex-0.144.6.ebuild
++++ b/dev-util/codex/codex-0.144.6.ebuild
 @@ -40,6 +40,7 @@ RUST_MIN_VER="1.95.0"
  RUSTY_V8_TAG="149.2.0"
  

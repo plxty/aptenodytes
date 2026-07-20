@@ -5,7 +5,7 @@ EAPI=8
 
 DISTUTILS_USE_PEP517=setuptools
 DISTUTILS_UPSTREAM_PEP517=standalone
-PYTHON_COMPAT=( pypy3_11 python3_{11..15} )
+PYTHON_COMPAT=( python3_{12..15} python3_{14..15}t )
 RUST_MIN_VER=1.89.0
 inherit cargo distutils-r1 flag-o-matic shell-completion toolchain-funcs
 
@@ -14,7 +14,7 @@ HOMEPAGE="https://www.maturin.rs/"
 SRC_URI="
 	https://github.com/PyO3/maturin/archive/refs/tags/v${PV}.tar.gz
 		-> ${P}.gh.tar.gz
-	https://github.com/plxty/aptenodytes/releases/download/dist/${P}-vendor.tar.xz
+	https://github.com/plxty/aptenodytes/releases/download/dist/${P}-crates.tar.xz
 "
 # ^ tarball also includes test-crates' Cargo.lock(s) crates for tests
 PATCHES=("${FILESDIR}/${PN}-workaround-mach-o-rpath.patch")
@@ -41,8 +41,8 @@ BDEPEND="
 	virtual/pkgconfig
 	doc? ( >=app-text/mdbook-0.5 )
 	test? (
-		$(python_gen_cond_dep 'dev-python/cffi[${PYTHON_USEDEP}]' 'python*')
 		dev-python/boltons[${PYTHON_USEDEP}]
+		dev-python/cffi[${PYTHON_USEDEP}]
 		dev-python/virtualenv[${PYTHON_USEDEP}]
 		dev-vcs/git
 		elibc_musl? ( dev-util/patchelf )
@@ -145,6 +145,13 @@ python_test() {
 		# unimportant and simpler to skip, does not work with just `git init`
 		sdist::lib_with_parent_workspace_git_dep_sdist
 	)
+
+	if [[ ${EPYTHON} == *t ]]; then
+		CARGO_SKIP_TESTS+=(
+			# incompatible with free-threaded CPython
+			develop::develop_pip_cases::case_02_pyo3_mixed
+		)
+	fi
 
 	cargo_src_test
 }

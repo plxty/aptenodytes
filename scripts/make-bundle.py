@@ -3,7 +3,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import Optional, Any, List, Self
+from typing import Optional, Any, List, Self, override
 from collections.abc import Callable
 from subprocess import check_call
 import json
@@ -70,7 +70,9 @@ class Vendor:
     name: str
     version: str
     tag: Optional[str] = None
-    flight: Optional[Callable[[Path], List[Path]]] = None
+
+    def flight(self: Self, cwd: Path) -> List[Path]:
+        raise
 
     def __post_init__(self: Self) -> None:
         if self.tag is None:
@@ -82,7 +84,8 @@ class GoVendor(Vendor):
     xform: Optional[str] = None
     pre_compress_hooks: List[List[str]] = field(default_factory=list)
 
-    def _flight(self: Self, cwd: Path) -> List[Path]:
+    @override
+    def flight(self: Self, cwd: Path) -> List[Path]:
         # treat some special workdir:
         artifact = f"{self.name}-{self.version}-vendor.tar.xz"
         if self.xform is None:
@@ -109,13 +112,27 @@ class GoVendor(Vendor):
 
     def __post_init__(self: Self) -> None:
         super().__post_init__()
-        if self.flight is None:
-            self.flight = lambda cwd: self._flight(cwd)
+
+
+@dataclass
+class CargoVendor(Vendor):
+    @override
+    def flight(self: Self, cwd: Path) -> List[Path]:
+        artifact = f"{self.name}-{self.version}-crates.tar.xz"
+        call(
+            [
+                "pycargoebuild",
+                "-c",
+                "--crate-tarball-path",
+                artifact,
+            ],
+            cwd,
+        )
+        return [cwd / artifact]
 
 
 def store_vendors(vendor: Vendor, cwd: Path) -> List[Path]:
     assert vendor.tag is not None
-    assert vendor.flight is not None
 
     # check the git out:
     call(["git", "reset", "--hard"], cwd)
@@ -130,14 +147,16 @@ def store_vendors(vendor: Vendor, cwd: Path) -> List[Path]:
 def main() -> None:
     # steal content from file if it is:
     token = os.environ.get("GITHUB_TOKEN")
-    if token is None:
+    if token is None and os.path.exists(".github_token"):
         with open(".github_token", "r") as reader:
             token = reader.read().strip()
 
     # doing work:
     cpv, git_dir, *_ = sys.argv[1:]
     cat, pkgname, version, _ = catpkgsplit(cpv)
+    vendor: Optional[Vendor] = None
     match f"{cat}/{pkgname}":
+        # special packages, TODO: from [aptenodytes] ebuild?
         case "app-office/lark-cli":
             vendor = GoVendor(
                 pkgname,
@@ -148,9 +167,20 @@ def main() -> None:
                     ["cp", "internal/registry/meta_data.json", "vendor"],
                 ],
             )
-        # TODO: defaults to fetch from ebuild?
+        # default packages, deduce from ebuild:
         case _:
-            raise
+            pv = cpv.split("/", maxsplit=1)[-1]
+            with open(f"{cat}/{pkgname}/{pv}.ebuild", "r") as reader:
+                lines = reader.readlines()
+            for line in lines:
+                if "cargo" in line:
+                    vendor = CargoVendor(pkgname, version)
+                else:
+                    continue
+                break
+
+    if vendor is None:
+        raise
 
     # TODO: cleanup previous?
     print(f">>> Vendoring {cpv}...")
