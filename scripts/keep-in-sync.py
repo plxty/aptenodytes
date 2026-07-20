@@ -146,6 +146,11 @@ class ProfilePackage(EbuildPackage):
     config: ConfigParser  # TODO: Remove
 
 
+@dataclass
+class RepologyPackage(EbuildPackage):
+    pass  # pseudo
+
+
 def progress(text: str) -> None:
     columns = os.get_terminal_size().columns
     if len(text) > columns:
@@ -160,7 +165,9 @@ def find_repo_path(env: WorkingEnvironment, repo_name: str) -> Path:
     return env.repos_path / repo_name
 
 
-def find_repology_cpv(my_cpv: MyCatPkgVerRev) -> Optional[MyCatPkgVerRev]:
+def collect_repology_package(
+    env: WorkingEnvironment, my_cpv: MyCatPkgVerRev
+) -> Optional[RepologyPackage]:
     url = f"https://repology.org/api/v1/project/{quote(my_cpv.pkgname)}"
     req = Request(url, headers={"User-Agent": "github.com/plxty/aptenodytes"})
     try:
@@ -179,9 +186,13 @@ def find_repology_cpv(my_cpv: MyCatPkgVerRev) -> Optional[MyCatPkgVerRev]:
     package = next(filter(lambda package: package["status"] == "newest", packages))
     version: str = package["version"]
 
-    # TODO: .clone()?
     assert not version.startswith("v")
-    return MyCatPkgVerRev(cpv=f"{my_cpv.cat}/{my_cpv.pkgname}-{version}")
+    return RepologyPackage(
+        MyCatPkgVerRev(cpv=f"{my_cpv.cat}/{my_cpv.pkgname}-{version}"),
+        None,
+        "repology",
+        env.accept_keywords,
+    )
 
 
 def find_best_cpv(
@@ -238,9 +249,9 @@ def find_best_cpv(
 
     # for non-override, we also add a repology version, TODO: --repology switch?
     if env.repology and is_overlay and not is_override:
-        repology_cpv = find_repology_cpv(package.my_cpv)
-        if repology_cpv is not None:
-            my_cpvs[repology_cpv] = "repology"
+        repology_package = collect_repology_package(env, package.my_cpv)
+        if repology_package is not None:
+            my_cpvs[repology_package.my_cpv] = repology_package.repo_overlay
 
     # falling back...
     if len(my_cpvs) == 0:
@@ -405,13 +416,13 @@ def sync_emerge() -> None:
 def sync_overlay_package(
     old_package: OverlayPackage, new_package: EbuildPackage, manifest: bool
 ) -> None:
-    # no way to support repology now...
-    if new_package.repo_overlay == "repology":
-        print(f"!!! Repology unavailable for {old_package.my_cpv}")
-        return
-
-    src = new_package.source
-    dst = old_package.source.parent / new_package.source.name
+    if old_package.repo_override is None:
+        # maybe repology:
+        src = old_package.source
+        dst = old_package.source.parents[2] / new_package.my_cpv
+    else:
+        src = new_package.source
+        dst = old_package.source.parent / new_package.source.name
     try:
         copyfile(src, dst)
     except SameFileError:
@@ -523,7 +534,10 @@ def main() -> None:
     if env.oneshot is not None:
         my_cpv = MyCatPkgVerRev(cpv=env.oneshot)
         a = collect_overlay_package(env, my_cpv)
-        b = collect_ebuild_package(env, a.repo_override, my_cpv)
+        if env.repology and a.repo_override is None:
+            b = collect_repology_package(env, my_cpv)
+        else:
+            b = collect_ebuild_package(env, a.repo_override, my_cpv)
         sync_overlay_package(a, b, False)
         return
 
