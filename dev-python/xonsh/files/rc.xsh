@@ -47,6 +47,6 @@ def _up(args):
 @aliases.register("unprefix")
 @aliases.return_command
 def _unprefix(args):
-    eprefix = which("emerge").rsplit("/", maxsplit=1)[0]
+    eprefix = which("emerge").rsplit("/", maxsplit=3)[0]  # usr/bin/emerge
     path = os.pathsep.join(filter(lambda p: not p.startswith(eprefix), $PATH))
     return ["env", f"PATH={path}", *args]
