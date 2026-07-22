@@ -16,9 +16,7 @@ RDEPEND="
 	dev-python/click[${PYTHON_USEDEP}]
 "
 case "${CHOST}" in
-*"-linux"*)
-	RDEPEND+=" dev-python/distro[${PYTHON_USEDEP}]"
-	;;
-	# gnureadline is already a part of python in darwin
+*"-linux"*) RDEPEND+="dev-python/distro[${PYTHON_USEDEP}]" ;;
+# gnureadline is already a part of python in darwin
 esac
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"
