@@ -2,5 +2,8 @@
 *app-containers/podman
 *dev-util/crash
 *dev-debug/drgn
+*dev-debug/strace
 *dev-util/pahole
+*sys-kernel/virtme-ng
 *dev-python/gitpython
+*net-libs/libpcap

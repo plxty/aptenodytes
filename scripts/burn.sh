@@ -147,7 +147,7 @@ fi
 
 # now try to sync the repo with git to ensure we've setup:
 if ! "${SKIP_REFRESH}"; then
-	erun "${PWD}/keep-in-sync.py" --refresh
+	erun "${PWD}/keep-in-sync.py" --pretend
 fi
 
 # update-the-world if !shell-instead

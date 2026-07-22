@@ -1,0 +1,2 @@
+# https://bugs.gentoo.org/680456
+FEATURES="${FEATURES} -ipc-sandbox -network-sandbox -pid-sandbox"
