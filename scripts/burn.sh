@@ -7,14 +7,24 @@ die() {
 	exit 1
 }
 
+dirname_n() {
+	local n="${1}"
+	local p="${2}"
+	if [[ "${n}" -eq "0" ]]; then
+		echo "${p}"
+	else
+		dirname_n "$((n - 1))" "$(dirname "${p}")"
+	fi
+}
+
 # [--opts...] [iglu_id] [eprefix]
 IGLU_ID="$(hostname)"
-EPREFIX=
+EPREFIX="$(dirname_n 3 "$(which emerge 2>/dev/null || echo "/")")"
 SKIP_REFRESH=false
 YES=false
 while [[ "${1:-}" != "" ]]; do
 	case "${1}" in
-	"--help") die "${0} [--skip-refresh] [--yes] [IGLU_ID|${IGLU_ID}] [EPREFIX] [-- ...]" ;;
+	"--help") die "${0} [--skip-refresh] [--yes] [IGLU_ID|${IGLU_ID}] [EPREFIX|${EPREFIX}] [-- ...]" ;;
 	"--skip-refresh") SKIP_REFRESH=true ;;
 	"--yes") YES=true ;;
 	"--")
@@ -37,21 +47,10 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 EAPI="8"
 source ../eclass/dirty-deeds.eclass
 
-# sanity:
+# check if is a prefix or gentoo install
 if [[ ! -e "../profiles/iglu/${IGLU_ID}" ]]; then
 	die "Invalid IGLU_ID: ${IGLU_ID}"
 fi
-if [[ "${EPREFIX}" != "" ]]; then
-	EPREFIX="$(realpath "${EPREFIX}")"
-	if [[ "${EPREFIX}" == "" ]]; then
-		die "Invalid EPREFIX: ${EPREFIX}"
-	fi
-	if [[ "${EPREFIX}" == "/" ]]; then
-		EPREFIX=
-	fi
-fi
-
-# check if is a prefix or gentoo install
 USE="${USE:-} "
 if grep -q prefix "../profiles/iglu/${IGLU_ID}/parent"; then
 	USE+="prefix "
@@ -59,6 +58,16 @@ fi
 case "$(awk '$2 == "'"iglu/${IGLU_ID}"'" {print $1}' ../profiles/profiles.desc)" in
 "arm64-macos") USE+="prefix-guest " ;;
 esac
+
+# sanity eprefix "/" -> "" to looks better:
+EPREFIX="$(realpath "${EPREFIX}")"
+if [[ "${EPREFIX}" == "/" ]]; then
+	if guse prefix; then
+		die "Invalid EPREFIX: / for prefix"
+	else
+		EPREFIX=
+	fi
+fi
 
 # for many users:
 while read -r user; do
@@ -155,7 +164,7 @@ if [[ "${*}" != "" ]]; then
 	echo ">>> Spawning ${*}..."
 	erun "${@}"
 else
-	echo ">>> Burning..."
+	echo ">>> Burning for ${IGLU_ID} in ${EPREFIX}..."
 	erun emerge -uND @world
 fi
 
