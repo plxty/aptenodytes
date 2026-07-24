@@ -1,7 +1,7 @@
-diff --git a/net-libs/nodejs/nodejs-24.14.0.ebuild b/net-libs/nodejs/nodejs-24.14.0.ebuild
-index 5def0651d9d7..6a8d2eb98a75 100644
---- a/net-libs/nodejs/nodejs-24.14.0.ebuild
-+++ b/net-libs/nodejs/nodejs-24.14.0.ebuild
+diff --git a/net-libs/nodejs/nodejs-26.3.0.ebuild b/net-libs/nodejs/nodejs-26.3.0.ebuild
+index 9abe41085efa..80d4045bce01 100644
+--- a/net-libs/nodejs/nodejs-26.3.0.ebuild
++++ b/net-libs/nodejs/nodejs-26.3.0.ebuild
 @@ -21,7 +21,7 @@ if [[ ${PV} == *9999 ]]; then
  else
  	SRC_URI="https://nodejs.org/dist/v${PV}/node-v${PV}.tar.xz"
@@ -11,11 +11,11 @@ index 5def0651d9d7..6a8d2eb98a75 100644
  	S="${WORKDIR}/node-v${PV}"
  fi
  
-@@ -76,6 +76,7 @@ CHECKREQS_DISK_BUILD="22G"
- 
- PATCHES=(
- 	"${FILESDIR}"/${PN}-24.14.0-32-bit.patch
-+	"${FILESDIR}/${P}-darwin.patch"
+@@ -77,6 +77,7 @@ PATCHES=(
+ 	"${FILESDIR}"/${PN}-26.3.0-gcc17.patch
+ 	"${FILESDIR}"/${PN}-26.3.0-format-cstdlib.patch
+ 	"${FILESDIR}"/${PN}-26.3.0-v8-climits.patch
++	"${FILESDIR}.override/${PN}-24.14.0-darwin.patch"
  )
  
  pkg_pretend() {

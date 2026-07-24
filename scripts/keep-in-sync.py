@@ -8,7 +8,8 @@ from configparser import ConfigParser
 from dataclasses import astuple, dataclass
 from pathlib import Path
 from time import sleep
-from typing import Dict, List, Optional, Set, Tuple, Self, Any
+from collections import defaultdict
+from typing import Dict, List, Optional, Set, Tuple, Self, Any, DefaultDict
 from subprocess import check_call, Popen, PIPE
 from shutil import rmtree, copyfile, SameFileError
 from urllib.parse import quote
@@ -468,6 +469,11 @@ def sync_overlay_package(
             else:
                 raise
 
+        # always store the patch, to help debug:
+        with open(override, "w") as writer:
+            for line in lines:
+                writer.write(line)
+
         # TODO: check_output with input=?
         patch_process = Popen(
             [
@@ -487,17 +493,12 @@ def sync_overlay_package(
         if patch_process.wait() != 0:
             raise
 
-        # patch is success, store back for furthur simple modification:
-        with open(override, "w") as writer:
-            for line in lines:
-                writer.write(line)
-
-        # sync filesdir as well, TODO: consider removing old files?
+        # sync filesdir as well:
         files_src = src.parent / "files"
         if files_src.is_dir():
             files_dst = dst.parent / "files"
             os.makedirs(files_dst, exist_ok=True)
-            check_call(["rsync", "-a", f"{files_src}/.", files_dst])
+            check_call(["rsync", "-a", "--delete", f"{files_src}/.", files_dst])
 
     # TODO: make-bundle.py
     if manifest:
@@ -544,9 +545,15 @@ def main() -> None:
     # obtain every normal packages, filter only really overlays:
     packages: List[EbuildPackage] = list()
     repo_path = find_repo_path(env, "aptenodytes")
+
+    # checks only the latest overlay:
+    candidate_overlays: DefaultDict[str, List[MyCatPkgVerRev]] = defaultdict(list)
     for ebuild_path in repo_path.glob("**/*.ebuild", recurse_symlinks=True):
-        progress(f"overlay: {ebuild_path}")
         my_cpv = MyCatPkgVerRev(path=ebuild_path)
+        candidate_overlays[f"{my_cpv.cat}/{my_cpv.pkgname}"].append(my_cpv)
+    for _, overlays in candidate_overlays.items():
+        my_cpv = MyCatPkgVerRev.best(overlays)
+        progress(f"overlay: {my_cpv.__fspath__()}")
         packages.append(collect_overlay_package(env, my_cpv))
 
     # obtain profiles packages, to show if they needs update:

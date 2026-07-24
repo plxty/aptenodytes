@@ -60,7 +60,7 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-1.90.0-msm-std.patch
 	"${FILESDIR}"/${PN}-1.90.0-unsigned-char-EOF.patch
 	# https://github.com/boostorg/context/commit/fda3986b10926fa94103abca0190cd063f14544c.patch
-	"${FILESDIR}/${P}-context-build.patch"
+	"${FILESDIR}.override/${P}-context-build.patch"
 )
 
 create_user-config.jam() {

@@ -1,7 +1,7 @@
-diff --git a/sys-kernel/gentoo-kernel/gentoo-kernel-6.18.38.ebuild b/sys-kernel/gentoo-kernel/gentoo-kernel-6.18.38.ebuild
+diff --git a/sys-kernel/gentoo-kernel/gentoo-kernel-6.18.39.ebuild b/sys-kernel/gentoo-kernel/gentoo-kernel-6.18.39.ebuild
 index 823e417e19e7..6dfe6b786e19 100644
---- a/sys-kernel/gentoo-kernel/gentoo-kernel-6.18.38.ebuild
-+++ b/sys-kernel/gentoo-kernel/gentoo-kernel-6.18.38.ebuild
+--- a/sys-kernel/gentoo-kernel/gentoo-kernel-6.18.39.ebuild
++++ b/sys-kernel/gentoo-kernel/gentoo-kernel-6.18.39.ebuild
 @@ -39,14 +39,22 @@ SRC_URI+="
  S=${WORKDIR}/${BASE_P}
  

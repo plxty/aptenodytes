@@ -50,7 +50,7 @@ PATCHES=(
 	# https://github.com/abseil/abseil-cpp/issues/1992
 	"${DISTDIR}/${PN}-20260107.0-c++23.patch"
 	# https://github.com/google/cctz/pull/343/changes
-	"${FILESDIR}/${PN}-darwin-gcc-15.patch"
+	"${FILESDIR}.override/${PN}-darwin-gcc-15.patch"
 )
 
 src_prepare() {
