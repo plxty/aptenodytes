@@ -5,6 +5,7 @@ app-arch/7zip rar
 virtual/libcrypt static-libs
 sys-libs/libxcrypt static-libs
 sys-apps/busybox static
+app-emulation/qemu virtfs xattr
 
 # networks
 net-firewall/iptables nftables

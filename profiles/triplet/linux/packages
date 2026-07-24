@@ -4,6 +4,8 @@
 *dev-debug/drgn
 *dev-debug/strace
 *dev-util/pahole
+*sys-devel/bc
 *sys-kernel/virtme-ng
 *dev-python/gitpython
 *net-libs/libpcap
+*sys-apps/iproute2

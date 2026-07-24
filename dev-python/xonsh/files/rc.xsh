@@ -24,8 +24,8 @@ aliases[".."] = ["cd", ".."]
 
 # auto ls, not using on_chdir as it may affects not only the interactive shell:
 __rcxsh_auto_ls_lastpwd = ""
-@events.on_post_prompt
-def _auto_ls() -> None:
+@events.on_postcommand
+def _auto_ls(cmd: str, rtn: int, out: str or None, ts: list) -> None:
     global __rcxsh_auto_ls_lastpwd
     if __rcxsh_auto_ls_lastpwd == $PWD:
         return
