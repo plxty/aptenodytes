@@ -17,7 +17,7 @@ S="${WORKDIR}"
 
 LICENSE="LGPL-2 BSD rar? ( unRAR )"
 SLOT="0"
-KEYWORDS="~alpha amd64 arm arm64 ~hppa ~loong ppc ppc64 ~riscv ~s390 ~sparc x86"
+KEYWORDS="~arm64-macos"
 IUSE="uasm jwasm rar +symlink"
 REQUIRED_USE="?? ( uasm jwasm )"
 
@@ -68,6 +68,13 @@ src_prepare() {
 	popd >/dev/null || die "Unable to switch directory"
 
 	default
+
+	# fix for install_name in gcc, TODO: clang?
+	if use kernel_Darwin; then
+		sed -i -e 's@LDFLAGS = -shared@\0 -install_name $(EPREFIX)/usr/lib/$(PROG).so@' \
+			"./CPP/7zip/7zip_gcc.mak" \
+			"./C/7zip_gcc_c.mak" || die
+	fi
 }
 
 src_compile() {
