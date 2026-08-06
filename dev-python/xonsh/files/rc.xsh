@@ -20,17 +20,27 @@ execx($(zoxide init xonsh), 'exec', __xonsh__.ctx, filename='zoxide')
 
 # shortcuts:
 aliases["ll"] = ["ls", "-la"]
-aliases[".."] = ["cd", ".."]
+aliases["-"] = ["cd", "-"]
+
+# execute on directory means change, note the newline is also carried in:
+@events.on_transform_command
+def _cd_to_dir(cmd: str, **kwargs) -> str | None:
+    if cmd and cmd.startswith(".") and os.path.isdir(cmd.rstrip()):
+        return f"cd {cmd}"
+    return None
 
 # auto ls, not using on_chdir as it may affects not only the interactive shell:
 __rcxsh_auto_ls_lastpwd = ""
 @events.on_postcommand
-def _auto_ls(cmd: str, rtn: int, out: str or None, ts: list) -> None:
+def _auto_ls(cmd: str, rtn: int, out: str or None, ts: list, **kwargs) -> None:
     global __rcxsh_auto_ls_lastpwd
     if __rcxsh_auto_ls_lastpwd == $PWD:
         return
     __rcxsh_auto_ls_lastpwd = $PWD
     $[ls]
+@events.on_post_init
+def _init_auto_ls(**kwargs):
+    _auto_ls("", -1, None, [])
 
 # up to directory:
 @aliases.register("up")
