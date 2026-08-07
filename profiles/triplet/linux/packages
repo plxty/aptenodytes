@@ -9,3 +9,5 @@
 *dev-python/gitpython
 *net-libs/libpcap
 *sys-apps/iproute2
+*sys-devel/crossdev
+*sys-apps/pciutils
