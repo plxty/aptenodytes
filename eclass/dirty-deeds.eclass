@@ -112,6 +112,8 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 		if [[ ! -e "${FILESDIR}.override" ]]; then
 			ln -s "$(realpath "${FILESDIR}" || die).override" "${FILESDIR}.override"
 		fi
+
+		default
 	}
 
 	_DIRTY_DEEDS_ECLASS=1
