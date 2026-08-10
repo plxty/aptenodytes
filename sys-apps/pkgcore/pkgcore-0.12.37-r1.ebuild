@@ -6,6 +6,7 @@ EAPI=8
 DISTUTILS_USE_PEP517=standalone
 PYTHON_COMPAT=( python3_{12..15} )
 inherit distutils-r1
+inherit dirty-deeds
 
 if [[ ${PV} == *9999 ]] ; then
 	EGIT_REPO_URI="https://anongit.gentoo.org/git/proj/pkgcore/pkgcore.git
@@ -18,15 +19,16 @@ fi
 
 DESCRIPTION="a framework for package management"
 HOMEPAGE="https://github.com/pkgcore/pkgcore"
+SRC_URI+=" https://github.com/pkgcore/pkgcore/commit/64f1319f0bb147d61cb080f07acd5f416d9c680e.patch
+	-> ${P}-fix-empty-depset.patch"
 
 LICENSE="BSD MIT"
 SLOT="0"
-PATCHES=("${FILESDIR}/${PN}-repo-aliases.patch")
 
 if [[ ${PV} == *9999 ]]; then
 	RDEPEND="~dev-python/snakeoil-9999[${PYTHON_USEDEP}]"
 else
-	RDEPEND=">=dev-python/snakeoil-0.11.1[${PYTHON_USEDEP}]"
+	RDEPEND=">=dev-python/snakeoil-0.11.3[${PYTHON_USEDEP}]"
 fi
 
 RDEPEND+="
@@ -40,7 +42,12 @@ BDEPEND="${RDEPEND}
 	)
 "
 
-EPYTEST_PLUGINS=()
+PATCHES=(
+	"${DISTDIR}/${P}-fix-empty-depset.patch"
+	"${FILESDIR}.override/${PN}-repo-aliases.patch"
+)
+
+EPYTEST_PLUGINS=( pkgcore )
 distutils_enable_tests pytest
 
 python_install_all() {

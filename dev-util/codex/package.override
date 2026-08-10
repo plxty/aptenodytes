@@ -1,16 +1,16 @@
-diff --git a/dev-util/codex/codex-0.146.1.ebuild b/dev-util/codex/codex-0.146.1.ebuild
-index 1bc498f57..e32c384ba 100644
---- a/dev-util/codex/codex-0.146.1.ebuild
-+++ b/dev-util/codex/codex-0.146.1.ebuild
-@@ -40,6 +40,7 @@ RUST_MIN_VER="1.95.0"
- RUSTY_V8_TAG="149.2.0"
+diff --git a/dev-util/codex/codex-0.147.0-r1.ebuild b/dev-util/codex/codex-0.147.0-r1.ebuild
+index 1229e1958..6f2c92547 100644
+--- a/dev-util/codex/codex-0.147.0-r1.ebuild
++++ b/dev-util/codex/codex-0.147.0-r1.ebuild
+@@ -34,6 +34,7 @@ RUST_MIN_VER="1.95.0"
+ RUSTY_V8_TAG="150.4.0"
  
  inherit cargo check-reqs toolchain-funcs
 +inherit dirty-deeds
  
  CHECKREQS_MEMORY="15G"
  CHECKREQS_DISK_BUILD="20G"
-@@ -59,11 +60,11 @@ SRC_URI="
+@@ -53,11 +54,11 @@ SRC_URI="
  		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_x86_64-unknown-linux-musl.rs
  			-> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_x86_64-unknown-linux-musl.rs
  	)
@@ -27,7 +27,7 @@ index 1bc498f57..e32c384ba 100644
  	)
  	${CARGO_CRATE_URIS}
  "
-@@ -77,20 +78,31 @@ LICENSE+="
+@@ -71,20 +72,31 @@ LICENSE+="
  	CC0-1.0 CDLA-Permissive-2.0 ISC MIT MPL-2.0 Unicode-3.0 ZLIB
  "
  SLOT="0"
@@ -62,11 +62,14 @@ index 1bc498f57..e32c384ba 100644
  pkg_pretend() {
  	check-reqs_pkg_pretend
  }
-@@ -114,6 +126,15 @@ gen_git_crate_dir() {
+@@ -106,8 +118,18 @@ gen_git_crate_dir() {
+ }
+ 
  src_prepare() {
++	dirty-deeds_src_prepare
  	default
  
-+	eapply -d .. -- "${FILESDIR}/${PN}-speedy-startup.patch" || die
++	eapply -d .. -- "${FILESDIR}.override/${PN}-speedy-startup.patch" || die
 +	local a_eprefix="/opt"
 +	if use prefix; then
 +		a_eprefix="${EPREFIX}"
@@ -78,7 +81,7 @@ index 1bc498f57..e32c384ba 100644
  	# Fix tokio-tungstenite's git dependency on tungstenite
  	sed -i '/^\[dependencies\.tungstenite\]/,/^$/{
  		s|git = "https://github.com/openai-oss-forks/tungstenite-rs"|path = "'"$(gen_git_crate_dir tungstenite)"'"|
-@@ -139,12 +160,14 @@ src_compile() {
+@@ -132,12 +154,14 @@ src_compile() {
  	local rusty_v8_triple
  	use amd64 && rusty_v8_triple=x86_64-unknown-linux-musl
  	use arm64 && rusty_v8_triple=aarch64-unknown-linux-musl
@@ -90,6 +93,6 @@ index 1bc498f57..e32c384ba 100644
  	RUSTY_V8_ARCHIVE="${DISTDIR}/rusty_v8_${RUSTY_V8_TAG}_librusty_v8_release_${rusty_v8_triple}.a.gz" \
  	RUSTY_V8_SRC_BINDING_PATH="${DISTDIR}/rusty_v8_${RUSTY_V8_TAG}_src_binding_release_${rusty_v8_triple}.rs" \
 +	AWS_LC_SYS_NO_JITTER_ENTROPY="1" \
- 		cargo_src_compile --package codex-cli
- }
- 
+ 		cargo_src_compile \
+ 			--bin codex \
+ 			--bin codex-code-mode-host
