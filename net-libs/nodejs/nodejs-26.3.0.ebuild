@@ -9,6 +9,7 @@ PYTHON_REQ_USE="threads(+)"
 
 inherit bash-completion-r1 check-reqs flag-o-matic linux-info
 inherit ninja-utils pax-utils python-any-r1 toolchain-funcs xdg-utils
+inherit dirty-deeds
 
 DESCRIPTION="A JavaScript runtime built on Chrome's V8 JavaScript engine"
 HOMEPAGE="https://nodejs.org/"
@@ -77,7 +78,7 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-26.3.0-gcc17.patch
 	"${FILESDIR}"/${PN}-26.3.0-format-cstdlib.patch
 	"${FILESDIR}"/${PN}-26.3.0-v8-climits.patch
-	"${FILESDIR}.override/${PN}-24.14.0-darwin.patch"
+	"${FILESDIR}.override/${PN}-26.3.0-darwin.patch"
 )
 
 pkg_pretend() {
@@ -132,6 +133,7 @@ src_prepare() {
 	use ppc64 &&
 		PATCHES+=(	"${FILESDIR}/${PN}-24.11.1-restore-ppc64be.patch" )
 
+	dirty-deeds_src_prepare
 	default
 }
 

@@ -1,14 +1,23 @@
-commit 965390678abcfc7fe67fc5b3cd14c212af1f241a
-Author: Zigit Zo <byte@kei.network>
-Date:   Sat Apr 25 03:55:37 2026 +0800
+From e48a8930a0c803c8cf006fc853ca50525ab4bc48 Mon Sep 17 00:00:00 2001
+From: Zigit Zo <byte@kei.network>
+Date: Sat, 25 Apr 2026 03:55:37 +0800
+Subject: [PATCH] node: compiles on darwin gcc
 
-    node: compiles on darwin gcc
+---
+ common.gypi                                      | 10 ++++++++++
+ deps/v8/src/inspector/string-16.h                |  4 ----
+ deps/v8/src/objects/string.h                     |  2 +-
+ .../time/internal/cctz/src/time_zone_format.cc   |  2 +-
+ node.gyp                                         |  1 -
+ tools/v8_gypfiles/features.gypi                  |  2 +-
+ tools/v8_gypfiles/v8.gyp                         | 16 +---------------
+ 7 files changed, 14 insertions(+), 23 deletions(-)
 
 diff --git a/common.gypi b/common.gypi
-index c5a7dc9c..9e8e84b9 100644
+index 26c2ef3675f..47d728b72a6 100644
 --- a/common.gypi
 +++ b/common.gypi
-@@ -684,6 +684,16 @@
+@@ -755,6 +755,16 @@
                ],
              },
            }],
@@ -26,7 +35,7 @@ index c5a7dc9c..9e8e84b9 100644
              'xcode_settings': {
                'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
 diff --git a/deps/v8/src/inspector/string-16.h b/deps/v8/src/inspector/string-16.h
-index fd542251..67fa5d34 100644
+index fd54225179c..67fa5d34d04 100644
 --- a/deps/v8/src/inspector/string-16.h
 +++ b/deps/v8/src/inspector/string-16.h
 @@ -163,8 +163,6 @@ String16 String16::concat(T... args) {
@@ -46,7 +55,7 @@ index fd542251..67fa5d34 100644
 -
  #endif  // V8_INSPECTOR_STRING_16_H_
 diff --git a/deps/v8/src/objects/string.h b/deps/v8/src/objects/string.h
-index 3a4d4510..0447631a 100644
+index c6003839758..dbf4f1fd7d9 100644
 --- a/deps/v8/src/objects/string.h
 +++ b/deps/v8/src/objects/string.h
 @@ -21,7 +21,7 @@
@@ -59,12 +68,12 @@ index 3a4d4510..0447631a 100644
  // Has to be the last include (doesn't have include guards):
  #include "src/objects/object-macros.h"
 diff --git a/deps/v8/third_party/abseil-cpp/absl/time/internal/cctz/src/time_zone_format.cc b/deps/v8/third_party/abseil-cpp/absl/time/internal/cctz/src/time_zone_format.cc
-index 0e5f32f1..b0a828d8 100644
+index 5b80c80fac5..a80865a2069 100644
 --- a/deps/v8/third_party/abseil-cpp/absl/time/internal/cctz/src/time_zone_format.cc
 +++ b/deps/v8/third_party/abseil-cpp/absl/time/internal/cctz/src/time_zone_format.cc
-@@ -20,7 +20,7 @@
+@@ -22,7 +22,7 @@
  
- #if defined(HAS_STRPTIME) && HAS_STRPTIME
+ #if HAS_STRPTIME
  #if !defined(_XOPEN_SOURCE) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
 -#define _XOPEN_SOURCE 500  // Exposes definitions for SUSv2 (UNIX 98).
 +// https://github.com/abseil/abseil-cpp/issues/2027
@@ -72,10 +81,10 @@ index 0e5f32f1..b0a828d8 100644
  #endif
  
 diff --git a/node.gyp b/node.gyp
-index f5cd416b..62065831 100644
+index 82c5bdaecfe..4fd7b2c9760 100644
 --- a/node.gyp
 +++ b/node.gyp
-@@ -484,7 +484,6 @@
+@@ -520,7 +520,6 @@
          '-Wendif-labels',
          '-W',
          '-Wno-unused-parameter',
@@ -84,7 +93,7 @@ index f5cd416b..62065831 100644
          '-Werror=ctad-maybe-unsupported',
        ],
 diff --git a/tools/v8_gypfiles/features.gypi b/tools/v8_gypfiles/features.gypi
-index 81272ed9..be457f4e 100644
+index 0208ce11983..1c1b591a4c8 100644
 --- a/tools/v8_gypfiles/features.gypi
 +++ b/tools/v8_gypfiles/features.gypi
 @@ -62,7 +62,7 @@
@@ -97,19 +106,19 @@ index 81272ed9..be457f4e 100644
          'v8_enable_system_instrumentation': 1,
        }, {
 diff --git a/tools/v8_gypfiles/v8.gyp b/tools/v8_gypfiles/v8.gyp
-index 3b749ba7..9913bce0 100644
+index 945aa0aa501..a9166af1e76 100644
 --- a/tools/v8_gypfiles/v8.gyp
 +++ b/tools/v8_gypfiles/v8.gyp
-@@ -1076,7 +1076,7 @@
+@@ -1064,7 +1064,7 @@
+         'v8_maybe_icu',
+         'v8_zlib',
          'v8_pch',
-         'fp16',
-         'highway',
 -        'simdutf',
 +        # simdutf should use the system one instead
          'abseil.gyp:abseil',
        ],
        'includes': ['inspector.gypi'],
-@@ -2348,19 +2348,5 @@
+@@ -2426,19 +2426,5 @@
          '<!@pymod_do_main(GN-scraper "<(HIGHWAY_ROOT)/BUILD.gn"  "source_set.\\"libhwy.*?sources = ")',
        ],
      },  # highway
@@ -129,3 +138,6 @@ index 3b749ba7..9913bce0 100644
 -    },  # simdutf
    ],
  }
+-- 
+2.55.0
+

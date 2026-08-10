@@ -45,6 +45,9 @@ done
 # bring in guse or other stuffs:
 cd "$(dirname "${BASH_SOURCE[0]}")"
 EAPI="8"
+EXPORT_FUNCTIONS() {
+	:
+}
 source ../eclass/dirty-deeds.eclass
 
 # check if is a prefix or gentoo install

@@ -1,8 +1,16 @@
 diff --git a/net-libs/nodejs/nodejs-26.3.0.ebuild b/net-libs/nodejs/nodejs-26.3.0.ebuild
-index 9abe41085efa..80d4045bce01 100644
+index 9abe41085efa..ad6db7469edb 100644
 --- a/net-libs/nodejs/nodejs-26.3.0.ebuild
 +++ b/net-libs/nodejs/nodejs-26.3.0.ebuild
-@@ -21,7 +21,7 @@ if [[ ${PV} == *9999 ]]; then
+@@ -9,6 +9,7 @@ PYTHON_REQ_USE="threads(+)"
+ 
+ inherit bash-completion-r1 check-reqs flag-o-matic linux-info
+ inherit ninja-utils pax-utils python-any-r1 toolchain-funcs xdg-utils
++inherit dirty-deeds
+ 
+ DESCRIPTION="A JavaScript runtime built on Chrome's V8 JavaScript engine"
+ HOMEPAGE="https://nodejs.org/"
+@@ -21,7 +22,7 @@ if [[ ${PV} == *9999 ]]; then
  else
  	SRC_URI="https://nodejs.org/dist/v${PV}/node-v${PV}.tar.xz"
  	SLOT="0/$(ver_cut 1)"
@@ -11,11 +19,19 @@ index 9abe41085efa..80d4045bce01 100644
  	S="${WORKDIR}/node-v${PV}"
  fi
  
-@@ -77,6 +77,7 @@ PATCHES=(
+@@ -77,6 +78,7 @@ PATCHES=(
  	"${FILESDIR}"/${PN}-26.3.0-gcc17.patch
  	"${FILESDIR}"/${PN}-26.3.0-format-cstdlib.patch
  	"${FILESDIR}"/${PN}-26.3.0-v8-climits.patch
-+	"${FILESDIR}.override/${PN}-24.14.0-darwin.patch"
++	"${FILESDIR}.override/${PN}-26.3.0-darwin.patch"
  )
  
  pkg_pretend() {
+@@ -131,6 +133,7 @@ src_prepare() {
+ 	use ppc64 &&
+ 		PATCHES+=(	"${FILESDIR}/${PN}-24.11.1-restore-ppc64be.patch" )
+ 
++	dirty-deeds_src_prepare
+ 	default
+ }
+ 

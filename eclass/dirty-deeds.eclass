@@ -107,5 +107,15 @@ if [[ -z ${_DIRTY_DEEDS_ECLASS:-} ]]; then
 			dosym ../"${template}" "${ud}"/"${target}".wants/"${destname}"
 	}
 
+	dirty-deeds_src_prepare() {
+		# prepare the overrided files:
+		if [[ ! -e "${FILESDIR}.override" ]]; then
+			ln -s "$(realpath "${FILESDIR}" || die).override" "${FILESDIR}.override"
+		fi
+	}
+
 	_DIRTY_DEEDS_ECLASS=1
 fi
+
+# MUST outisde:
+EXPORT_FUNCTIONS src_prepare
