@@ -19,8 +19,6 @@ fi
 
 DESCRIPTION="a framework for package management"
 HOMEPAGE="https://github.com/pkgcore/pkgcore"
-SRC_URI+=" https://github.com/pkgcore/pkgcore/commit/64f1319f0bb147d61cb080f07acd5f416d9c680e.patch
-	-> ${P}-fix-empty-depset.patch"
 
 LICENSE="BSD MIT"
 SLOT="0"
@@ -28,7 +26,7 @@ SLOT="0"
 if [[ ${PV} == *9999 ]]; then
 	RDEPEND="~dev-python/snakeoil-9999[${PYTHON_USEDEP}]"
 else
-	RDEPEND=">=dev-python/snakeoil-0.11.3[${PYTHON_USEDEP}]"
+	RDEPEND=">=dev-python/snakeoil-0.11.4[${PYTHON_USEDEP}]"
 fi
 
 RDEPEND+="
@@ -43,7 +41,6 @@ BDEPEND="${RDEPEND}
 "
 
 PATCHES=(
-	"${DISTDIR}/${P}-fix-empty-depset.patch"
 	"${FILESDIR}.override/${PN}-repo-aliases.patch"
 )
 

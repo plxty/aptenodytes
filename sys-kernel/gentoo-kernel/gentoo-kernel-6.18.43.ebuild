@@ -9,12 +9,12 @@ inherit kernel-build toolchain-funcs verify-sig
 
 BASE_P=linux-${PV%.*}
 PATCH_PV=${PV%_p*}
-PATCHSET=linux-gentoo-patches-6.18.40
+PATCHSET=linux-gentoo-patches-6.18.42
 # https://koji.fedoraproject.org/koji/packageinfo?packageID=8
 # forked to git.gentoo.org:fork/fedora/kernel
 CONFIG_VER=6.18.12-gentoo
 GENTOO_CONFIG_P=gentoo-kernel-config-g19
-SHA256SUM_DATE=20260730
+SHA256SUM_DATE=20260806
 # Debian kconfig commit from:
 # https://salsa.debian.org/kernel-team/linux/-/tree/debian/latest/debian/
 DEBIAN_COMMIT=b19b382f183d421a407f5d708dde1eff5009274d

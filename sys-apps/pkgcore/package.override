@@ -1,7 +1,7 @@
-diff --git a/sys-apps/pkgcore/pkgcore-0.12.37-r1.ebuild b/sys-apps/pkgcore/pkgcore-0.12.37-r1.ebuild
-index f59a04f82d14..400c84e7974c 100644
---- a/sys-apps/pkgcore/pkgcore-0.12.37-r1.ebuild
-+++ b/sys-apps/pkgcore/pkgcore-0.12.37-r1.ebuild
+diff --git a/sys-apps/pkgcore/pkgcore-0.12.38.ebuild b/sys-apps/pkgcore/pkgcore-0.12.38.ebuild
+index 192fa516b7fd..87556c2f03ed 100644
+--- a/sys-apps/pkgcore/pkgcore-0.12.38.ebuild
++++ b/sys-apps/pkgcore/pkgcore-0.12.38.ebuild
 @@ -6,6 +6,7 @@ EAPI=8
  DISTUTILS_USE_PEP517=standalone
  PYTHON_COMPAT=( python3_{12..15} )
@@ -10,11 +10,14 @@ index f59a04f82d14..400c84e7974c 100644
  
  if [[ ${PV} == *9999 ]] ; then
  	EGIT_REPO_URI="https://anongit.gentoo.org/git/proj/pkgcore/pkgcore.git
-@@ -43,6 +44,7 @@ BDEPEND="${RDEPEND}
+@@ -39,6 +40,10 @@ BDEPEND="${RDEPEND}
+ 	)
+ "
  
- PATCHES=(
- 	"${DISTDIR}/${P}-fix-empty-depset.patch"
++PATCHES=(
 +	"${FILESDIR}.override/${PN}-repo-aliases.patch"
- )
- 
++)
++
  EPYTEST_PLUGINS=( pkgcore )
+ distutils_enable_tests pytest
+ 
