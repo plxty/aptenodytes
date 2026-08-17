@@ -167,7 +167,7 @@ if [[ "${*}" != "" ]]; then
 	echo ">>> Spawning ${*}..."
 	erun "${@}"
 else
-	echo ">>> Burning for ${IGLU_ID} in ${EPREFIX}..."
+	echo ">>> Burning for ${IGLU_ID} in ${EPREFIX:-here}..."
 	erun emerge -uND @world
 fi
 
