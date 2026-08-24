@@ -20,12 +20,12 @@ dirname_n() {
 # [--opts...] [iglu_id] [eprefix]
 IGLU_ID="$(hostname)"
 EPREFIX="$(dirname_n 3 "$(which emerge 2>/dev/null || echo "/")")"
-SKIP_REFRESH=false
+REFRESH=false
 YES=false
 while [[ "${1:-}" != "" ]]; do
 	case "${1}" in
-	"--help") die "${0} [--skip-refresh] [--yes] [IGLU_ID|${IGLU_ID}] [EPREFIX|${EPREFIX}] [-- ...]" ;;
-	"--skip-refresh") SKIP_REFRESH=true ;;
+	"--help") die "${0} [--refresh] [--yes] [IGLU_ID|${IGLU_ID}] [EPREFIX|${EPREFIX}] [-- ...]" ;;
+	"--refresh") REFRESH=true ;;
 	"--yes") YES=true ;;
 	"--")
 		shift 1
@@ -158,8 +158,8 @@ if ! test -e "${EPREFIX}/var/db/pkg/sci-misc/aptenodytes-"*"/repository"; then
 fi
 
 # now try to sync the repo with git to ensure we've setup:
-if ! "${SKIP_REFRESH}"; then
-	erun "${PWD}/keep-in-sync.py" --pretend
+if "${REFRESH}"; then
+	erun "${PWD}/keep-in-sync.py" --refresh --pretend
 fi
 
 # update-the-world if !shell-instead

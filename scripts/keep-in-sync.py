@@ -38,7 +38,7 @@ class WorkingEnvironment:
 
     # private vars, mostly arguments:
     oneshot: Optional[str] = None
-    skip_refresh: bool = False
+    refresh: bool = False
     repology: bool = False
     pretend: bool = False
 
@@ -50,8 +50,8 @@ class WorkingEnvironment:
                 case "--oneshot":
                     self.oneshot = argv[i + 1]
                     i += 1
-                case "--skip-refresh":
-                    self.skip_refresh = True
+                case "--refresh":
+                    self.refresh = True
                 case "--repology":
                     self.repology = True
                 case "--pretend":
@@ -528,7 +528,7 @@ def main() -> None:
     env = WorkingEnvironment()
 
     # sync rest of the world first:
-    if not env.skip_refresh:
+    if env.refresh:
         sync_emerge()
 
     # oneshot for one overlay package:
