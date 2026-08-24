@@ -11,3 +11,4 @@
 *sys-apps/iproute2
 *sys-devel/crossdev
 *sys-apps/pciutils
+*dev-util/perf

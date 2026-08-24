@@ -1,7 +1,7 @@
-diff --git a/sys-apps/pkgcore/pkgcore-0.12.38.ebuild b/sys-apps/pkgcore/pkgcore-0.12.38.ebuild
+diff --git a/sys-apps/pkgcore/pkgcore-0.12.39.ebuild b/sys-apps/pkgcore/pkgcore-0.12.39.ebuild
 index 192fa516b7fd..87556c2f03ed 100644
---- a/sys-apps/pkgcore/pkgcore-0.12.38.ebuild
-+++ b/sys-apps/pkgcore/pkgcore-0.12.38.ebuild
+--- a/sys-apps/pkgcore/pkgcore-0.12.39.ebuild
++++ b/sys-apps/pkgcore/pkgcore-0.12.39.ebuild
 @@ -6,6 +6,7 @@ EAPI=8
  DISTUTILS_USE_PEP517=standalone
  PYTHON_COMPAT=( python3_{12..15} )
