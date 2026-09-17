@@ -33,11 +33,11 @@ SLOT="0"
 
 # [aptenodytes] accept_keywords=~amd64 repo_override=gentoo-zh
 KEYWORDS="-* ~amd64 ~arm64 ~arm64-macos"
-REQUIRED_USE="!kernel_Darwin ( elibc_glibc )"
+REQUIRED_USE="!kernel_Darwin? ( elibc_glibc )"
 
 RDEPEND="
 	!dev-util/codex
-	!kernel_Darwin ( >=sys-libs/glibc-2.38 )
+	!kernel_Darwin? ( >=sys-libs/glibc-2.38 )
 	sys-libs/ncurses:0/6
 "
 

@@ -1,7 +1,7 @@
-diff --git a/dev-util/codex-bin/codex-bin-0.153.4.ebuild b/dev-util/codex-bin/codex-bin-0.153.4.ebuild
+diff --git a/dev-util/codex-bin/codex-bin-0.154.0.ebuild b/dev-util/codex-bin/codex-bin-0.154.0.ebuild
 index 130a7e097..bbc8263ba 100644
---- a/dev-util/codex-bin/codex-bin-0.153.4.ebuild
-+++ b/dev-util/codex-bin/codex-bin-0.153.4.ebuild
+--- a/dev-util/codex-bin/codex-bin-0.154.0.ebuild
++++ b/dev-util/codex-bin/codex-bin-0.154.0.ebuild
 @@ -17,6 +17,10 @@ SRC_URI="
  		${URI_PREFIX}/codex-package-aarch64-unknown-linux-musl.tar.gz
  			-> ${P}-arm64.tar.gz
@@ -22,12 +22,12 @@ index 130a7e097..bbc8263ba 100644
 +
 +# [aptenodytes] accept_keywords=~amd64 repo_override=gentoo-zh
 +KEYWORDS="-* ~amd64 ~arm64 ~arm64-macos"
-+REQUIRED_USE="!kernel_Darwin ( elibc_glibc )"
++REQUIRED_USE="!kernel_Darwin? ( elibc_glibc )"
  
  RDEPEND="
  	!dev-util/codex
 -	>=sys-libs/glibc-2.38
-+	!kernel_Darwin ( >=sys-libs/glibc-2.38 )
++	!kernel_Darwin? ( >=sys-libs/glibc-2.38 )
  	sys-libs/ncurses:0/6
  "
  
