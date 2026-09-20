@@ -20,12 +20,10 @@ dirname_n() {
 # [--opts...] [iglu_id] [eprefix]
 IGLU_ID="$(hostname)"
 EPREFIX="$(dirname_n 3 "$(which emerge 2>/dev/null || echo "/")")"
-REFRESH=false
 YES=false
 while [[ "${1:-}" != "" ]]; do
 	case "${1}" in
-	"--help") die "${0} [--refresh] [--yes] [IGLU_ID|${IGLU_ID}] [EPREFIX|${EPREFIX}] [-- ...]" ;;
-	"--refresh") REFRESH=true ;;
+	"--help") die "${0} [--yes] [IGLU_ID|${IGLU_ID}] [EPREFIX|${EPREFIX}] [-- ...]" ;;
 	"--yes") YES=true ;;
 	"--")
 		shift 1
@@ -155,11 +153,6 @@ fi
 if ! test -e "${EPREFIX}/var/db/pkg/sci-misc/aptenodytes-"*"/repository"; then
 	echo ">>> Merging sci-misc/aptenodytes..."
 	erun emerge -1 sci-misc/aptenodytes
-fi
-
-# now try to sync the repo with git to ensure we've setup:
-if "${REFRESH}"; then
-	erun "${PWD}/keep-in-sync.py" --refresh --pretend
 fi
 
 # update-the-world if !shell-instead

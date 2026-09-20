@@ -13,9 +13,8 @@ LICENSE="public-domain"
 SLOT="${PV}"
 KEYWORDS="~arm64-macos"
 IUSE="
-	+compiler-rt libcxx offload openmp +sanitize
+	+compiler-rt libcxx openmp +sanitize
 	default-compiler-rt default-libcxx default-lld llvm-libunwind polly
-	llvm_targets_AMDGPU llvm_targets_NVPTX
 "
 REQUIRED_USE="
 	sanitize? ( compiler-rt )
@@ -29,18 +28,7 @@ RDEPEND="
 		)
 	)
 	libcxx? ( >=llvm-runtimes/libcxx-${PV}[${MULTILIB_USEDEP}] )
-	openmp? (
-		>=llvm-runtimes/openmp-${PV}[${MULTILIB_USEDEP}]
-		offload? (
-			>=llvm-runtimes/offload-${PV}
-			llvm_targets_AMDGPU? (
-				>=llvm-runtimes/openmp-amdgcn-amd-amdhsa-${PV}
-			)
-			llvm_targets_NVPTX? (
-				>=llvm-runtimes/openmp-nvptx64-nvidia-cuda-${PV}
-			)
-		)
-	)
+	openmp? ( >=llvm-runtimes/openmp-${PV}[${MULTILIB_USEDEP}] )
 
 	llvm-core/clang-common
 

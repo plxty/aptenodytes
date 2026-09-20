@@ -1,7 +1,7 @@
-diff --git a/llvm-runtimes/clang-runtime/clang-runtime-22.ebuild b/llvm-runtimes/clang-runtime/clang-runtime-22.ebuild
+diff --git a/llvm-runtimes/clang-runtime/clang-runtime-22-r1.ebuild b/llvm-runtimes/clang-runtime/clang-runtime-22-r1.ebuild
 index 53f62eeeb6a3..da1c75275d4b 100644
---- a/llvm-runtimes/clang-runtime/clang-runtime-22.ebuild
-+++ b/llvm-runtimes/clang-runtime/clang-runtime-22.ebuild
+--- a/llvm-runtimes/clang-runtime/clang-runtime-22-r1.ebuild
++++ b/llvm-runtimes/clang-runtime/clang-runtime-22-r1.ebuild
 @@ -11,7 +11,7 @@ S=${WORKDIR}
  
  LICENSE="public-domain"
