@@ -169,7 +169,7 @@ def find_repo_path(env: WorkingEnvironment, repo_name: str) -> Path:
 def collect_repology_package(
     env: WorkingEnvironment, my_cpv: MyCatPkgVerRev
 ) -> Optional[RepologyPackage]:
-    url = f"https://repology.org/api/v1/project/{quote(my_cpv.pkgname)}"
+    url = f"https://repology.amdmi3.ru/api/v1/project/{quote(my_cpv.pkgname)}"
     req = Request(url, headers={"User-Agent": "github.com/plxty/aptenodytes"})
     try:
         with urlopen(req, timeout=5) as r:
