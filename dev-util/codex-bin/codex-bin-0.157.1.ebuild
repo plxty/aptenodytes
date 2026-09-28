@@ -37,7 +37,10 @@ REQUIRED_USE="!kernel_Darwin? ( elibc_glibc )"
 
 RDEPEND="
 	!dev-util/codex
-	!kernel_Darwin? ( >=sys-libs/glibc-2.38 )
+	!kernel_Darwin? (
+		>=sys-apps/bubblewrap-0.11.2
+		>=sys-libs/glibc-2.38
+	)
 	sys-libs/ncurses:0/6
 "
 
