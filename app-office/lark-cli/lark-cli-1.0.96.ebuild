@@ -5,7 +5,7 @@ SLOT="0"
 
 inherit go-module
 
-# note: meta_data.json contains in vendor file to prevent from frequently csum:
+# [aptenodytes] make_bundle=vendor/lark-cli
 SRC_URI="
   https://github.com/larksuite/cli/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz
   https://github.com/plxty/aptenodytes/releases/download/dist/${P}-vendor.tar.xz
@@ -16,8 +16,7 @@ S="${WORKDIR}/cli-${PV}"
 
 src_prepare() {
 	default
-	mv vendor/meta_data.json internal/registry
-	sed -i "s/echo dev/echo v${PN}/g" Makefile
+	sed -i "s/echo dev/echo v${PV}/g" Makefile
 }
 
 src_compile() {

@@ -4,7 +4,7 @@ import json
 import os
 import sys
 from grp import getgrgid
-from configparser import ConfigParser
+from configparser import ConfigParser, NoSectionError, NoOptionError
 from dataclasses import astuple, dataclass
 from pathlib import Path
 from time import sleep
@@ -152,6 +152,30 @@ class RepologyPackage(EbuildPackage):
     pass  # pseudo
 
 
+def package_config_get(
+    package_or_config: OverlayPackage | ProfilePackage | ConfigParser,
+    key: str,
+    default: Any,
+) -> Any:
+    if type(package_or_config) is OverlayPackage:
+        config = package_or_config.config
+    elif type(package_or_config) is ProfilePackage:
+        config = package_or_config.config
+    else:
+        config = package_or_config
+
+    if type(default) is bool:
+        return config.getboolean("aptenodytes", key, fallback=default)
+    elif type(default) is list:
+        # special list[str]: split by ','
+        try:
+            return config.get("aptenodytes", key).split(",")
+        except (NoSectionError, NoOptionError):
+            return default
+    else:
+        return config.get("aptenodytes", key, fallback=default)
+
+
 def progress(text: str) -> None:
     columns = os.get_terminal_size().columns
     if len(text) > columns:
@@ -212,9 +236,7 @@ def find_best_cpv(
 
     accept_keywords = env.accept_keywords.copy()
     if type(package) is OverlayPackage or type(package) is ProfilePackage:
-        accept_keywords.update(
-            package.config.get("aptenodytes", "accept_keywords", fallback="").split()
-        )
+        accept_keywords.update(package_config_get(package, "accept_keywords", []))
 
     # overlay vs override...
     is_overlay = type(package) is OverlayPackage
@@ -358,7 +380,7 @@ def collect_overlay_package(
                 continue
 
     # try if overrides:
-    repo_override = config.get("aptenodytes", "repo_override", fallback=repo_override)
+    repo_override = package_config_get(config, "repo_override", repo_override)
 
     # hey i'm over laying:
     return OverlayPackage(*astuple(ebuild_package), repo_override, config)
@@ -415,10 +437,10 @@ def sync_emerge() -> None:
 
 
 def sync_overlay_package(
-    old_package: OverlayPackage, new_package: EbuildPackage, manifest: bool
+    old_package: OverlayPackage, new_package: EbuildPackage
 ) -> None:
     if old_package.repo_override is None:
-        # maybe repology:
+        # maybe repology, therefore we copy self-to-self:
         src = old_package.source
         dst = old_package.source.parents[2] / new_package.my_cpv
     else:
@@ -500,13 +522,25 @@ def sync_overlay_package(
             os.makedirs(files_dst, exist_ok=True)
             check_call(["rsync", "-a", "--delete", f"{files_src}/.", files_dst])
 
-    # TODO: make-bundle.py
-    if manifest:
-        check_call(["ebuild", dst, "manifest"])
+    # manifest and more:
+    make_bundle = package_config_get(old_package, "make_bundle", [])
+    if len(make_bundle) != 0:
+        check_call(
+            [
+                str(Path(__file__).parent / "make-bundle.py"),
+                str(new_package.my_cpv),
+                *make_bundle,
+            ]
+        )
+    check_call(["ebuild", dst, "manifest"])
 
     # reseting permissions back:
     stat = old_package.source.stat()
     check_call(["chown", "-R", f"{stat.st_uid}:{stat.st_gid}", dst.parent])
+
+    # keep leagcy or not:
+    if not package_config_get(old_package, "keep_legacy", False):
+        os.unlink(old_package.source)
     print(f"=== Syncd overlay: {new_package.my_cpv}::{new_package.repo_overlay}")
 
 
@@ -539,7 +573,7 @@ def main() -> None:
             b = collect_repology_package(env, my_cpv)
         else:
             b = collect_ebuild_package(env, a.repo_override, my_cpv)
-        sync_overlay_package(a, b, False)
+        sync_overlay_package(a, b)
         return
 
     # obtain every normal packages, filter only really overlays:
@@ -575,14 +609,14 @@ def main() -> None:
             continue
 
         # skip it to un-check:
-        if package.config.getboolean("aptenodytes", "skip", fallback=False):
+        if package_config_get(package, "skip", False):
             continue
 
         # we might go a little bit too far:
-        pin_until_stable = package.config.getboolean(
-            "aptenodytes", "pin_until_stable", fallback=False
-        )
-        if pin_until_stable and package.my_cpv.cmp(my_cpv) > 0:
+        if (
+            package_config_get(package, "pin_until_stable", False)
+            and package.my_cpv.cmp(my_cpv) > 0
+        ):
             continue
 
         pendings.append((package, collect_ebuild_package(env, repo_name, my_cpv)))
@@ -608,7 +642,7 @@ def main() -> None:
             continue
 
         if type(old_package) is OverlayPackage:
-            sync_overlay_package(old_package, new_package, True)
+            sync_overlay_package(old_package, new_package)
         elif type(old_package) is ProfilePackage:
             sync_profile_package(old_package, new_package)
         else:

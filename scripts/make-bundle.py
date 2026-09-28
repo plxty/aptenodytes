@@ -4,7 +4,6 @@ import os
 import sys
 from pathlib import Path
 from typing import Optional, Any, List, Self, override
-from collections.abc import Callable
 from subprocess import check_call
 import json
 import mimetypes
@@ -61,7 +60,7 @@ def github_upload(tag: str, name: str, path: Path, token: str) -> Optional[Any]:
 
 
 def call(commands: List[str], cwd: Path) -> None:
-    print(f">>> Running {' '.join(commands)}...")
+    print(f">>> Running {' '.join(commands)} in {cwd}...")
     check_call(commands, cwd=cwd)
 
 
@@ -69,6 +68,7 @@ def call(commands: List[str], cwd: Path) -> None:
 class Vendor:
     name: str
     version: str
+    repo: str
     tag: Optional[str] = None
 
     def flight(self: Self, cwd: Path) -> List[Path]:
@@ -82,7 +82,6 @@ class Vendor:
 @dataclass
 class GoVendor(Vendor):
     xform: Optional[str] = None
-    pre_compress_hooks: List[List[str]] = field(default_factory=list)
 
     @override
     def flight(self: Self, cwd: Path) -> List[Path]:
@@ -92,8 +91,6 @@ class GoVendor(Vendor):
             self.xform = f"{self.name}-{self.version}"
 
         call(["go", "mod", "vendor"], cwd)
-        for hook in self.pre_compress_hooks:
-            call(hook, cwd)
         call(
             [
                 "tar",
@@ -134,6 +131,10 @@ class CargoVendor(Vendor):
 def store_vendors(vendor: Vendor, cwd: Path) -> List[Path]:
     assert vendor.tag is not None
 
+    # init if not ready:
+    if not os.path.exists(cwd):
+        call(["git", "clone", "--recursive", vendor.repo, cwd.name], cwd.parent)
+
     # check the git out:
     call(["git", "reset", "--hard"], cwd)
     call(["git", "clean", "-fdx"], cwd)
@@ -161,11 +162,8 @@ def main() -> None:
             vendor = GoVendor(
                 pkgname,
                 version,
+                "https://github.com/larksuite/cli.git",
                 xform=f"cli-{version}",
-                pre_compress_hooks=[
-                    ["python3", "scripts/fetch_meta.py"],
-                    ["cp", "internal/registry/meta_data.json", "vendor"],
-                ],
             )
         # default packages, deduce from ebuild:
         case _:
@@ -184,7 +182,7 @@ def main() -> None:
 
     # TODO: cleanup previous?
     print(f">>> Vendoring {cpv}...")
-    for path in store_vendors(vendor, Path(git_dir)):
+    for path in store_vendors(vendor, Path(git_dir).absolute()):
         print(f">>> Uploading {str(path)}...")
         resp = github_upload("dist", path.name, path, token)
         if resp is None:
