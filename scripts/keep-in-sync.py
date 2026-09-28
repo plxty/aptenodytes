@@ -221,68 +221,91 @@ def collect_repology_package(
 
 
 def find_best_cpv(
-    env: WorkingEnvironment, package: EbuildPackage
-) -> Tuple[str, MyCatPkgVerRev]:
-    # sanity check, if we're special packages, there's no need to check best:
-    if package.my_cpv.is_meta_or_live():
-        return package.repo_overlay, package.my_cpv
+    env: WorkingEnvironment, packages: List[EbuildPackage]
+) -> List[Tuple[EbuildPackage, EbuildPackage]]:
+    pendings: List[Tuple[EbuildPackage, EbuildPackage]] = list()
 
-    try:
-        slot = env.portdbapi.aux_get(package.my_cpv.cpv, ["SLOT"])[0]
-        if slot == "ridgeni":
-            return package.repo_overlay, package.my_cpv
-    except PortageKeyError:
-        pass
+    def push_pending(repo_name, my_cpv) -> None:
+        if my_cpv == package.my_cpv:
+            return
+        if package_config_get(package, "skip", False):
+            return
+        if (
+            package_config_get(package, "pin_until_stable", False)
+            and package.my_cpv.cmp(my_cpv) > 0
+        ):
+            return
+        pendings.append((package, collect_ebuild_package(env, repo_name, my_cpv)))
 
-    accept_keywords = env.accept_keywords.copy()
-    if type(package) is OverlayPackage or type(package) is ProfilePackage:
-        accept_keywords.update(package_config_get(package, "accept_keywords", []))
+    for package in packages:
+        progress(f"package: {package.my_cpv}")
 
-    # overlay vs override...
-    is_overlay = type(package) is OverlayPackage
-    is_override = is_overlay and package.repo_override is not None
-
-    my_cpvs: Dict[MyCatPkgVerRev, str] = dict()
-    for my_cpv in package.my_cpv.cp_list(env):
-        if my_cpv.is_meta_or_live():
-            continue
-
-        # selected myself, just let me go:
-        if package.my_cpv == my_cpv:
-            my_cpvs[my_cpv] = package.repo_overlay
+        # sanity check, if we're special packages, there's no need to check best:
+        if package.my_cpv.is_meta_or_live():
+            push_pending(package.repo_overlay, package.my_cpv)
             continue
 
         try:
-            keywords = set(env.portdbapi.aux_get(my_cpv.cpv, ["KEYWORDS"])[0].split())
+            slot = env.portdbapi.aux_get(package.my_cpv.cpv, ["SLOT"])[0]
+            if slot == "ridgeni":
+                push_pending(package.repo_overlay, package.my_cpv)
+                continue
         except PortageKeyError:
-            continue
-        if len(keywords.intersection(accept_keywords)) == 0:
-            continue
+            pass
 
-        # targetting to override, if latest, cpv_find_repo will returns repo_overlay:
-        repo = cpv_find_repo(env, my_cpv, True)
-        if (
-            package.repo_overlay != repo
-            and is_override
-            and package.repo_override != repo
-        ):
-            continue
+        accept_keywords = env.accept_keywords.copy()
+        if type(package) is OverlayPackage or type(package) is ProfilePackage:
+            accept_keywords.update(package_config_get(package, "accept_keywords", []))
 
-        my_cpvs[my_cpv] = repo
+        # overlay vs override...
+        is_overlay = type(package) is OverlayPackage
+        is_override = is_overlay and package.repo_override is not None
 
-    # for non-override, we also add a repology version, TODO: --repology switch?
-    if env.repology and is_overlay and not is_override:
-        repology_package = collect_repology_package(env, package.my_cpv)
-        if repology_package is not None:
-            my_cpvs[repology_package.my_cpv] = repology_package.repo_overlay
+        my_cpvs: Dict[MyCatPkgVerRev, str] = dict()
+        for my_cpv in package.my_cpv.cp_list(env):
+            if my_cpv.is_meta_or_live():
+                continue
 
-    # falling back...
-    if len(my_cpvs) == 0:
-        my_cpvs[package.my_cpv] = package.repo_overlay
+            # selected myself, just let me go:
+            if package.my_cpv == my_cpv:
+                my_cpvs[my_cpv] = package.repo_overlay
+                continue
 
-    # best!
-    my_cpv = MyCatPkgVerRev.best(list(my_cpvs.keys()))
-    return my_cpvs[my_cpv], my_cpv
+            try:
+                keywords = set(
+                    env.portdbapi.aux_get(my_cpv.cpv, ["KEYWORDS"])[0].split()
+                )
+            except PortageKeyError:
+                continue
+            if len(keywords.intersection(accept_keywords)) == 0:
+                continue
+
+            # targetting to override, if latest, cpv_find_repo will returns repo_overlay:
+            repo = cpv_find_repo(env, my_cpv, True)
+            if (
+                package.repo_overlay != repo
+                and is_override
+                and package.repo_override != repo
+            ):
+                continue
+
+            my_cpvs[my_cpv] = repo
+
+        # for non-override, we also add a repology version, TODO: --repology switch?
+        if env.repology and is_overlay and not is_override:
+            repology_package = collect_repology_package(env, package.my_cpv)
+            if repology_package is not None:
+                my_cpvs[repology_package.my_cpv] = repology_package.repo_overlay
+
+        # falling back...
+        if len(my_cpvs) == 0:
+            my_cpvs[package.my_cpv] = package.repo_overlay
+
+        # best!
+        my_cpv = MyCatPkgVerRev.best(list(my_cpvs.keys()))
+        push_pending(my_cpvs[my_cpv], my_cpv)
+
+    return pendings
 
 
 def cpv_find_repo(
@@ -544,6 +567,31 @@ def sync_overlay_package(
     print(f"=== Syncd overlay: {new_package.my_cpv}::{new_package.repo_overlay}")
 
 
+def sync_overlay_packages(env: WorkingEnvironment, repo_path: Path) -> None:
+    packages: List[EbuildPackage] = list()
+    candidate_overlays: DefaultDict[str, List[MyCatPkgVerRev]] = defaultdict(list)
+
+    # checks only the latest overlay:
+    for ebuild_path in repo_path.glob("**/*.ebuild", recurse_symlinks=True):
+        my_cpv = MyCatPkgVerRev(path=ebuild_path)
+        candidate_overlays[f"{my_cpv.cat}/{my_cpv.pkgname}"].append(my_cpv)
+    for _, overlays in candidate_overlays.items():
+        my_cpv = MyCatPkgVerRev.best(overlays)
+        progress(f"overlay: {my_cpv.__fspath__()}")
+        packages.append(collect_overlay_package(env, my_cpv))
+
+    # sync them:
+    progress("")
+    for old_package, new_package in find_best_cpv(env, packages):
+        if env.pretend:
+            print(
+                f">>> overlay: {old_package.my_cpv} ({old_package.repo_overlay})",
+                f"-> {new_package.my_cpv} ({new_package.repo_overlay})",
+            )
+        else:
+            sync_overlay_package(old_package, new_package)
+
+
 def sync_profile_package(
     old_package: ProfilePackage, new_package: EbuildPackage
 ) -> None:
@@ -558,6 +606,29 @@ def sync_profile_package(
     print(f"=== Syncd profile: {new_package.my_cpv}::{new_package.repo_overlay}")
 
 
+def sync_profile_packages(env: WorkingEnvironment, repo_path: Path) -> None:
+    packages: List[EbuildPackage] = list()
+
+    # obtain profiles packages, to show if they needs update:
+    for profile_path in (repo_path / "profiles").glob(
+        "**/package.accept_keywords", recurse_symlinks=True
+    ):
+        for package in collect_profile_packages(env, profile_path):
+            progress(f"profile: {profile_path}: {package.my_cpv}")
+            packages.append(package)
+
+    # sync them:
+    progress("")
+    for old_package, new_package in find_best_cpv(env, packages):
+        if env.pretend:
+            print(
+                f">>> profile: {old_package.my_cpv} ({old_package.repo_overlay})",
+                f"-> {new_package.my_cpv} ({new_package.repo_overlay})",
+            )
+        else:
+            sync_profile_package(old_package, new_package)
+
+
 def main() -> None:
     env = WorkingEnvironment()
 
@@ -565,7 +636,7 @@ def main() -> None:
     if env.refresh:
         sync_emerge()
 
-    # oneshot for one overlay package:
+    # oneshot for one overlay package, TODO: --append and --filter instead.
     if env.oneshot is not None:
         my_cpv = MyCatPkgVerRev(cpv=env.oneshot)
         a = collect_overlay_package(env, my_cpv)
@@ -576,77 +647,11 @@ def main() -> None:
         sync_overlay_package(a, b)
         return
 
-    # obtain every normal packages, filter only really overlays:
-    packages: List[EbuildPackage] = list()
+    # first to sync overlay to make packages up-to-date, then use the latest
+    # overlay to update the profile again, to keep everything shiny:
     repo_path = find_repo_path(env, "aptenodytes")
-
-    # checks only the latest overlay:
-    candidate_overlays: DefaultDict[str, List[MyCatPkgVerRev]] = defaultdict(list)
-    for ebuild_path in repo_path.glob("**/*.ebuild", recurse_symlinks=True):
-        my_cpv = MyCatPkgVerRev(path=ebuild_path)
-        candidate_overlays[f"{my_cpv.cat}/{my_cpv.pkgname}"].append(my_cpv)
-    for _, overlays in candidate_overlays.items():
-        my_cpv = MyCatPkgVerRev.best(overlays)
-        progress(f"overlay: {my_cpv.__fspath__()}")
-        packages.append(collect_overlay_package(env, my_cpv))
-
-    # obtain profiles packages, to show if they needs update:
-    for profile_path in (repo_path / "profiles").glob(
-        "**/package.accept_keywords", recurse_symlinks=True
-    ):
-        for package in collect_profile_packages(env, profile_path):
-            progress(f"profile: {profile_path}: {package.my_cpv}")
-            packages.append(package)
-
-    # find the best cpv, check if any updates:
-    pendings: List[Tuple[EbuildPackage, EbuildPackage]] = list()
-    for package in packages:
-        progress(f"package: {package.my_cpv}")
-        repo_name, my_cpv = find_best_cpv(env, package)
-
-        # nothing changes:
-        if my_cpv == package.my_cpv:
-            continue
-
-        # skip it to un-check:
-        if package_config_get(package, "skip", False):
-            continue
-
-        # we might go a little bit too far:
-        if (
-            package_config_get(package, "pin_until_stable", False)
-            and package.my_cpv.cmp(my_cpv) > 0
-        ):
-            continue
-
-        pendings.append((package, collect_ebuild_package(env, repo_name, my_cpv)))
-
-    # try to sync:
-    progress("")
-    for old_package, new_package in pendings:
-        if env.pretend:
-            if type(old_package) is OverlayPackage:
-                typ = "overlay"
-            elif type(old_package) is ProfilePackage:
-                typ = "profile"
-            else:
-                raise
-            print(
-                f">>> {typ}:",
-                old_package.my_cpv,
-                f"({old_package.repo_overlay})",
-                "->",
-                new_package.my_cpv,
-                f"({new_package.repo_overlay})",
-            )
-            continue
-
-        if type(old_package) is OverlayPackage:
-            sync_overlay_package(old_package, new_package)
-        elif type(old_package) is ProfilePackage:
-            sync_profile_package(old_package, new_package)
-        else:
-            raise
+    sync_overlay_packages(env, repo_path)
+    sync_profile_packages(env, repo_path)
 
 
 if __name__ == "__main__":
