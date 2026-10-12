@@ -37,7 +37,7 @@ elif [[ ${PV} == *beta* ]]; then
 else
 	# curl -Ls static.rust-lang.org/dist/channel-rust-${PV}.toml | grep "xz_url.*rust-src"
 	SRC_URI="$(rust_all_arch_uris "rust-${PV}")
-		rust-src? ( ${RUST_TOOLCHAIN_BASEURL%/}/2026-07-16/rust-src-${PV}.tar.xz )
+		rust-src? ( ${RUST_TOOLCHAIN_BASEURL%/}/2026-09-03/rust-src-${PV}.tar.xz )
 	"
 	KEYWORDS="amd64 ~arm64-macos"
 fi

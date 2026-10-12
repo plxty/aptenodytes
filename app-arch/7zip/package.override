@@ -1,7 +1,7 @@
-diff --git a/app-arch/7zip/7zip-26.02-r1.ebuild b/app-arch/7zip/7zip-26.02-r1.ebuild
+diff --git a/app-arch/7zip/7zip-26.03.ebuild b/app-arch/7zip/7zip-26.03.ebuild
 index 51c437a9ca09..9b3d06e24c05 100644
---- a/app-arch/7zip/7zip-26.02-r1.ebuild
-+++ b/app-arch/7zip/7zip-26.02-r1.ebuild
+--- a/app-arch/7zip/7zip-26.03.ebuild
++++ b/app-arch/7zip/7zip-26.03.ebuild
 @@ -17,7 +17,7 @@ S="${WORKDIR}"
  
  LICENSE="LGPL-2 BSD rar? ( unRAR )"
