@@ -152,30 +152,6 @@ class RepologyPackage(EbuildPackage):
     pass  # pseudo
 
 
-def package_config_get(
-    package_or_config: OverlayPackage | ProfilePackage | ConfigParser,
-    key: str,
-    default: Any,
-) -> Any:
-    if type(package_or_config) is OverlayPackage:
-        config = package_or_config.config
-    elif type(package_or_config) is ProfilePackage:
-        config = package_or_config.config
-    else:
-        config = package_or_config
-
-    if type(default) is bool:
-        return config.getboolean("aptenodytes", key, fallback=default)
-    elif type(default) is list:
-        # special list[str]: split by ','
-        try:
-            return config.get("aptenodytes", key).split(",")
-        except (NoSectionError, NoOptionError):
-            return default
-    else:
-        return config.get("aptenodytes", key, fallback=default)
-
-
 def progress(text: str) -> None:
     columns = os.get_terminal_size().columns
     if len(text) > columns:
@@ -331,14 +307,38 @@ def parse_comment_config(
     if not text.startswith("# [aptenodytes]"):
         return None
 
-    # space as return, comma as space:
-    config_text = text.replace(" ", "\n").replace(",", " ")
+    # space as return, if you want list, @see package_config_get
+    config_text = text.replace(" ", "\n")
 
     # then we're, the read_string will not clear existences:
     if config is None:
         config = ConfigParser()
     config.read_string(config_text)
     return config
+
+
+def package_config_get(
+    package_or_config: OverlayPackage | ProfilePackage | ConfigParser,
+    key: str,
+    default: Any,
+) -> Any:
+    if type(package_or_config) is OverlayPackage:
+        config = package_or_config.config
+    elif type(package_or_config) is ProfilePackage:
+        config = package_or_config.config
+    else:
+        config = package_or_config
+
+    if type(default) is bool:
+        return config.getboolean("aptenodytes", key, fallback=default)
+    elif type(default) is list:
+        # special list[str]: split by ','
+        try:
+            return config.get("aptenodytes", key).split(",")
+        except (NoSectionError, NoOptionError):
+            return default
+    else:
+        return config.get("aptenodytes", key, fallback=default)
 
 
 def collect_ebuild_package(
