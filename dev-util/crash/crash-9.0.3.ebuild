@@ -67,6 +67,7 @@ src_compile() {
 		CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}"
 }
 
+# [aptenodytes] accept_keywords=~amd64
 src_install() {
 	emake DESTDIR="${ED}" install
 }

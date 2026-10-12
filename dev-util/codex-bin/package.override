@@ -1,19 +1,25 @@
 diff --git a/dev-util/codex-bin/codex-bin-0.162.1.ebuild b/dev-util/codex-bin/codex-bin-0.162.1.ebuild
-index 31205a34a..a8fedd207 100644
+index 31205a34a..0bbb0dca3 100644
 --- a/dev-util/codex-bin/codex-bin-0.162.1.ebuild
 +++ b/dev-util/codex-bin/codex-bin-0.162.1.ebuild
-@@ -17,6 +17,10 @@ SRC_URI="
- 		${URI_PREFIX}/codex-package-aarch64-unknown-linux-musl.tar.gz
- 			-> ${P}-arm64.tar.gz
- 	)
+@@ -9,13 +9,9 @@ URI_PREFIX="https://github.com/openai/${MY_PN}/releases/download/rust-v${PV}"
+ DESCRIPTION="Codex CLI - OpenAI's AI-powered coding agent"
+ HOMEPAGE="https://github.com/openai/codex"
+ SRC_URI="
+-	amd64? (
+-		${URI_PREFIX}/codex-package-x86_64-unknown-linux-musl.tar.gz
+-			-> ${P}-amd64.tar.gz
+-	)
+-	arm64? (
+-		${URI_PREFIX}/codex-package-aarch64-unknown-linux-musl.tar.gz
+-			-> ${P}-arm64.tar.gz
 +	arm64-macos? (
 +		${URI_PREFIX}/codex-package-aarch64-apple-darwin.tar.gz
 +			-> ${P}-arm64-macos.tar.gz
-+	)
+ 	)
  "
  S="${WORKDIR}"
- 
-@@ -26,13 +30,17 @@ LICENSE="
+@@ -26,13 +22,12 @@ LICENSE="
  	ZLIB ZSH
  "
  SLOT="0"
@@ -21,17 +27,12 @@ index 31205a34a..a8fedd207 100644
 -REQUIRED_USE="elibc_glibc"
 +
 +# [aptenodytes] accept_keywords=~amd64 repo_override=gentoo-zh
-+KEYWORDS="-* ~amd64 ~arm64 ~arm64-macos"
-+REQUIRED_USE="!kernel_Darwin? ( elibc_glibc )"
++KEYWORDS="~arm64-macos"
  
  RDEPEND="
  	!dev-util/codex
 -	>=sys-apps/bubblewrap-0.11.2
 -	>=sys-libs/glibc-2.38
-+	!kernel_Darwin? (
-+		>=sys-apps/bubblewrap-0.11.2
-+		>=sys-libs/glibc-2.38
-+	)
  	sys-libs/ncurses:0/6
  "
  

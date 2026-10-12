@@ -9,14 +9,6 @@ URI_PREFIX="https://github.com/openai/${MY_PN}/releases/download/rust-v${PV}"
 DESCRIPTION="Codex CLI - OpenAI's AI-powered coding agent"
 HOMEPAGE="https://github.com/openai/codex"
 SRC_URI="
-	amd64? (
-		${URI_PREFIX}/codex-package-x86_64-unknown-linux-musl.tar.gz
-			-> ${P}-amd64.tar.gz
-	)
-	arm64? (
-		${URI_PREFIX}/codex-package-aarch64-unknown-linux-musl.tar.gz
-			-> ${P}-arm64.tar.gz
-	)
 	arm64-macos? (
 		${URI_PREFIX}/codex-package-aarch64-apple-darwin.tar.gz
 			-> ${P}-arm64-macos.tar.gz
@@ -32,15 +24,10 @@ LICENSE="
 SLOT="0"
 
 # [aptenodytes] accept_keywords=~amd64 repo_override=gentoo-zh
-KEYWORDS="-* ~amd64 ~arm64 ~arm64-macos"
-REQUIRED_USE="!kernel_Darwin? ( elibc_glibc )"
+KEYWORDS="~arm64-macos"
 
 RDEPEND="
 	!dev-util/codex
-	!kernel_Darwin? (
-		>=sys-apps/bubblewrap-0.11.2
-		>=sys-libs/glibc-2.38
-	)
 	sys-libs/ncurses:0/6
 "
 

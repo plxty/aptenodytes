@@ -206,11 +206,6 @@ def find_best_cpv(
             return
         if package_config_get(package, "skip", False):
             return
-        if (
-            package_config_get(package, "pin_until_stable", False)
-            and package.my_cpv.cmp(my_cpv) > 0
-        ):
-            return
         pendings.append((package, collect_ebuild_package(env, repo_name, my_cpv)))
 
     for package in packages:
@@ -562,7 +557,9 @@ def sync_overlay_package(
     check_call(["chown", "-R", f"{stat.st_uid}:{stat.st_gid}", dst.parent])
 
     # keep leagcy or not:
-    if not package_config_get(old_package, "keep_legacy", False):
+    if old_package.source != dst and not package_config_get(
+        old_package, "keep_legacy", False
+    ):
         os.unlink(old_package.source)
     print(f"=== Syncd overlay: {new_package.my_cpv}::{new_package.repo_overlay}")
 
