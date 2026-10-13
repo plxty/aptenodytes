@@ -26,9 +26,11 @@ LICENSE+="
 	BZIP2
 " # crates
 SLOT="0"
-KEYWORDS="amd64 arm arm64 ~loong ~mips ppc ppc64 ~riscv ~s390 ~sparc ~x86"
+# [aptenodytes] make_bundle=vendor/maturin
+KEYWORDS="~arm64-macos"
 IUSE="doc +ssl test"
-RESTRICT="!test? ( test )"
+# https://devmanual.gentoo.org/general-concepts/mirrors/index.html#restricting-automatic-mirroring
+RESTRICT="!test? ( test ) primaryuri"
 
 RDEPEND="
 	app-arch/xz-utils

@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
 
-import os
-import sys
-from pathlib import Path
-from typing import Optional, Any, List, Self, override
-from subprocess import check_call
 import json
 import mimetypes
+import os
+import sys
+import urllib.error
 import urllib.parse
 import urllib.request
-import urllib.error
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from pathlib import Path
+from subprocess import check_call
+from typing import Any, Self, override
+
 from portage.versions import catpkgsplit
 
 
 def github_request(
     url: str,
     method: str,
-    data: Optional[bytes],
-    content_type: Optional[str],
+    data: bytes | None,
+    content_type: str | None,
     token: str,
-) -> Optional[Any]:
+) -> Any | None:
     headers = {
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {token}",
@@ -38,7 +39,7 @@ def github_request(
         return json.loads(body)
 
 
-def github_upload(tag: str, name: str, path: Path, token: str) -> Optional[Any]:
+def github_upload(tag: str, name: str, path: Path, token: str) -> Any | None:
     tag = urllib.parse.quote(tag, safe="")
     url = f"https://api.github.com/repos/plxty/aptenodytes/releases/tags/{tag}"
     resp = github_request(url, "GET", None, None, token)
@@ -59,7 +60,7 @@ def github_upload(tag: str, name: str, path: Path, token: str) -> Optional[Any]:
     )
 
 
-def call(commands: List[str], cwd: Path) -> None:
+def call(commands: list[str], cwd: Path) -> None:
     print(f">>> Running {' '.join(commands)} in {cwd}...")
     check_call(commands, cwd=cwd)
 
@@ -69,9 +70,9 @@ class Vendor:
     name: str
     version: str
     repo: str
-    tag: Optional[str] = None
+    tag: str | None = None
 
-    def flight(self: Self, cwd: Path) -> List[Path]:
+    def flight(self: Self, cwd: Path) -> list[Path]:
         raise
 
     def __post_init__(self: Self) -> None:
@@ -81,10 +82,10 @@ class Vendor:
 
 @dataclass
 class GoVendor(Vendor):
-    xform: Optional[str] = None
+    xform: str | None = None
 
     @override
-    def flight(self: Self, cwd: Path) -> List[Path]:
+    def flight(self: Self, cwd: Path) -> list[Path]:
         # treat some special workdir:
         artifact = f"{self.name}-{self.version}-vendor.tar.xz"
         if self.xform is None:
@@ -114,7 +115,7 @@ class GoVendor(Vendor):
 @dataclass
 class CargoVendor(Vendor):
     @override
-    def flight(self: Self, cwd: Path) -> List[Path]:
+    def flight(self: Self, cwd: Path) -> list[Path]:
         artifact = f"{self.name}-{self.version}-crates.tar.xz"
         call(
             [
@@ -128,7 +129,7 @@ class CargoVendor(Vendor):
         return [cwd / artifact]
 
 
-def store_vendors(vendor: Vendor, cwd: Path) -> List[Path]:
+def store_vendors(vendor: Vendor, cwd: Path) -> list[Path]:
     assert vendor.tag is not None
 
     # init if not ready:
@@ -155,7 +156,7 @@ def main() -> None:
     # doing work:
     cpv, git_dir, *_ = sys.argv[1:]
     cat, pkgname, version, _ = catpkgsplit(cpv)
-    vendor: Optional[Vendor] = None
+    vendor: Vendor | None = None
     match f"{cat}/{pkgname}":
         # special packages, TODO: from [aptenodytes] ebuild?
         case "app-office/lark-cli":
@@ -165,17 +166,28 @@ def main() -> None:
                 "https://github.com/larksuite/cli.git",
                 xform=f"cli-{version}",
             )
+
         # default packages, deduce from ebuild:
         case _:
             pv = cpv.split("/", maxsplit=1)[-1]
             with open(f"{cat}/{pkgname}/{pv}.ebuild", "r") as reader:
                 lines = reader.readlines()
+
+            repo: str | None = None
             for line in lines:
-                if "cargo" in line:
-                    vendor = CargoVendor(pkgname, version)
-                else:
-                    continue
-                break
+                prefix_github = "https://github.com/"
+                if prefix_github in line:
+                    owner, repo_name, *_ = line.split(prefix_github)[-1].split("/")
+                    repo = f"{prefix_github}{owner}/{repo_name}.git"
+                    break
+
+            if repo is not None:
+                for line in lines:
+                    if "cargo" in line:
+                        vendor = CargoVendor(pkgname, version, repo)
+                    else:
+                        continue
+                    break
 
     if vendor is None:
         raise
@@ -183,7 +195,7 @@ def main() -> None:
     # TODO: cleanup previous?
     print(f">>> Vendoring {cpv}...")
     for path in store_vendors(vendor, Path(git_dir).absolute()):
-        print(f">>> Uploading {str(path)}...")
+        print(f">>> Uploading {path!s}...")
         resp = github_upload("dist", path.name, path, token)
         if resp is None:
             print("!!! Failed to upload the artifact")

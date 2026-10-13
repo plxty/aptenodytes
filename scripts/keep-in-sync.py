@@ -3,26 +3,26 @@
 import json
 import os
 import sys
-from grp import getgrgid
-from configparser import ConfigParser, NoSectionError, NoOptionError
-from dataclasses import astuple, dataclass
-from pathlib import Path
-from time import sleep
 from collections import defaultdict
-from typing import Dict, List, Optional, Set, Tuple, Self, Any, DefaultDict
-from subprocess import check_call, Popen, PIPE
-from shutil import rmtree, copyfile, SameFileError
+from configparser import ConfigParser, NoOptionError, NoSectionError
+from dataclasses import astuple, dataclass
+from grp import getgrgid
+from pathlib import Path
+from shutil import SameFileError, copyfile, rmtree
+from subprocess import PIPE, Popen, check_call
+from time import sleep
+from typing import Any, Self
+from urllib.error import URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
-from urllib.error import URLError
 
 # before portage, we setup the overlay to here:
 os.environ["PORTDIR_OVERLAY"] = str(Path(__file__).parent / "..")
 
 import portage
+from portage.dbapi.porttree import portdbapi
 from portage.exception import PortageKeyError, UnsupportedAPIException
 from portage.package.ebuild import doebuild
-from portage.dbapi.porttree import portdbapi
 from portage.package.ebuild.config import config as ebuild_config
 
 # enforce sync mode to allow nonexistent directory:
@@ -34,10 +34,10 @@ class WorkingEnvironment:
     repos_path: Path = Path(portage.settings["PORTDIR"]).parent
     repo_override: str = Path(portage.settings["PORTDIR"]).name
     portdbapi: portdbapi = portage.db[portage.settings["EROOT"]]["porttree"].dbapi
-    accept_keywords: Set[str] = {"amd64", "arm64", "arm64-macos"}
+    accept_keywords: set[str] = {"amd64", "arm64", "arm64-macos"}
 
     # private vars, mostly arguments:
-    oneshot: Optional[str] = None
+    oneshot: str | None = None
     refresh: bool = False
     repology: bool = False
     pretend: bool = False
@@ -64,11 +64,9 @@ class MyCatPkgVerRev(os.PathLike):  # Category/Package-Version-Rev
     cat: str
     pkgname: str
     version: str
-    rev: Optional[str]
+    rev: str | None
 
-    def __init__(
-        self: Self, cpv: Optional[str] = None, path: Optional[Path] = None
-    ) -> None:
+    def __init__(self: Self, cpv: str | None = None, path: Path | None = None) -> None:
         from portage.versions import catpkgsplit
 
         if path is not None:
@@ -89,7 +87,7 @@ class MyCatPkgVerRev(os.PathLike):  # Category/Package-Version-Rev
     def __hash__(self: Self) -> int:
         return hash(self.cpv)
 
-    def __eq__(self: Self, other: Any) -> bool:
+    def __eq__(self: Self, other: object) -> bool:
         if type(other) is not MyCatPkgVerRev:
             return False
         return self.cpv == other.cpv
@@ -107,7 +105,7 @@ class MyCatPkgVerRev(os.PathLike):  # Category/Package-Version-Rev
         return self.version == "0" or "9999" in self.version
 
     # FIXME: -> List[Self]
-    def cp_list(self: Self, env: WorkingEnvironment) -> List[Any]:
+    def cp_list(self: Self, env: WorkingEnvironment) -> list[Any]:
         return [
             MyCatPkgVerRev(cpv=cpv)
             for cpv in env.portdbapi.cp_list(f"{self.cat}/{self.pkgname}")
@@ -120,7 +118,7 @@ class MyCatPkgVerRev(os.PathLike):  # Category/Package-Version-Rev
         return pkgcmp(pkgsplit(self.cpv), pkgsplit(other.cpv)) > 0
 
     # FIXME: -> Self
-    def best(cpvs: List[Self]) -> Any:
+    def best(cpvs: list[Self]) -> Any:
         from portage.versions import best
 
         assert len(cpvs) > 0
@@ -130,14 +128,14 @@ class MyCatPkgVerRev(os.PathLike):  # Category/Package-Version-Rev
 @dataclass
 class EbuildPackage:
     my_cpv: MyCatPkgVerRev
-    source: Optional[Path]
+    source: Path | None
     repo_overlay: str
-    keywords: Set[str]
+    keywords: set[str]
 
 
 @dataclass
 class OverlayPackage(EbuildPackage):
-    repo_override: Optional[str]
+    repo_override: str | None
     config: ConfigParser  # TODO: Remove
 
 
@@ -168,7 +166,7 @@ def find_repo_path(env: WorkingEnvironment, repo_name: str) -> Path:
 
 def collect_repology_package(
     env: WorkingEnvironment, my_cpv: MyCatPkgVerRev
-) -> Optional[RepologyPackage]:
+) -> RepologyPackage | None:
     url = f"https://repology.amdmi3.ru/api/v1/project/{quote(my_cpv.pkgname)}"
     req = Request(url, headers={"User-Agent": "github.com/plxty/aptenodytes"})
     try:
@@ -197,9 +195,9 @@ def collect_repology_package(
 
 
 def find_best_cpv(
-    env: WorkingEnvironment, packages: List[EbuildPackage]
-) -> List[Tuple[EbuildPackage, EbuildPackage]]:
-    pendings: List[Tuple[EbuildPackage, EbuildPackage]] = list()
+    env: WorkingEnvironment, packages: list[EbuildPackage]
+) -> list[tuple[EbuildPackage, EbuildPackage]]:
+    pendings: list[tuple[EbuildPackage, EbuildPackage]] = []
 
     def push_pending(repo_name, my_cpv) -> None:
         if my_cpv == package.my_cpv:
@@ -232,7 +230,7 @@ def find_best_cpv(
         is_overlay = type(package) is OverlayPackage
         is_override = is_overlay and package.repo_override is not None
 
-        my_cpvs: Dict[MyCatPkgVerRev, str] = dict()
+        my_cpvs: dict[MyCatPkgVerRev, str] = {}
         for my_cpv in package.my_cpv.cp_list(env):
             if my_cpv.is_meta_or_live():
                 continue
@@ -296,9 +294,7 @@ def cpv_find_repo(
     return cpv_find_repo(env, my_cpvs[0], True)
 
 
-def parse_comment_config(
-    text: str, config: Optional[ConfigParser]
-) -> Optional[ConfigParser]:
+def parse_comment_config(text: str, config: ConfigParser | None) -> ConfigParser | None:
     if not text.startswith("# [aptenodytes]"):
         return None
 
@@ -317,9 +313,10 @@ def package_config_get(
     key: str,
     default: Any,
 ) -> Any:
-    if type(package_or_config) is OverlayPackage:
-        config = package_or_config.config
-    elif type(package_or_config) is ProfilePackage:
+    if (
+        type(package_or_config) is OverlayPackage
+        or type(package_or_config) is ProfilePackage
+    ):
         config = package_or_config.config
     else:
         config = package_or_config
@@ -347,7 +344,7 @@ def collect_ebuild_package(
 
         # setting to me, portage uses a user that cannot access pwd when sudo:
         # @see portage _get_global
-        if all(map(lambda v: v in os.environ, ["SUDO_USER", "SUDO_GID"])):
+        if all(v in os.environ for v in ["SUDO_USER", "SUDO_GID"]):
             group = getgrgid(int(os.environ["SUDO_GID"])).gr_name
             settings["PORTAGE_GRPNAME"] = group
             settings["PORTAGE_USERNAME"] = os.environ["SUDO_USER"]
@@ -372,7 +369,7 @@ def collect_overlay_package(
 
     # try if package.override, and make config:
     override = ebuild.parent / "package.override"
-    repo_override: Optional[str] = None
+    repo_override: str | None = None
     config = ConfigParser()
     if override.is_file():  # TODO: support directories...
         with open(override, "r") as reader:
@@ -406,9 +403,9 @@ def collect_overlay_package(
 
 def collect_profile_packages(
     env: WorkingEnvironment, fullpath: Path
-) -> List[ProfilePackage]:
+) -> list[ProfilePackage]:
     # reading the whole profile package list:
-    packages: List[ProfilePackage] = list()
+    packages: list[ProfilePackage] = []
     with open(fullpath, "r") as reader:
         lines = reader.readlines()
 
@@ -479,7 +476,7 @@ def sync_overlay_package(
             lines = reader.readlines()
 
         # modify the patch file to pointing to latest file:
-        a: Optional[str] = None  # to verify the diff format
+        a: str | None = None  # to verify the diff format
         for i, line in enumerate(lines):
             if line.startswith("diff --git a/"):
                 _, a, b = line.strip().rsplit(maxsplit=2)
@@ -487,7 +484,7 @@ def sync_overlay_package(
                 assert a == b
             elif line.startswith("index "):
                 continue
-            elif line.startswith("--- a/") or line.startswith("+++ b/"):
+            elif line.startswith(("--- a/", "+++ b/")):
                 _, b = line.strip().rsplit(maxsplit=1)
                 b = b[len("x/") :]
                 assert a == b
@@ -565,14 +562,14 @@ def sync_overlay_package(
 
 
 def sync_overlay_packages(env: WorkingEnvironment, repo_path: Path) -> None:
-    packages: List[EbuildPackage] = list()
-    candidate_overlays: DefaultDict[str, List[MyCatPkgVerRev]] = defaultdict(list)
+    packages: list[EbuildPackage] = []
+    candidate_overlays: defaultdict[str, list[MyCatPkgVerRev]] = defaultdict(list)
 
     # checks only the latest overlay:
     for ebuild_path in repo_path.glob("**/*.ebuild", recurse_symlinks=True):
         my_cpv = MyCatPkgVerRev(path=ebuild_path)
         candidate_overlays[f"{my_cpv.cat}/{my_cpv.pkgname}"].append(my_cpv)
-    for _, overlays in candidate_overlays.items():
+    for overlays in candidate_overlays.values():
         my_cpv = MyCatPkgVerRev.best(overlays)
         progress(f"overlay: {my_cpv.__fspath__()}")
         packages.append(collect_overlay_package(env, my_cpv))
@@ -604,7 +601,7 @@ def sync_profile_package(
 
 
 def sync_profile_packages(env: WorkingEnvironment, repo_path: Path) -> None:
-    packages: List[EbuildPackage] = list()
+    packages: list[EbuildPackage] = []
 
     # obtain profiles packages, to show if they needs update:
     for profile_path in (repo_path / "profiles").glob(
