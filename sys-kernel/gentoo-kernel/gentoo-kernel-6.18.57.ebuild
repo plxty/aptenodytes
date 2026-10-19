@@ -9,12 +9,12 @@ inherit kernel-build toolchain-funcs verify-sig
 
 BASE_P=linux-${PV%.*}
 PATCH_PV=${PV%_p*}
-PATCHSET=linux-gentoo-patches-${PV}
+PATCHSET=linux-gentoo-patches-6.18.42
 # https://koji.fedoraproject.org/koji/packageinfo?packageID=8
 # forked to git.gentoo.org:fork/fedora/kernel
 CONFIG_VER=6.18.12-gentoo
 GENTOO_CONFIG_P=gentoo-kernel-config-g19
-SHA256SUM_DATE=20260704
+SHA256SUM_DATE=20261015
 # Debian kconfig commit from:
 # https://salsa.debian.org/kernel-team/linux/-/tree/debian/latest/debian/
 DEBIAN_COMMIT=b19b382f183d421a407f5d708dde1eff5009274d
@@ -115,10 +115,11 @@ src_prepare() {
 	sed -i -e "s:^\(EXTRAVERSION =\).*:\1 ${extraversion/_/-}:" Makefile || die
 
 	local biendian=false
+	local merge_configs=()
 
 	# prepare the default config
 	case ${ARCH} in
-	hppa | mips)
+		hppa | mips)
 			> .config || die
 		;;
 		alpha)
@@ -190,7 +191,7 @@ src_prepare() {
 	echo "CONFIG_LOCALVERSION=\"${myversion}\"" > "${T}"/version.config || die
 	local dist_conf_path="${WORKDIR}/${GENTOO_CONFIG_P}"
 
-	local merge_configs=(
+	merge_configs+=(
 		"${T}"/version.config
 		"${dist_conf_path}"/base.config
 		"${dist_conf_path}"/6.12+.config

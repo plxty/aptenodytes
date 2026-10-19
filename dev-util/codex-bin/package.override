@@ -1,7 +1,7 @@
-diff --git a/dev-util/codex-bin/codex-bin-0.162.1.ebuild b/dev-util/codex-bin/codex-bin-0.162.1.ebuild
+diff --git a/dev-util/codex-bin/codex-bin-0.163.0.ebuild b/dev-util/codex-bin/codex-bin-0.163.0.ebuild
 index 31205a34a..0bbb0dca3 100644
---- a/dev-util/codex-bin/codex-bin-0.162.1.ebuild
-+++ b/dev-util/codex-bin/codex-bin-0.162.1.ebuild
+--- a/dev-util/codex-bin/codex-bin-0.163.0.ebuild
++++ b/dev-util/codex-bin/codex-bin-0.163.0.ebuild
 @@ -9,13 +9,9 @@ URI_PREFIX="https://github.com/openai/${MY_PN}/releases/download/rust-v${PV}"
  DESCRIPTION="Codex CLI - OpenAI's AI-powered coding agent"
  HOMEPAGE="https://github.com/openai/codex"
