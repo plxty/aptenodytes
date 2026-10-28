@@ -11,12 +11,12 @@
 =dev-python/sse-starlette-3.4.4 ~*
 =app-office/lark-cli-1.0.96 ~*
 =dev-util/bash-language-server-5.6.0 ~*
-=net-proxy/mihomo-1.19.32 ~*
+=net-proxy/mihomo-1.19.33 ~*
 =dev-libs/v2ray-rules-dat-bin-202607092306 ~*
 =app-crypt/age-1.3.1-r1 ~*
 =dev-util/crash-9.0.3 ~*
 =dev-debug/drgn-0.1.0 ~*
 =dev-libs/libkdumpfile-0.5.6 ~*
-=dev-util/pi-coding-agent-bin-1.3.0 ~*
+=dev-util/pi-coding-agent-bin-1.4.0 ~*
 =dev-cpp/yaml-cpp-0.9.0-r1 ~*
 # [aptenodytes]
