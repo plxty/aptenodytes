@@ -81,6 +81,9 @@ The module-facing `pkgs.buildEnv` is implemented by `pseudoBuildEnv`. It support
 `passthru`. Native inputs contribute only their declared links; their targets
 need not exist and are never traversed. Real generated package directories are
 merged without following directory symlinks, retaining HM's session files.
+Generated inputs must be store output roots, not subdirectories or unmarked
+native prefixes such as `/usr`. An output that is itself a directory symlink
+is rejected before enumeration; native links must use `nativeFiles`.
 
 Identical links are deduplicated; conflicting files or parent links fail. This
 version does not implement upstream priorities, collision override flags,
@@ -106,6 +109,11 @@ services receive drop-ins; complete PPP instances receive full units. Masked
 units point to `/dev/null`. Credentials stay at `/etc/ppp/keys/ppp-wan`; they are
 not read during evaluation or copied into the store.
 
+Module assertions are enforced before producing the artifact. Explicit networkd
+source overrides are retained, as are additional files declared through
+`environment.etc`. Conflicting owned destinations or aliases fail instead of
+silently replacing an earlier entry.
+
 `home-example` uses HM's minimal module list plus the declarations needed by Git
 and shell integration. It generates Git config, YAML, a systemd user unit and
 HM session variables. The artifact has `home-files`, `home-path`, and a manifest
@@ -128,6 +136,9 @@ The automated checks compare all 11 networkd files to the actual existing
 match the old template instance except for the store pre-start script and the
 added restart trigger. They also check the Git/YAML/user-unit outputs, retained
 HM session variables, native links, and unit enablement/aliases.
+Eight evaluation checks cover input boundaries, file preservation, assertions,
+collisions and masking. Ten Python tests cover the native builder, including
+dangling links, traversal prevention, collisions and YAML generation.
 
 The initial cloud run built the examples and passed the checks. Its recursive
 derivation graph used `/bin/bash` for all system/home builds, with no Nix compiler

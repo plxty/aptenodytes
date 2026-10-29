@@ -33,9 +33,9 @@
 
 **Interfaces:** native builder functions provide runCommand/writeText/writeTextFile/script writers and format generators; pseudoBuildEnv accepts native descriptors with `nativeFiles` and real store output directories. The Python builder consumes JSON specifications and writes one output tree or YAML file.
 
-- [ ] Add failing tests for dangling native links, generated-file preservation, collisions, path traversal, filtering and native YAML generation.
-- [ ] Implement the native builder subset and pseudoBuildEnv; run `/usr/bin/python3 -m unittest discover -s tests/config -v` until green.
-- [ ] Commit the independently tested backend.
+- [x] Add failing tests for dangling native links, generated-file preservation, collisions, path traversal, filtering and native YAML generation.
+- [x] Implement the native builder subset and pseudoBuildEnv; run `/usr/bin/python3 -m unittest discover -s tests/config -v` until green.
+- [x] Commit the independently tested backend.
 
 ## Task 2: Pinned flake and module integration
 
@@ -43,17 +43,17 @@
 
 **Interfaces:** `lib.mkPkgs` produces the module-facing package set; `packages.<system>.system-example`, `home-example` and `pseudo-env-example` produce inspectable store artifacts; `checks` verify the same outputs. The root manifest records owned files and service policy, without activation side effects.
 
-- [ ] Add integration assertions for the real baseline generator, PPP peer/unit parity, native-only runtime closures and retained HM session files.
-- [ ] Integrate the already verified upstream networkd/PPP modules and an HM config using native Git plus generated YAML.
-- [ ] Build all examples, run the assertions and probe strict sandboxing with fallback disabled.
-- [ ] Commit the integrated examples and pinned inputs.
+- [x] Add integration assertions for the real baseline generator, PPP peer/unit parity, native-only runtime closures and retained HM session files.
+- [x] Integrate the already verified upstream networkd/PPP modules and an HM config using native Git plus generated YAML.
+- [x] Build all examples, run the assertions and probe strict sandboxing with fallback disabled.
+- [x] Commit the integrated examples and pinned inputs.
 
 ## Task 3: Documentation, review and push
 
 **Files:** `nix/README.md`, root README link, design/plan execution notes.
 
-- [ ] Document native tool requirements, explicit sandbox exposure, toolchain identity, supported builder subset and deferred activation.
-- [ ] Run all relevant checks and a fresh whole-branch review; resolve important findings with regression coverage.
+- [x] Document native tool requirements, explicit sandbox exposure, toolchain identity, supported builder subset and deferred activation.
+- [x] Run all relevant checks and a fresh whole-branch review; resolve important findings with regression coverage.
 - [ ] Commit documentation/fixes, push the authorized new branch and verify remote HEAD matches local HEAD. No PR.
 
 ## Execution notes
@@ -61,3 +61,13 @@
 - Permission preflight: GitHub reports push permission and push dry-run succeeds.
 - Workspace choice: use the clean dedicated cloud checkout on the explicitly requested new branch; no additional worktree is needed.
 - Execution is already authorized by the user; proceed inline without another plan approval round.
+- Independent review identified four issues: unrestricted environment inputs,
+  discarded explicit network files, silent destination collisions and ignored
+  module assertions. All were fixed with regression checks that failed before
+  the fixes and passed afterward.
+- Validation covers ten Python tests, eight Nix evaluation assertions, all eleven
+  generated networkd files, PPP peer/unit parity and the native Home Manager
+  example. Strict sandboxing remains unverified because the cloud container lacks
+  the required kernel namespaces; see `nix/README.md` for the exact boundary.
+- This execution record precedes the final commit and branch push. Publication
+  is the remaining delivery step; no PR will be opened.

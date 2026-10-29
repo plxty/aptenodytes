@@ -50,6 +50,17 @@ class NativeBuildTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue((self.output / "share").is_symlink())
 
+    def test_generated_root_symlink_cannot_enumerate_external_tree(self):
+        outside = self.root / "external"
+        outside.mkdir()
+        (outside / "must-not-be-imported").write_text("host data")
+        package = self.root / "generated"
+        package.symlink_to(outside, target_is_directory=True)
+        result = self.run_builder({"kind": "environment", "paths": [{"store": str(package)}]})
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("root symlink", result.stderr)
+        self.assertFalse(self.output.exists())
+
     def test_conflicting_files_fail(self):
         result = self.run_builder({"kind": "environment", "paths": [
             {"nativeFiles": {"bin/tool": "/usr/bin/one"}},

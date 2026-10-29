@@ -21,6 +21,7 @@
         { isNative = true; nativeFiles."bin/not-installed" = "/native-missing/bin/tool"; }
       ];
     };
+    evaluationChecks = import ./tests/config/evaluation.nix { inherit api pkgs; };
   in {
     lib = api;
     packages.${system} = {
@@ -29,11 +30,16 @@
       home-example = homeExample.artifact;
       pseudo-env-example = environment;
     };
-    checks.${system}.config = pkgs.runCommand "aptenodytes-config-check" { } ''
-      /usr/bin/python3 ${./tests/config/integration.py} \
-        --repo ${./.} --system ${systemExample.artifact} \
-        --home ${homeExample.artifact} --environment ${environment}
-      mkdir -p "$out"
-    '';
+    checks.${system} = {
+      evaluation =
+        assert builtins.all (passed: passed) (builtins.attrValues evaluationChecks);
+        pkgs.writeText "aptenodytes-evaluation-checks" (builtins.toJSON evaluationChecks);
+      config = pkgs.runCommand "aptenodytes-config-check" { } ''
+        /usr/bin/python3 ${./tests/config/integration.py} \
+          --repo ${./.} --system ${systemExample.artifact} \
+          --home ${homeExample.artifact} --environment ${environment}
+        mkdir -p "$out"
+      '';
+    };
   };
 }

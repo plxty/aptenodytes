@@ -46,6 +46,10 @@ def environment(spec, output):
             entries = package["nativeFiles"].items()
         else:
             source = Path(package["store"])
+            # os.walk(followlinks=False) still follows a symlink passed as its
+            # root. Reject it before any directory inspection or enumeration.
+            if source.is_symlink():
+                raise ValueError(f"generated environment input cannot be a root symlink: {source}")
             if not source.is_dir():
                 raise ValueError(f"generated environment input must be a directory: {source}")
             entries = []

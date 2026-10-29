@@ -9,7 +9,10 @@ let
     inherit pathsToLink;
     paths = map (pkg:
       if pkg.isNative or false then { inherit (pkg) nativeFiles; }
-      else { store = toString pkg; }) outputs;
+      else let path = toString pkg; in
+        assert lib.assertMsg (lib.isStorePath path && builtins.dirOf path == builtins.storeDir)
+          "pseudoBuildEnv: generated inputs must be store output roots; declare native paths with isNative/nativeFiles";
+        { store = path; }) outputs;
   };
 in (builders.buildSpec name description).overrideAttrs (old: {
   inherit meta;
