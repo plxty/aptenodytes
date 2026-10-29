@@ -5,7 +5,8 @@ let
       inherit system;
       builder = shell;
       args = [ "-e" (builtins.toFile "native-builder.sh" ''
-        set -euo pipefail
+        # Upstream runCommand bodies may deliberately read unset variables.
+        set -eo pipefail
         runHook() {
           local hook="$1"
           if [[ -n "''${!hook-}" ]]; then eval "''${!hook}"; fi

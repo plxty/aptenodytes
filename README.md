@@ -2,6 +2,9 @@
 
 in pseudo-declarative style :)
 
+The [native Nix configuration adapter](nix/README.md) provides experimental
+system and Home Manager configuration builds alongside the existing profiles.
+
 this is not a "lint" overlay, it contains `dirty-deeds.eclass` for hack works.
 
 please note `sci-misc/aptenodytes` and `SLOT=ridgeni` in ebuild mean profile packages, which is highly personalized.

@@ -55,8 +55,8 @@ Home Manager 接入时，文件生成、user units 和所选模块的必要 acti
 
 ## 已有证据与待验证范围
 
-- [第一轮验证](REPORT.md)：完整 networkd 模块及 systemd 渲染库可不改源码复用；11 个网络文件与现有生成器规范化一致。
-- [PPP 验证](PPP-REPORT.md)：完整上游 `services.pppd` 加本地选项覆盖，可生成 peer、实例 unit、准备脚本和启用链接，保持现有配置行为。
-- 尚未完成 `pseudoBuildEnv`、原生构建工具沙盒接入、Home Manager 实际构建，以及系统 activation 的实现与运行验证。
+- 第一轮验证：完整 networkd 模块及 systemd 渲染库可不改源码复用；11 个网络文件与现有生成器规范化一致。
+- PPP 验证：完整上游 `services.pppd` 加本地选项覆盖，可生成 peer、实例 unit、准备脚本和启用链接，保持现有配置行为。
+- 本设计形成时尚未完成 `pseudoBuildEnv`、原生构建工具沙盒接入、Home Manager 实际构建，以及系统 activation 的实现与运行验证。最新实现和验证状态见 [构建文档](../../../nix/README.md)。
 
 下一轮适合围绕 `pseudoBuildEnv` 验证一个同时包含原生应用引用、YAML 生成工具和 HM 自有生成文件的最小案例。它用于确认上述边界，不扩展到系统包管理。
