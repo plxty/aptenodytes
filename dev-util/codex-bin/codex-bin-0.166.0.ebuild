@@ -35,6 +35,7 @@ RESTRICT="strip"
 QA_PREBUILT="
 	usr/libexec/${MY_PN}/bin/${MY_PN}
 	usr/libexec/${MY_PN}/bin/${MY_PN}-code-mode-host
+	usr/libexec/${MY_PN}/bin/${MY_PN}-exec-server
 	usr/libexec/${MY_PN}/${MY_PN}-path/rg
 	usr/libexec/${MY_PN}/${MY_PN}-resources/bwrap
 	usr/libexec/${MY_PN}/${MY_PN}-resources/voice/*

@@ -1,7 +1,7 @@
-diff --git a/dev-libs/boost/boost-1.90.0-r2.ebuild b/dev-libs/boost/boost-1.90.0-r2.ebuild
+diff --git a/dev-libs/boost/boost-1.90.0-r3.ebuild b/dev-libs/boost/boost-1.90.0-r3.ebuild
 index c35327225d90..71e04c7e4a98 100644
---- a/dev-libs/boost/boost-1.90.0-r2.ebuild
-+++ b/dev-libs/boost/boost-1.90.0-r2.ebuild
+--- a/dev-libs/boost/boost-1.90.0-r3.ebuild
++++ b/dev-libs/boost/boost-1.90.0-r3.ebuild
 @@ -18,7 +18,7 @@ S="${WORKDIR}/${PN}_${MY_PV}"
  
  LICENSE="Boost-1.0"
