@@ -6,6 +6,7 @@ virtual/libcrypt static-libs
 sys-libs/libxcrypt static-libs
 sys-apps/busybox static -pam
 app-emulation/qemu virtfs xattr
+dev-libs/boehm-gc cxx
 
 # networks
 net-firewall/iptables nftables
