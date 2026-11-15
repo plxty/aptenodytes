@@ -1,11 +1,11 @@
-diff --git a/app-containers/podman/podman-5.8.2.ebuild b/app-containers/podman/podman-5.8.2.ebuild
-index 2ef82fc90e2f..af95edd9a7f1 100644
---- a/app-containers/podman/podman-5.8.2.ebuild
-+++ b/app-containers/podman/podman-5.8.2.ebuild
-@@ -86,6 +86,20 @@ src_prepare() {
- 	#!/usr/bin/env bash
- 	$(usex btrfs echo 'echo exclude_graphdriver_btrfs')
- 	EOF
+diff --git a/app-containers/podman/podman-6.1.4.ebuild b/app-containers/podman/podman-6.1.4.ebuild
+index 13d63b072f0a..bba0dd07139f 100644
+--- a/app-containers/podman/podman-6.1.4.ebuild
++++ b/app-containers/podman/podman-6.1.4.ebuild
+@@ -90,6 +90,20 @@ src_prepare() {
+ 
+ 	# hardcode using system sqlite instead of bundled one
+ 	[[ -f hack/sqlite_tag.sh ]] && echo -e '#!/usr/bin/env bash\necho libsqlite3' > hack/sqlite_tag.sh || die
 +
 +	if use prefix; then
 +		# only with prefix, we fix-up the wrong config location...
